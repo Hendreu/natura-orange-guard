@@ -10,11 +10,17 @@
 
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as IndexRouteImport } from './routes/index'
+import { Route as AtivosRouteImport } from './routes/ativos'
 import { Route as VulnerabilidadesRouteImport } from './routes/vulnerabilidades'
 
 const IndexRoute = IndexRouteImport.update({
   id: '/',
   path: '/',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const AtivosRoute = AtivosRouteImport.update({
+  id: '/ativos',
+  path: '/ativos',
   getParentRoute: () => rootRouteImport,
 } as any)
 const VulnerabilidadesRoute = VulnerabilidadesRouteImport.update({
@@ -25,27 +31,31 @@ const VulnerabilidadesRoute = VulnerabilidadesRouteImport.update({
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
+  '/ativos': typeof AtivosRoute
   '/vulnerabilidades': typeof VulnerabilidadesRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
+  '/ativos': typeof AtivosRoute
   '/vulnerabilidades': typeof VulnerabilidadesRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
+  '/ativos': typeof AtivosRoute
   '/vulnerabilidades': typeof VulnerabilidadesRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths: '/' | '/vulnerabilidades'
+  fullPaths: '/' | '/ativos' | '/vulnerabilidades'
   fileRoutesByTo: FileRoutesByTo
-  to: '/' | '/vulnerabilidades'
-  id: '__root__' | '/' | '/vulnerabilidades'
+  to: '/' | '/ativos' | '/vulnerabilidades'
+  id: '__root__' | '/' | '/ativos' | '/vulnerabilidades'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
+  AtivosRoute: typeof AtivosRoute
   VulnerabilidadesRoute: typeof VulnerabilidadesRoute
 }
 
@@ -56,6 +66,13 @@ declare module '@tanstack/react-router' {
       path: '/'
       fullPath: '/'
       preLoaderRoute: typeof IndexRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/ativos': {
+      id: '/ativos'
+      path: '/ativos'
+      fullPath: '/ativos'
+      preLoaderRoute: typeof AtivosRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/vulnerabilidades': {
@@ -70,6 +87,7 @@ declare module '@tanstack/react-router' {
 
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
+  AtivosRoute: AtivosRoute,
   VulnerabilidadesRoute: VulnerabilidadesRoute,
 }
 export const routeTree = rootRouteImport
