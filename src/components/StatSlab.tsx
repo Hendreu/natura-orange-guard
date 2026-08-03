@@ -1,6 +1,6 @@
 import { fmt, type Trend } from "@/lib/sla-data";
 
-export function TrendTag({ trend, invert = false }: { trend?: Trend; invert?: boolean }) {
+export function TrendTag({ trend, invert = false }: { trend?: Trend | undefined; invert?: boolean }) {
   if (!trend) return null;
   const up = trend.diff > 0;
   const flat = trend.diff === 0;
@@ -29,10 +29,10 @@ export function StatSlab({
 }: {
   label: string;
   value: number | string;
-  trend?: Trend;
-  sub?: React.ReactNode;
-  accent?: boolean;
-  invertTrend?: boolean;
+  trend?: Trend | undefined;
+  sub?: React.ReactNode | undefined;
+  accent?: boolean | undefined;
+  invertTrend?: boolean | undefined;
 }) {
   return (
     <div className={`${accent ? "slab-signal" : "slab"} corner-cut p-4`}>
