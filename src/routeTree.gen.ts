@@ -12,6 +12,7 @@ import { Route as rootRouteImport } from './routes/__root'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as AtivosRouteImport } from './routes/ativos'
 import { Route as SlaRouteImport } from './routes/sla'
+import { Route as SquadsRouteImport } from './routes/squads'
 import { Route as VulnerabilidadesRouteImport } from './routes/vulnerabilidades'
 
 const IndexRoute = IndexRouteImport.update({
@@ -29,6 +30,11 @@ const SlaRoute = SlaRouteImport.update({
   path: '/sla',
   getParentRoute: () => rootRouteImport,
 } as any)
+const SquadsRoute = SquadsRouteImport.update({
+  id: '/squads',
+  path: '/squads',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const VulnerabilidadesRoute = VulnerabilidadesRouteImport.update({
   id: '/vulnerabilidades',
   path: '/vulnerabilidades',
@@ -39,12 +45,14 @@ export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/ativos': typeof AtivosRoute
   '/sla': typeof SlaRoute
+  '/squads': typeof SquadsRoute
   '/vulnerabilidades': typeof VulnerabilidadesRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/ativos': typeof AtivosRoute
   '/sla': typeof SlaRoute
+  '/squads': typeof SquadsRoute
   '/vulnerabilidades': typeof VulnerabilidadesRoute
 }
 export interface FileRoutesById {
@@ -52,20 +60,22 @@ export interface FileRoutesById {
   '/': typeof IndexRoute
   '/ativos': typeof AtivosRoute
   '/sla': typeof SlaRoute
+  '/squads': typeof SquadsRoute
   '/vulnerabilidades': typeof VulnerabilidadesRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths: '/' | '/ativos' | '/sla' | '/vulnerabilidades'
+  fullPaths: '/' | '/ativos' | '/sla' | '/squads' | '/vulnerabilidades'
   fileRoutesByTo: FileRoutesByTo
-  to: '/' | '/ativos' | '/sla' | '/vulnerabilidades'
-  id: '__root__' | '/' | '/ativos' | '/sla' | '/vulnerabilidades'
+  to: '/' | '/ativos' | '/sla' | '/squads' | '/vulnerabilidades'
+  id: '__root__' | '/' | '/ativos' | '/sla' | '/squads' | '/vulnerabilidades'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   AtivosRoute: typeof AtivosRoute
   SlaRoute: typeof SlaRoute
+  SquadsRoute: typeof SquadsRoute
   VulnerabilidadesRoute: typeof VulnerabilidadesRoute
 }
 
@@ -92,6 +102,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof SlaRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/squads': {
+      id: '/squads'
+      path: '/squads'
+      fullPath: '/squads'
+      preLoaderRoute: typeof SquadsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/vulnerabilidades': {
       id: '/vulnerabilidades'
       path: '/vulnerabilidades'
@@ -106,6 +123,7 @@ const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   AtivosRoute: AtivosRoute,
   SlaRoute: SlaRoute,
+  SquadsRoute: SquadsRoute,
   VulnerabilidadesRoute: VulnerabilidadesRoute,
 }
 export const routeTree = rootRouteImport
