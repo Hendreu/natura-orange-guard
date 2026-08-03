@@ -1,4 +1,4 @@
-import { useMemo, useState } from "react";
+import { Fragment, useMemo, useState } from "react";
 import { createFileRoute } from "@tanstack/react-router";
 import { Shell } from "@/components/Shell";
 import { fmt, qids, severityOrder, severityToken, teamNames } from "@/lib/sla-data";
@@ -82,9 +82,8 @@ function Vulnerabilidades() {
           </thead>
           <tbody>
             {rows.map((r) => (
-              <>
+              <Fragment key={`${r.qid}-${r.team}-${r.action}`}>
                 <tr
-                  key={`${r.qid}-${r.team}-${r.action}`}
                   onClick={() => setOpen(open === r.qid ? null : r.qid)}
                   className="cursor-pointer border-b border-border/60 hover:bg-steel"
                 >
@@ -108,7 +107,7 @@ function Vulnerabilidades() {
                   <td className="px-3 py-2 text-primary">{open === r.qid ? "−" : "+"}</td>
                 </tr>
                 {open === r.qid && (
-                  <tr key={`${r.qid}-detail`} className="border-b-2 border-border">
+                  <tr className="border-b-2 border-border">
                     <td colSpan={7} className="bg-secondary px-5 py-4">
                       <p className="stencil mb-2 text-[10px] text-primary">
                         Frente: {r.action} — corrigíveis {fmt(r.corr)} / não corrigíveis{" "}
@@ -120,7 +119,7 @@ function Vulnerabilidades() {
                     </td>
                   </tr>
                 )}
-              </>
+              </Fragment>
             ))}
           </tbody>
         </table>
