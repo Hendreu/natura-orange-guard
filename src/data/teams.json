@@ -1,0 +1,1607 @@
+{
+ "Cloud-Cyber": {
+  "kpis": {
+   "vulns": 743,
+   "vulns_corr": 743,
+   "vulns_nao_corr": 0,
+   "qids": 177,
+   "assets": 10,
+   "qds": 95.0,
+   "qds_corr": 95.0,
+   "workfronts": 11
+  },
+  "trends": {
+   "vulns": {
+    "diff": 31,
+    "pct": 4.4
+   },
+   "qids": {
+    "diff": 4,
+    "pct": 2.3
+   },
+   "assets": {
+    "diff": 0,
+    "pct": 0.0
+   },
+   "qds": {
+    "diff": 4.0,
+    "pct": 4.4
+   },
+   "qds_corr": {
+    "diff": 4.0,
+    "pct": 4.4
+   },
+   "workfronts": {
+    "diff": 0,
+    "pct": 0.0
+   }
+  },
+  "chartSev": [
+   400,
+   46,
+   90,
+   207
+  ],
+  "slaData": {
+   "Crítica": {
+    "DentroSLA_Corr": 400,
+    "DentroSLA_NaoCorr": 0,
+    "ForaSLA_Corr": 0,
+    "ForaSLA_NaoCorr": 0
+   },
+   "Alta": {
+    "DentroSLA_Corr": 43,
+    "DentroSLA_NaoCorr": 0,
+    "ForaSLA_Corr": 3,
+    "ForaSLA_NaoCorr": 0
+   },
+   "Média": {
+    "DentroSLA_Corr": 87,
+    "DentroSLA_NaoCorr": 0,
+    "ForaSLA_Corr": 3,
+    "ForaSLA_NaoCorr": 0
+   }
+  },
+  "raw": {
+   "Crítica": {
+    "total": 400,
+    "actions": {
+     "Aplicar patch Windows (SO)": {
+      "total": 376,
+      "avg_age": 33,
+      "qids": 53
+     },
+     "Atualizar .NET Framework": {
+      "total": 12,
+      "avg_age": 34,
+      "qids": 2
+     },
+     "Atualizar Chrome": {
+      "total": 12,
+      "avg_age": 34,
+      "qids": 12
+     }
+    }
+   },
+   "Alta": {
+    "total": 46,
+    "actions": {
+     "Aplicar hardening em criptografia e protocolos (SSL/TLS/SSH)": {
+      "total": 5,
+      "avg_age": 428,
+      "qids": 2
+     },
+     "Aplicar patch Windows (SO)": {
+      "total": 40,
+      "avg_age": 34,
+      "qids": 6
+     },
+     "Atualizar Chrome": {
+      "total": 1,
+      "avg_age": 24,
+      "qids": 1
+     }
+    }
+   },
+   "Média": {
+    "total": 90,
+    "actions": {
+     "Aplicar hardening em criptografia e protocolos (SSL/TLS/SSH)": {
+      "total": 1,
+      "avg_age": 687,
+      "qids": 1
+     },
+     "Aplicar patch Windows (SO)": {
+      "total": 44,
+      "avg_age": 27,
+      "qids": 6
+     },
+     "Atualizar .NET Framework": {
+      "total": 12,
+      "avg_age": 34,
+      "qids": 2
+     },
+     "Atualizar Chrome": {
+      "total": 26,
+      "avg_age": 30,
+      "qids": 26
+     },
+     "Atualizar Edge": {
+      "total": 3,
+      "avg_age": 10,
+      "qids": 3
+     },
+     "Criar/revisar política de senha e autenticação": {
+      "total": 3,
+      "avg_age": 251,
+      "qids": 2
+     },
+     "Verificar configurações diversas de rede e serviços": {
+      "total": 1,
+      "avg_age": 687,
+      "qids": 1
+     }
+    }
+   },
+   "Baixa": {
+    "total": 207,
+    "actions": {
+     "Aplicar hardening em criptografia e protocolos (SSL/TLS/SSH)": {
+      "total": 2,
+      "avg_age": 687,
+      "qids": 2
+     },
+     "Aplicar patch Windows (SO)": {
+      "total": 47,
+      "avg_age": 48,
+      "qids": 8
+     },
+     "Atualizar .NET Framework": {
+      "total": 92,
+      "avg_age": 31,
+      "qids": 13
+     },
+     "Atualizar Chrome": {
+      "total": 30,
+      "avg_age": 33,
+      "qids": 30
+     },
+     "Atualizar Libcurl Denial of Service (DoS)": {
+      "total": 8,
+      "avg_age": 34,
+      "qids": 1
+     },
+     "Atualizar Redis": {
+      "total": 8,
+      "avg_age": 34,
+      "qids": 1
+     },
+     "Atualizar Zabbix": {
+      "total": 9,
+      "avg_age": 137,
+      "qids": 2
+     },
+     "Bloquear SMB ou corrigir configuração insegura": {
+      "total": 8,
+      "avg_age": 34,
+      "qids": 1
+     },
+     "Verificar configurações diversas de rede e serviços": {
+      "total": 3,
+      "avg_age": 143,
+      "qids": 2
+     }
+    }
+   }
+  }
+ },
+ "Cloud-Middleware": {
+  "kpis": {
+   "vulns": 35986,
+   "vulns_corr": 26470,
+   "vulns_nao_corr": 9516,
+   "qids": 1657,
+   "assets": 543,
+   "qds": 94.0,
+   "qds_corr": 93.0,
+   "workfronts": 64
+  },
+  "trends": {
+   "vulns": {
+    "diff": -1394,
+    "pct": -3.7
+   },
+   "qids": {
+    "diff": 29,
+    "pct": 1.8
+   },
+   "assets": {
+    "diff": 0,
+    "pct": 0.0
+   },
+   "qds": {
+    "diff": 0.0,
+    "pct": 0.0
+   },
+   "qds_corr": {
+    "diff": 1.0,
+    "pct": 1.1
+   },
+   "workfronts": {
+    "diff": 0,
+    "pct": 0.0
+   }
+  },
+  "chartSev": [
+   5174,
+   1926,
+   11743,
+   17143
+  ],
+  "slaData": {
+   "Crítica": {
+    "DentroSLA_Corr": 352,
+    "DentroSLA_NaoCorr": 72,
+    "ForaSLA_Corr": 3755,
+    "ForaSLA_NaoCorr": 995
+   },
+   "Alta": {
+    "DentroSLA_Corr": 546,
+    "DentroSLA_NaoCorr": 108,
+    "ForaSLA_Corr": 1007,
+    "ForaSLA_NaoCorr": 265
+   },
+   "Média": {
+    "DentroSLA_Corr": 3536,
+    "DentroSLA_NaoCorr": 820,
+    "ForaSLA_Corr": 5283,
+    "ForaSLA_NaoCorr": 2104
+   }
+  },
+  "raw": {
+   "Crítica": {
+    "total": 5174,
+    "actions": {
+     "Aplicar hardening em criptografia e protocolos (SSL/TLS/SSH)": {
+      "total": 592,
+      "avg_age": 483,
+      "qids": 9
+     },
+     "Aplicar patch Oracle Enterprise Linux (SO)": {
+      "total": 1956,
+      "avg_age": 346,
+      "qids": 119
+     },
+     "Aplicar patch Red Hat (SO)": {
+      "total": 4,
+      "avg_age": 697,
+      "qids": 2
+     },
+     "Atualizar Apache / Tomcat": {
+      "total": 28,
+      "avg_age": 562,
+      "qids": 6
+     },
+     "Atualizar Apache Commons Arbitrary Code Execution (ACE)": {
+      "total": 4,
+      "avg_age": 637,
+      "qids": 1
+     },
+     "Atualizar Apache Struts2 Remote Code Execution (RCE)": {
+      "total": 2,
+      "avg_age": 265,
+      "qids": 1
+     },
+     "Atualizar Docker": {
+      "total": 3,
+      "avg_age": 697,
+      "qids": 3
+     },
+     "Atualizar Git": {
+      "total": 1,
+      "avg_age": 332,
+      "qids": 1
+     },
+     "Atualizar Grafana": {
+      "total": 1,
+      "avg_age": 96,
+      "qids": 1
+     },
+     "Atualizar IBM Hypertext Transfer Protocol (HTTP) Server": {
+      "total": 6,
+      "avg_age": 690,
+      "qids": 3
+     },
+     "Atualizar Java": {
+      "total": 772,
+      "avg_age": 427,
+      "qids": 19
+     },
+     "Atualizar Jenkins": {
+      "total": 5,
+      "avg_age": 414,
+      "qids": 5
+     },
+     "Atualizar Oracle Coherence": {
+      "total": 212,
+      "avg_age": 530,
+      "qids": 4
+     },
+     "Atualizar Oracle Hypertext Transfer Protocol (HTTP) Server": {
+      "total": 28,
+      "avg_age": 221,
+      "qids": 2
+     },
+     "Atualizar Oracle Hypertext Transfer Protocol Server (HTTP Server)": {
+      "total": 14,
+      "avg_age": 232,
+      "qids": 1
+     },
+     "Atualizar Oracle Hypertext Transfer Protocol Server (HTTP Server) Server": {
+      "total": 14,
+      "avg_age": 232,
+      "qids": 1
+     },
+     "Atualizar Oracle WebLogic": {
+      "total": 1083,
+      "avg_age": 510,
+      "qids": 31
+     },
+     "Atualizar PostgreSQL": {
+      "total": 4,
+      "avg_age": 390,
+      "qids": 1
+     },
+     "Atualizar Python": {
+      "total": 4,
+      "avg_age": 642,
+      "qids": 2
+     },
+     "Atualizar SaltStack Salt": {
+      "total": 3,
+      "avg_age": 496,
+      "qids": 2
+     },
+     "Atualizar SaltStack Salt Master": {
+      "total": 2,
+      "avg_age": 396,
+      "qids": 1
+     },
+     "Atualizar drivers/firmware HP": {
+      "total": 5,
+      "avg_age": 472,
+      "qids": 2
+     },
+     "Atualizar jQuery": {
+      "total": 10,
+      "avg_age": 472,
+      "qids": 5
+     },
+     "Atualizar kernel Linux": {
+      "total": 171,
+      "avg_age": 85,
+      "qids": 6
+     },
+     "Atualizar nlockmgr RPC Service": {
+      "total": 201,
+      "avg_age": 556,
+      "qids": 1
+     },
+     "Criar/revisar política de senha e autenticação": {
+      "total": 6,
+      "avg_age": 624,
+      "qids": 1
+     },
+     "Descomissionar ou atualizar software obsoleto (EOL)": {
+      "total": 25,
+      "avg_age": 593,
+      "qids": 3
+     },
+     "Verificar configurações diversas de rede e serviços": {
+      "total": 18,
+      "avg_age": 157,
+      "qids": 3
+     }
+    }
+   },
+   "Alta": {
+    "total": 1926,
+    "actions": {
+     "Aplicar hardening em criptografia e protocolos (SSL/TLS/SSH)": {
+      "total": 398,
+      "avg_age": 563,
+      "qids": 18
+     },
+     "Aplicar patch Oracle Enterprise Linux (SO)": {
+      "total": 656,
+      "avg_age": 56,
+      "qids": 44
+     },
+     "Aplicar patch Red Hat (SO)": {
+      "total": 13,
+      "avg_age": 697,
+      "qids": 7
+     },
+     "Atualizar Apache / Tomcat": {
+      "total": 20,
+      "avg_age": 543,
+      "qids": 5
+     },
+     "Atualizar IBM Hypertext Transfer Protocol (HTTP) Server": {
+      "total": 4,
+      "avg_age": 690,
+      "qids": 2
+     },
+     "Atualizar IBM Hypertext Transfer Protocol Server (HTTP Server)": {
+      "total": 2,
+      "avg_age": 438,
+      "qids": 1
+     },
+     "Atualizar Java": {
+      "total": 250,
+      "avg_age": 581,
+      "qids": 4
+     },
+     "Atualizar MySQL": {
+      "total": 1,
+      "avg_age": 662,
+      "qids": 1
+     },
+     "Atualizar NFS-Utils Xlog Remote Buffer Overrun": {
+      "total": 2,
+      "avg_age": 358,
+      "qids": 1
+     },
+     "Atualizar Oracle Coherence": {
+      "total": 17,
+      "avg_age": 513,
+      "qids": 1
+     },
+     "Atualizar Oracle Hypertext Transfer Protocol (HTTP) Server": {
+      "total": 14,
+      "avg_age": 188,
+      "qids": 1
+     },
+     "Atualizar Oracle Hypertext Transfer Protocol Server (HTTP Server)": {
+      "total": 28,
+      "avg_age": 232,
+      "qids": 2
+     },
+     "Atualizar Oracle Hypertext Transfer Protocol Server (HTTP Server) Server": {
+      "total": 14,
+      "avg_age": 232,
+      "qids": 1
+     },
+     "Atualizar Oracle WebLogic": {
+      "total": 225,
+      "avg_age": 437,
+      "qids": 15
+     },
+     "Atualizar PHP": {
+      "total": 2,
+      "avg_age": 472,
+      "qids": 1
+     },
+     "Atualizar Python": {
+      "total": 8,
+      "avg_age": 123,
+      "qids": 3
+     },
+     "Atualizar SaltStack Salt Minion": {
+      "total": 50,
+      "avg_age": 301,
+      "qids": 1
+     },
+     "Atualizar Spring Framework Path Traversal": {
+      "total": 1,
+      "avg_age": 458,
+      "qids": 1
+     },
+     "Atualizar drivers/firmware HP": {
+      "total": 12,
+      "avg_age": 472,
+      "qids": 6
+     },
+     "Atualizar kernel Linux": {
+      "total": 1,
+      "avg_age": 59,
+      "qids": 1
+     },
+     "Atualizar pacotes Node.js (npm)": {
+      "total": 1,
+      "avg_age": 356,
+      "qids": 1
+     },
+     "Atualizar ypbind RPC Daemon Present": {
+      "total": 199,
+      "avg_age": 572,
+      "qids": 1
+     },
+     "Criar/revisar política de senha e autenticação": {
+      "total": 3,
+      "avg_age": 296,
+      "qids": 2
+     },
+     "Verificar configurações diversas de rede e serviços": {
+      "total": 5,
+      "avg_age": 207,
+      "qids": 2
+     }
+    }
+   },
+   "Média": {
+    "total": 11743,
+    "actions": {
+     "Aplicar hardening em criptografia e protocolos (SSL/TLS/SSH)": {
+      "total": 2349,
+      "avg_age": 530,
+      "qids": 36
+     },
+     "Aplicar patch Linux (SO)": {
+      "total": 1,
+      "avg_age": 97,
+      "qids": 1
+     },
+     "Aplicar patch Oracle Enterprise Linux (SO)": {
+      "total": 5333,
+      "avg_age": 219,
+      "qids": 313
+     },
+     "Aplicar patch Red Hat (SO)": {
+      "total": 26,
+      "avg_age": 685,
+      "qids": 13
+     },
+     "Atualizar Apache / Tomcat": {
+      "total": 58,
+      "avg_age": 289,
+      "qids": 18
+     },
+     "Atualizar Apache Partial HTTP Request": {
+      "total": 2,
+      "avg_age": 472,
+      "qids": 1
+     },
+     "Atualizar Apple Macintosh OS X Client Apache Directory Contents Disclosure": {
+      "total": 2,
+      "avg_age": 625,
+      "qids": 1
+     },
+     "Atualizar IBM HTTP Server": {
+      "total": 3,
+      "avg_age": 260,
+      "qids": 2
+     },
+     "Atualizar IBM Hypertext Transfer Protocol (HTTP) Server": {
+      "total": 4,
+      "avg_age": 690,
+      "qids": 2
+     },
+     "Atualizar IBM Hypertext Transfer Protocol (HTTP) Server Cross-Site Scripting (XSS)": {
+      "total": 2,
+      "avg_age": 690,
+      "qids": 1
+     },
+     "Atualizar IBM Hypertext Transfer Protocol (HTTP) Server Denial of Service (DOS)": {
+      "total": 2,
+      "avg_age": 690,
+      "qids": 1
+     },
+     "Atualizar Java": {
+      "total": 1888,
+      "avg_age": 488,
+      "qids": 22
+     },
+     "Atualizar Jenkins": {
+      "total": 6,
+      "avg_age": 372,
+      "qids": 5
+     },
+     "Atualizar Kubernetes": {
+      "total": 2,
+      "avg_age": 96,
+      "qids": 2
+     },
+     "Atualizar NFS Exported Filesystems List": {
+      "total": 1,
+      "avg_age": 595,
+      "qids": 1
+     },
+     "Atualizar Oracle Coherence": {
+      "total": 323,
+      "avg_age": 273,
+      "qids": 8
+     },
+     "Atualizar Oracle Hypertext Transfer Protocol (HTTP) Server": {
+      "total": 28,
+      "avg_age": 195,
+      "qids": 2
+     },
+     "Atualizar Oracle Hypertext Transfer Protocol Server (HTTP Server)": {
+      "total": 28,
+      "avg_age": 232,
+      "qids": 2
+     },
+     "Atualizar Oracle WebLogic": {
+      "total": 409,
+      "avg_age": 182,
+      "qids": 10
+     },
+     "Atualizar PostgreSQL": {
+      "total": 6,
+      "avg_age": 349,
+      "qids": 3
+     },
+     "Atualizar Python": {
+      "total": 295,
+      "avg_age": 342,
+      "qids": 21
+     },
+     "Atualizar SQLite resetAccumulator and Heap Buffer Overflow": {
+      "total": 2,
+      "avg_age": 514,
+      "qids": 1
+     },
+     "Atualizar SaltStack Salt Minion": {
+      "total": 2,
+      "avg_age": 396,
+      "qids": 1
+     },
+     "Atualizar Spring Framework Open Redirect": {
+      "total": 3,
+      "avg_age": 417,
+      "qids": 1
+     },
+     "Atualizar Spring Framework Path Traversal": {
+      "total": 2,
+      "avg_age": 359,
+      "qids": 1
+     },
+     "Atualizar Web Directories Listable": {
+      "total": 5,
+      "avg_age": 563,
+      "qids": 1
+     },
+     "Atualizar drivers/firmware HP": {
+      "total": 30,
+      "avg_age": 472,
+      "qids": 14
+     },
+     "Atualizar iPlanet Web Server Information Disclosure": {
+      "total": 3,
+      "avg_age": 685,
+      "qids": 1
+     },
+     "Atualizar kernel Linux": {
+      "total": 9,
+      "avg_age": 635,
+      "qids": 9
+     },
+     "Atualizar pacotes Node.js (npm)": {
+      "total": 2,
+      "avg_age": 697,
+      "qids": 2
+     },
+     "Descomissionar ou atualizar software obsoleto (EOL)": {
+      "total": 164,
+      "avg_age": 564,
+      "qids": 9
+     },
+     "Necessário upgrade SO": {
+      "total": 327,
+      "avg_age": 555,
+      "qids": 4
+     },
+     "Verificar configurações diversas de rede e serviços": {
+      "total": 426,
+      "avg_age": 416,
+      "qids": 8
+     }
+    }
+   },
+   "Baixa": {
+    "total": 17143,
+    "actions": {
+     "Aplicar hardening em criptografia e protocolos (SSL/TLS/SSH)": {
+      "total": 3266,
+      "avg_age": 413,
+      "qids": 87
+     },
+     "Aplicar patch Oracle Enterprise Linux (SO)": {
+      "total": 9351,
+      "avg_age": 265,
+      "qids": 515
+     },
+     "Aplicar patch Red Hat (SO)": {
+      "total": 38,
+      "avg_age": 697,
+      "qids": 20
+     },
+     "Atualizar Apache / Tomcat": {
+      "total": 138,
+      "avg_age": 186,
+      "qids": 42
+     },
+     "Atualizar Apache Struts2 Denial of Service (DoS)": {
+      "total": 2,
+      "avg_age": 228,
+      "qids": 1
+     },
+     "Atualizar Apple macOS": {
+      "total": 2,
+      "avg_age": 625,
+      "qids": 1
+     },
+     "Atualizar Docker": {
+      "total": 12,
+      "avg_age": 697,
+      "qids": 12
+     },
+     "Atualizar ElasticSearch Beats": {
+      "total": 77,
+      "avg_age": 172,
+      "qids": 1
+     },
+     "Atualizar IBM Hypertext Transfer Protocol (HTTP) Server": {
+      "total": 2,
+      "avg_age": 690,
+      "qids": 1
+     },
+     "Atualizar IBM Hypertext Transfer Protocol (HTTP) Server Information Disclosure": {
+      "total": 2,
+      "avg_age": 690,
+      "qids": 1
+     },
+     "Atualizar IBM Hypertext Transfer Protocol Server (HTTP Server) Remote Code Execution (RCE)": {
+      "total": 2,
+      "avg_age": 690,
+      "qids": 1
+     },
+     "Atualizar Java": {
+      "total": 1813,
+      "avg_age": 494,
+      "qids": 28
+     },
+     "Atualizar Jenkins": {
+      "total": 19,
+      "avg_age": 427,
+      "qids": 17
+     },
+     "Atualizar Kubernetes": {
+      "total": 7,
+      "avg_age": 96,
+      "qids": 7
+     },
+     "Atualizar LibreOffice": {
+      "total": 3,
+      "avg_age": 454,
+      "qids": 1
+     },
+     "Atualizar MariaDB": {
+      "total": 22,
+      "avg_age": 136,
+      "qids": 3
+     },
+     "Atualizar Microsoft Exchange": {
+      "total": 4,
+      "avg_age": 685,
+      "qids": 1
+     },
+     "Atualizar MySQL": {
+      "total": 1,
+      "avg_age": 662,
+      "qids": 1
+     },
+     "Atualizar Oracle Coherence": {
+      "total": 499,
+      "avg_age": 392,
+      "qids": 9
+     },
+     "Atualizar Oracle Hypertext Transfer Protocol (HTTP) Server": {
+      "total": 28,
+      "avg_age": 232,
+      "qids": 2
+     },
+     "Atualizar Oracle WebLogic": {
+      "total": 232,
+      "avg_age": 131,
+      "qids": 6
+     },
+     "Atualizar PHP": {
+      "total": 4,
+      "avg_age": 472,
+      "qids": 2
+     },
+     "Atualizar PostgreSQL": {
+      "total": 7,
+      "avg_age": 605,
+      "qids": 1
+     },
+     "Atualizar Python": {
+      "total": 1002,
+      "avg_age": 122,
+      "qids": 49
+     },
+     "Atualizar Splunk": {
+      "total": 2,
+      "avg_age": 690,
+      "qids": 2
+     },
+     "Atualizar Spring Framework": {
+      "total": 3,
+      "avg_age": 417,
+      "qids": 1
+     },
+     "Atualizar Spring Framework Denial of Service (DoS)": {
+      "total": 2,
+      "avg_age": 396,
+      "qids": 1
+     },
+     "Atualizar Spring Framework Denial of Service (DoS) Data Binding": {
+      "total": 3,
+      "avg_age": 417,
+      "qids": 1
+     },
+     "Atualizar Spring Framework Spring Expression Denial of Service (DoS)": {
+      "total": 3,
+      "avg_age": 412,
+      "qids": 1
+     },
+     "Atualizar drivers/firmware HP": {
+      "total": 18,
+      "avg_age": 472,
+      "qids": 9
+     },
+     "Atualizar elFinder File Manager Cross-Site Scripting (XSS)": {
+      "total": 2,
+      "avg_age": 472,
+      "qids": 1
+     },
+     "Atualizar kernel Linux": {
+      "total": 14,
+      "avg_age": 615,
+      "qids": 13
+     },
+     "Atualizar pacotes Node.js (npm)": {
+      "total": 2,
+      "avg_age": 697,
+      "qids": 2
+     },
+     "Criar/revisar política de senha e autenticação": {
+      "total": 530,
+      "avg_age": 555,
+      "qids": 8
+     },
+     "Verificar HTTP Security": {
+      "total": 12,
+      "avg_age": 588,
+      "qids": 1
+     },
+     "Verificar configurações diversas de rede e serviços": {
+      "total": 19,
+      "avg_age": 238,
+      "qids": 4
+     }
+    }
+   }
+  }
+ },
+ "Cloud-Modernops": {
+  "kpis": {
+   "vulns": 107,
+   "vulns_corr": 107,
+   "vulns_nao_corr": 0,
+   "qids": 107,
+   "assets": 1,
+   "qds": 95.0,
+   "qds_corr": 95.0,
+   "workfronts": 3
+  },
+  "trends": {
+   "vulns": {
+    "diff": 13,
+    "pct": 13.8
+   },
+   "qids": {
+    "diff": 13,
+    "pct": 13.8
+   },
+   "assets": {
+    "diff": 0,
+    "pct": 0.0
+   },
+   "qds": {
+    "diff": 0.0,
+    "pct": 0.0
+   },
+   "qds_corr": {
+    "diff": 0.0,
+    "pct": 0.0
+   },
+   "workfronts": {
+    "diff": 2,
+    "pct": 200.0
+   }
+  },
+  "chartSev": [
+   16,
+   4,
+   25,
+   62
+  ],
+  "slaData": {
+   "Crítica": {
+    "DentroSLA_Corr": 4,
+    "DentroSLA_NaoCorr": 0,
+    "ForaSLA_Corr": 12,
+    "ForaSLA_NaoCorr": 0
+   },
+   "Alta": {
+    "DentroSLA_Corr": 4,
+    "DentroSLA_NaoCorr": 0,
+    "ForaSLA_Corr": 0,
+    "ForaSLA_NaoCorr": 0
+   },
+   "Média": {
+    "DentroSLA_Corr": 25,
+    "DentroSLA_NaoCorr": 0,
+    "ForaSLA_Corr": 0,
+    "ForaSLA_NaoCorr": 0
+   }
+  },
+  "raw": {
+   "Crítica": {
+    "total": 16,
+    "actions": {
+     "Aplicar patch Oracle Enterprise Linux (SO)": {
+      "total": 16,
+      "avg_age": 75,
+      "qids": 16
+     }
+    }
+   },
+   "Alta": {
+    "total": 4,
+    "actions": {
+     "Aplicar patch Oracle Enterprise Linux (SO)": {
+      "total": 4,
+      "avg_age": 24,
+      "qids": 4
+     }
+    }
+   },
+   "Média": {
+    "total": 25,
+    "actions": {
+     "Aplicar patch Oracle Enterprise Linux (SO)": {
+      "total": 25,
+      "avg_age": 59,
+      "qids": 25
+     }
+    }
+   },
+   "Baixa": {
+    "total": 62,
+    "actions": {
+     "Aplicar hardening em criptografia e protocolos (SSL/TLS/SSH)": {
+      "total": 1,
+      "avg_age": 4,
+      "qids": 1
+     },
+     "Aplicar patch Oracle Enterprise Linux (SO)": {
+      "total": 60,
+      "avg_age": 85,
+      "qids": 60
+     },
+     "Atualizar Python": {
+      "total": 1,
+      "avg_age": 6,
+      "qids": 1
+     }
+    }
+   }
+  }
+ },
+ "Middleware": {
+  "kpis": {
+   "vulns": 4477,
+   "vulns_corr": 4472,
+   "vulns_nao_corr": 5,
+   "qids": 469,
+   "assets": 226,
+   "qds": 77.0,
+   "qds_corr": 78.0,
+   "workfronts": 11
+  },
+  "trends": {
+   "vulns": {
+    "diff": -16,
+    "pct": -0.4
+   },
+   "qids": {
+    "diff": -16,
+    "pct": -3.3
+   },
+   "assets": {
+    "diff": 1,
+    "pct": 0.4
+   },
+   "qds": {
+    "diff": 0.0,
+    "pct": 0.0
+   },
+   "qds_corr": {
+    "diff": 1.0,
+    "pct": 1.3
+   },
+   "workfronts": {
+    "diff": 0,
+    "pct": 0.0
+   }
+  },
+  "chartSev": [
+   431,
+   235,
+   877,
+   2934
+  ],
+  "slaData": {
+   "Crítica": {
+    "DentroSLA_Corr": 31,
+    "DentroSLA_NaoCorr": 0,
+    "ForaSLA_Corr": 400,
+    "ForaSLA_NaoCorr": 0
+   },
+   "Alta": {
+    "DentroSLA_Corr": 62,
+    "DentroSLA_NaoCorr": 0,
+    "ForaSLA_Corr": 173,
+    "ForaSLA_NaoCorr": 0
+   },
+   "Média": {
+    "DentroSLA_Corr": 505,
+    "DentroSLA_NaoCorr": 5,
+    "ForaSLA_Corr": 367,
+    "ForaSLA_NaoCorr": 0
+   }
+  },
+  "raw": {
+   "Crítica": {
+    "total": 431,
+    "actions": {
+     "Atualizar Apache / Tomcat": {
+      "total": 144,
+      "avg_age": 456,
+      "qids": 18
+     },
+     "Atualizar IBM MQ": {
+      "total": 3,
+      "avg_age": 517,
+      "qids": 1
+     },
+     "Atualizar IBM WebSphere": {
+      "total": 51,
+      "avg_age": 387,
+      "qids": 6
+     },
+     "Atualizar Java": {
+      "total": 27,
+      "avg_age": 369,
+      "qids": 3
+     },
+     "Atualizar Oracle WebLogic": {
+      "total": 150,
+      "avg_age": 374,
+      "qids": 23
+     },
+     "Descomissionar ou atualizar software obsoleto (EOL)": {
+      "total": 56,
+      "avg_age": 487,
+      "qids": 9
+     }
+    }
+   },
+   "Alta": {
+    "total": 235,
+    "actions": {
+     "Atualizar Apache / Tomcat": {
+      "total": 112,
+      "avg_age": 330,
+      "qids": 10
+     },
+     "Atualizar IBM WebSphere": {
+      "total": 23,
+      "avg_age": 381,
+      "qids": 2
+     },
+     "Atualizar Oracle WebLogic": {
+      "total": 50,
+      "avg_age": 423,
+      "qids": 7
+     },
+     "Criar/revisar política de senha e autenticação": {
+      "total": 40,
+      "avg_age": 263,
+      "qids": 4
+     },
+     "Descomissionar ou atualizar software obsoleto (EOL)": {
+      "total": 10,
+      "avg_age": 642,
+      "qids": 2
+     }
+    }
+   },
+   "Média": {
+    "total": 877,
+    "actions": {
+     "Aplicar hardening em criptografia e protocolos (SSL/TLS/SSH)": {
+      "total": 28,
+      "avg_age": 121,
+      "qids": 1
+     },
+     "Atualizar Apache / Tomcat": {
+      "total": 413,
+      "avg_age": 153,
+      "qids": 43
+     },
+     "Atualizar IBM MQ": {
+      "total": 15,
+      "avg_age": 425,
+      "qids": 5
+     },
+     "Atualizar IBM WebSphere": {
+      "total": 337,
+      "avg_age": 222,
+      "qids": 28
+     },
+     "Atualizar Java": {
+      "total": 20,
+      "avg_age": 360,
+      "qids": 4
+     },
+     "Atualizar Oracle WebLogic": {
+      "total": 17,
+      "avg_age": 345,
+      "qids": 3
+     },
+     "Criar/revisar política de senha e autenticação": {
+      "total": 7,
+      "avg_age": 599,
+      "qids": 2
+     },
+     "Descomissionar ou atualizar software obsoleto (EOL)": {
+      "total": 40,
+      "avg_age": 432,
+      "qids": 5
+     }
+    }
+   },
+   "Baixa": {
+    "total": 2934,
+    "actions": {
+     "Aplicar hardening em criptografia e protocolos (SSL/TLS/SSH)": {
+      "total": 13,
+      "avg_age": 384,
+      "qids": 2
+     },
+     "Atualizar Apache / Tomcat": {
+      "total": 1191,
+      "avg_age": 293,
+      "qids": 119
+     },
+     "Atualizar IBM MQ": {
+      "total": 156,
+      "avg_age": 477,
+      "qids": 37
+     },
+     "Atualizar IBM WebSphere": {
+      "total": 1276,
+      "avg_age": 380,
+      "qids": 111
+     },
+     "Atualizar Java": {
+      "total": 90,
+      "avg_age": 382,
+      "qids": 11
+     },
+     "Atualizar Oracle WebLogic": {
+      "total": 17,
+      "avg_age": 417,
+      "qids": 4
+     },
+     "Atualizar Python": {
+      "total": 43,
+      "avg_age": 107,
+      "qids": 3
+     },
+     "Atualizar RabbitMQ Server": {
+      "total": 5,
+      "avg_age": 514,
+      "qids": 1
+     },
+     "Atualizar RabbitMQ Server Cross-Site Scripting": {
+      "total": 5,
+      "avg_age": 514,
+      "qids": 1
+     },
+     "Criar/revisar política de senha e autenticação": {
+      "total": 124,
+      "avg_age": 117,
+      "qids": 11
+     },
+     "Descomissionar ou atualizar software obsoleto (EOL)": {
+      "total": 14,
+      "avg_age": 399,
+      "qids": 1
+     }
+    }
+   }
+  }
+ },
+ "Network": {
+  "kpis": {
+   "vulns": 19153,
+   "vulns_corr": 14197,
+   "vulns_nao_corr": 4956,
+   "qids": 660,
+   "assets": 881,
+   "qds": 73.0,
+   "qds_corr": 69.0,
+   "workfronts": 34
+  },
+  "trends": {
+   "vulns": {
+    "diff": -291,
+    "pct": -1.5
+   },
+   "qids": {
+    "diff": -27,
+    "pct": -3.9
+   },
+   "assets": {
+    "diff": -2,
+    "pct": -0.2
+   },
+   "qds": {
+    "diff": 0.0,
+    "pct": 0.0
+   },
+   "qds_corr": {
+    "diff": 0.0,
+    "pct": 0.0
+   },
+   "workfronts": {
+    "diff": -1,
+    "pct": -2.9
+   }
+  },
+  "chartSev": [
+   1731,
+   730,
+   4088,
+   12604
+  ],
+  "slaData": {
+   "Crítica": {
+    "DentroSLA_Corr": 14,
+    "DentroSLA_NaoCorr": 17,
+    "ForaSLA_Corr": 1159,
+    "ForaSLA_NaoCorr": 541
+   },
+   "Alta": {
+    "DentroSLA_Corr": 60,
+    "DentroSLA_NaoCorr": 1,
+    "ForaSLA_Corr": 644,
+    "ForaSLA_NaoCorr": 25
+   },
+   "Média": {
+    "DentroSLA_Corr": 396,
+    "DentroSLA_NaoCorr": 9,
+    "ForaSLA_Corr": 3560,
+    "ForaSLA_NaoCorr": 123
+   }
+  },
+  "raw": {
+   "Crítica": {
+    "total": 1731,
+    "actions": {
+     "Aplicar hardening em criptografia e protocolos (SSL/TLS/SSH)": {
+      "total": 257,
+      "avg_age": 471,
+      "qids": 7
+     },
+     "Atualizar Citrix NetScaler Application Delivery Controller (ADC) and NetScaler Gateway Denial of Service (DoS)": {
+      "total": 9,
+      "avg_age": 13,
+      "qids": 1
+     },
+     "Atualizar Microsoft Exchange": {
+      "total": 104,
+      "avg_age": 436,
+      "qids": 3
+     },
+     "Atualizar NGINX": {
+      "total": 48,
+      "avg_age": 62,
+      "qids": 1
+     },
+     "Atualizar drivers/firmware Dell": {
+      "total": 2,
+      "avg_age": 410,
+      "qids": 2
+     },
+     "Atualizar jQuery": {
+      "total": 15,
+      "avg_age": 471,
+      "qids": 5
+     },
+     "Atualizar/configurar Cisco": {
+      "total": 1119,
+      "avg_age": 425,
+      "qids": 31
+     },
+     "Atualizar/configurar Fortinet": {
+      "total": 74,
+      "avg_age": 372,
+      "qids": 8
+     },
+     "Criar/revisar política de senha e autenticação": {
+      "total": 22,
+      "avg_age": 426,
+      "qids": 3
+     },
+     "Descomissionar ou atualizar software obsoleto (EOL)": {
+      "total": 33,
+      "avg_age": 371,
+      "qids": 2
+     },
+     "Necessário upgrade SO": {
+      "total": 35,
+      "avg_age": 374,
+      "qids": 2
+     },
+     "Verificar Intelligent Platform": {
+      "total": 13,
+      "avg_age": 584,
+      "qids": 1
+     }
+    }
+   },
+   "Alta": {
+    "total": 730,
+    "actions": {
+     "Aplicar hardening em criptografia e protocolos (SSL/TLS/SSH)": {
+      "total": 84,
+      "avg_age": 487,
+      "qids": 5
+     },
+     "Atualizar Apache / Tomcat": {
+      "total": 2,
+      "avg_age": 146,
+      "qids": 2
+     },
+     "Atualizar NGINX": {
+      "total": 127,
+      "avg_age": 253,
+      "qids": 5
+     },
+     "Atualizar Rsync": {
+      "total": 1,
+      "avg_age": 491,
+      "qids": 1
+     },
+     "Atualizar/configurar Cisco": {
+      "total": 416,
+      "avg_age": 299,
+      "qids": 9
+     },
+     "Atualizar/configurar Fortinet": {
+      "total": 26,
+      "avg_age": 402,
+      "qids": 2
+     },
+     "Criar/revisar política de senha e autenticação": {
+      "total": 48,
+      "avg_age": 380,
+      "qids": 2
+     },
+     "Verificar configurações diversas de rede e serviços": {
+      "total": 26,
+      "avg_age": 403,
+      "qids": 2
+     }
+    }
+   },
+   "Média": {
+    "total": 4088,
+    "actions": {
+     "Aplicar hardening em criptografia e protocolos (SSL/TLS/SSH)": {
+      "total": 2312,
+      "avg_age": 544,
+      "qids": 29
+     },
+     "Atualizar .NET Framework": {
+      "total": 1,
+      "avg_age": 655,
+      "qids": 1
+     },
+     "Atualizar Apache / Tomcat": {
+      "total": 5,
+      "avg_age": 113,
+      "qids": 5
+     },
+     "Atualizar IETF RADIUS Dictionary Attack": {
+      "total": 1,
+      "avg_age": 690,
+      "qids": 1
+     },
+     "Atualizar NFS Exported Filesystems List": {
+      "total": 1,
+      "avg_age": 690,
+      "qids": 1
+     },
+     "Atualizar NGINX": {
+      "total": 159,
+      "avg_age": 272,
+      "qids": 5
+     },
+     "Atualizar OpenRADIUS Divide By Zero": {
+      "total": 1,
+      "avg_age": 655,
+      "qids": 1
+     },
+     "Atualizar SNMP GETBULK Reflected Distributed Denial Of Service (DoS)": {
+      "total": 17,
+      "avg_age": 422,
+      "qids": 1
+     },
+     "Atualizar/configurar Cisco": {
+      "total": 947,
+      "avg_age": 416,
+      "qids": 35
+     },
+     "Atualizar/configurar Fortinet": {
+      "total": 150,
+      "avg_age": 314,
+      "qids": 8
+     },
+     "Descomissionar ou atualizar software obsoleto (EOL)": {
+      "total": 35,
+      "avg_age": 392,
+      "qids": 3
+     },
+     "Verificar Multiple Cross-Site": {
+      "total": 5,
+      "avg_age": 334,
+      "qids": 1
+     },
+     "Verificar configurações diversas de rede e serviços": {
+      "total": 454,
+      "avg_age": 258,
+      "qids": 10
+     }
+    }
+   },
+   "Baixa": {
+    "total": 12604,
+    "actions": {
+     "Aplicar hardening em criptografia e protocolos (SSL/TLS/SSH)": {
+      "total": 1434,
+      "avg_age": 455,
+      "qids": 34
+     },
+     "Aplicar patch Linux (SO)": {
+      "total": 1,
+      "avg_age": 3,
+      "qids": 1
+     },
+     "Atualizar Apache / Tomcat": {
+      "total": 32,
+      "avg_age": 169,
+      "qids": 30
+     },
+     "Atualizar Citrix NetScaler Application Delivery Controller (ADC) and NetScaler Gateway Denial of Service (DoS)": {
+      "total": 26,
+      "avg_age": 12,
+      "qids": 4
+     },
+     "Atualizar Edge": {
+      "total": 222,
+      "avg_age": 493,
+      "qids": 4
+     },
+     "Atualizar GoAhead WebServer /aux": {
+      "total": 4,
+      "avg_age": 363,
+      "qids": 1
+     },
+     "Atualizar Hewlett Packard Enterprise (HPE) Integrated Lights-Out Stored Cross-Site Scripting (XSS)": {
+      "total": 12,
+      "avg_age": 233,
+      "qids": 1
+     },
+     "Atualizar Macromedia JRun": {
+      "total": 1,
+      "avg_age": 655,
+      "qids": 1
+     },
+     "Atualizar Microsoft Exchange": {
+      "total": 199,
+      "avg_age": 446,
+      "qids": 7
+     },
+     "Atualizar Multiple Vendor Radius Short Vendor-Length Field": {
+      "total": 1,
+      "avg_age": 690,
+      "qids": 1
+     },
+     "Atualizar NGINX": {
+      "total": 546,
+      "avg_age": 182,
+      "qids": 13
+     },
+     "Atualizar NTP Information Disclosure": {
+      "total": 72,
+      "avg_age": 378,
+      "qids": 1
+     },
+     "Atualizar OpenLDAP": {
+      "total": 1,
+      "avg_age": 690,
+      "qids": 1
+     },
+     "Atualizar Privilege Escalation": {
+      "total": 1,
+      "avg_age": 655,
+      "qids": 1
+     },
+     "Atualizar Python": {
+      "total": 2,
+      "avg_age": 3,
+      "qids": 2
+     },
+     "Atualizar UDP Constant IP Identification Field Fingerprinting": {
+      "total": 44,
+      "avg_age": 457,
+      "qids": 1
+     },
+     "Atualizar drivers/firmware Dell": {
+      "total": 4,
+      "avg_age": 265,
+      "qids": 4
+     },
+     "Atualizar/configurar Cisco": {
+      "total": 7483,
+      "avg_age": 404,
+      "qids": 264
+     },
+     "Atualizar/configurar Fortinet": {
+      "total": 1590,
+      "avg_age": 291,
+      "qids": 88
+     },
+     "Criar/revisar política de senha e autenticação": {
+      "total": 199,
+      "avg_age": 422,
+      "qids": 7
+     },
+     "Verificar HTTP Security": {
+      "total": 31,
+      "avg_age": 490,
+      "qids": 1
+     },
+     "Verificar Presence of": {
+      "total": 132,
+      "avg_age": 104,
+      "qids": 1
+     },
+     "Verificar configurações diversas de rede e serviços": {
+      "total": 567,
+      "avg_age": 537,
+      "qids": 5
+     }
+    }
+   }
+  }
+ }
+}
