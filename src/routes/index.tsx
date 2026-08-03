@@ -11,40 +11,36 @@ import {
   XAxis,
   YAxis,
 } from "recharts";
+import { Shell } from "@/components/Shell";
 import { StatSlab, TrendTag } from "@/components/StatSlab";
 import { fmt, severityOrder, severityToken, teamNames, teams } from "@/lib/sla-data";
 
 export const Route = createFileRoute("/")({
   head: () => ({
     meta: [
-      { title: "Natura SecOps — Painel Tático de Vulnerabilidades" },
+      { title: "Natura SecOps — Plataforma de Gestão de Vulnerabilidades" },
       {
         name: "description",
         content:
-          "Painel tático de SLA e vulnerabilidades das squads de segurança Natura: score QDS, severidade, aderência a SLA e frentes de ação.",
+          "Plataforma interna Natura SecOps: score QDS, severidade, aderência a SLA e frentes de correção por squad de segurança.",
       },
-      { property: "og:title", content: "Natura SecOps — Painel Tático de Vulnerabilidades" },
+      { property: "og:title", content: "Natura SecOps — Plataforma de Vulnerabilidades" },
       {
         property: "og:description",
-        content:
-          "Leitura facilitada de dados: KPIs, severidade, SLA e frentes de correção por squad.",
+        content: "Visão geral tática: KPIs, severidade, SLA e frentes de correção por squad.",
       },
     ],
   }),
-  component: Dashboard,
+  component: Overview,
 });
 
-function Dashboard() {
+function Overview() {
   const [team, setTeam] = useState(teamNames[0] as string);
   const [openSev, setOpenSev] = useState<string | null>("Crítica");
   const data = teams[team]!;
 
   const sevData = useMemo(
-    () =>
-      severityOrder.map((s, i) => ({
-        name: s,
-        total: data.chartSev[i] ?? 0,
-      })),
+    () => severityOrder.map((s, i) => ({ name: s, total: data.chartSev[i] ?? 0 })),
     [data],
   );
 
@@ -63,57 +59,42 @@ function Dashboard() {
   const aderencia = totalSla ? Math.round((dentro / totalSla) * 100) : 0;
 
   return (
-    <main className="mx-auto max-w-[1400px] px-5 py-8">
-      {/* HEADER */}
-      <header className="slab corner-cut mb-6 p-6">
-        <div className="scan-strip mb-5 h-2 w-full" />
-        <div className="flex flex-wrap items-end justify-between gap-6">
-          <div>
-            <p className="stencil text-[11px] text-primary">
-              Natura // Divisão de Segurança da Informação
+    <Shell
+      title="Visão geral"
+      subtitle="Comparativo semanal — Semana 2 vs Semana 3 de Julho // base consolidada Qualys"
+    >
+      <div className="mb-6 flex flex-wrap items-center justify-between gap-4">
+        <nav className="flex flex-wrap gap-2" aria-label="Seleção de squad">
+          {teamNames.map((t) => (
+            <button
+              key={t}
+              onClick={() => setTeam(t)}
+              className={`stencil border-2 px-4 py-2 text-[11px] transition-transform ${
+                t === team
+                  ? "border-primary bg-primary text-primary-foreground"
+                  : "border-border bg-card text-muted-foreground hover:-translate-y-0.5 hover:text-foreground"
+              }`}
+            >
+              {t}
+            </button>
+          ))}
+        </nav>
+        <div className="flex gap-3">
+          <div className="slab-signal px-4 py-2 text-center">
+            <p className="font-display text-2xl leading-none font-bold text-primary">
+              {data.kpis.qds}
             </p>
-            <h1 className="font-display text-5xl leading-none font-bold">
-              Painel <span className="text-primary">Tático</span> de Vulnerabilidades
-            </h1>
-            <p className="mt-2 text-xs text-muted-foreground">
-              Comparativo semanal — Semana 2 vs Semana 3 de Julho // Fonte: base consolidada Qualys
-            </p>
+            <p className="stencil text-[9px] text-muted-foreground">Score QDS</p>
+            <TrendTag trend={data.trends["qds"]} />
           </div>
-          <div className="flex gap-3">
-            <div className="slab-signal px-5 py-3 text-center">
-              <p className="font-display text-4xl leading-none font-bold text-primary">
-                {data.kpis.qds}
-              </p>
-              <p className="stencil text-[9px] text-muted-foreground">Score QDS</p>
-              <TrendTag trend={data.trends["qds"]} />
-            </div>
-            <div className="slab px-5 py-3 text-center">
-              <p className="font-display text-4xl leading-none font-bold">{data.kpis.qds_corr}</p>
-              <p className="stencil text-[9px] text-muted-foreground">QDS corrigíveis</p>
-              <TrendTag trend={data.trends["qds_corr"]} />
-            </div>
+          <div className="slab px-4 py-2 text-center">
+            <p className="font-display text-2xl leading-none font-bold">{data.kpis.qds_corr}</p>
+            <p className="stencil text-[9px] text-muted-foreground">QDS corrigíveis</p>
+            <TrendTag trend={data.trends["qds_corr"]} />
           </div>
         </div>
-      </header>
+      </div>
 
-      {/* SQUAD SELECTOR */}
-      <nav className="mb-6 flex flex-wrap gap-2" aria-label="Seleção de squad">
-        {teamNames.map((t) => (
-          <button
-            key={t}
-            onClick={() => setTeam(t)}
-            className={`stencil border-2 px-4 py-2 text-[11px] transition-transform ${
-              t === team
-                ? "border-primary bg-primary text-primary-foreground"
-                : "border-border bg-card text-muted-foreground hover:-translate-y-0.5 hover:text-foreground"
-            }`}
-          >
-            {t}
-          </button>
-        ))}
-      </nav>
-
-      {/* KPI GRID */}
       <section className="mb-6 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
         <StatSlab
           label="Vulnerabilidades"
@@ -123,9 +104,7 @@ function Dashboard() {
           sub={
             <>
               <span className="text-baixa">Corr: {fmt(data.kpis.vulns_corr)}</span>{" "}
-              <span className="text-critica">
-                / Não corr: {fmt(data.kpis.vulns_nao_corr)}
-              </span>
+              <span className="text-critica">/ Não corr: {fmt(data.kpis.vulns_nao_corr)}</span>
             </>
           }
         />
@@ -138,7 +117,6 @@ function Dashboard() {
         />
       </section>
 
-      {/* CHARTS */}
       <section className="mb-6 grid gap-4 lg:grid-cols-2">
         <div className="slab corner-cut p-5">
           <h2 className="stencil mb-4 text-xs text-primary">Distribuição por severidade</h2>
@@ -210,7 +188,6 @@ function Dashboard() {
         </div>
       </section>
 
-      {/* LEITURA FACILITADA */}
       <section className="slab p-6">
         <h2 className="stencil mb-1 text-sm">Leitura facilitada // frentes de ação</h2>
         <p className="mb-5 text-xs text-muted-foreground">
@@ -273,9 +250,7 @@ function Dashboard() {
                           <tr key={name} className="border-b border-border/60">
                             <td className="px-2 py-2">{name}</td>
                             <td className="px-2 py-2 text-right font-bold">{fmt(a.total)}</td>
-                            <td className="px-2 py-2 text-right text-muted-foreground">
-                              {a.qids}
-                            </td>
+                            <td className="px-2 py-2 text-right text-muted-foreground">{a.qids}</td>
                             <td
                               className={`px-2 py-2 text-right ${a.avg_age > 180 ? "text-critica" : "text-muted-foreground"}`}
                             >
@@ -303,10 +278,6 @@ function Dashboard() {
           })}
         </div>
       </section>
-
-      <footer className="stencil mt-8 text-[10px] text-muted-foreground">
-        Natura SecOps // dados consolidados — uso interno
-      </footer>
-    </main>
+    </Shell>
   );
 }

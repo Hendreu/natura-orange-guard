@@ -53,3 +53,32 @@ export const severityToken: Record<string, string> = {
 export function fmt(n: number) {
   return n.toLocaleString("pt-BR");
 }
+
+import qidsJson from "@/data/qids.json";
+import assetsJson from "@/data/assets.json";
+
+export type QidRow = {
+  qid: number;
+  title: string;
+  sev: string;
+  team: string;
+  action: string;
+  count: number;
+  corr: number;
+  naoCorr: number;
+  age: number;
+  solution: string;
+};
+
+export type AssetRow = {
+  ip: string;
+  dns: string;
+  os: string;
+  team: string;
+  vulns: number;
+  maxAge: number;
+  crit: number;
+};
+
+export const qids = qidsJson as QidRow[];
+export const assets = assetsJson as AssetRow[];
