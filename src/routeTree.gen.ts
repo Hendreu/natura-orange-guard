@@ -10,33 +10,43 @@
 
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as IndexRouteImport } from './routes/index'
+import { Route as VulnerabilidadesRouteImport } from './routes/vulnerabilidades'
 
 const IndexRoute = IndexRouteImport.update({
   id: '/',
   path: '/',
   getParentRoute: () => rootRouteImport,
 } as any)
+const VulnerabilidadesRoute = VulnerabilidadesRouteImport.update({
+  id: '/vulnerabilidades',
+  path: '/vulnerabilidades',
+  getParentRoute: () => rootRouteImport,
+} as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
+  '/vulnerabilidades': typeof VulnerabilidadesRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
+  '/vulnerabilidades': typeof VulnerabilidadesRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
+  '/vulnerabilidades': typeof VulnerabilidadesRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths: '/'
+  fullPaths: '/' | '/vulnerabilidades'
   fileRoutesByTo: FileRoutesByTo
-  to: '/'
-  id: '__root__' | '/'
+  to: '/' | '/vulnerabilidades'
+  id: '__root__' | '/' | '/vulnerabilidades'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
+  VulnerabilidadesRoute: typeof VulnerabilidadesRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -48,11 +58,19 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof IndexRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/vulnerabilidades': {
+      id: '/vulnerabilidades'
+      path: '/vulnerabilidades'
+      fullPath: '/vulnerabilidades'
+      preLoaderRoute: typeof VulnerabilidadesRouteImport
+      parentRoute: typeof rootRouteImport
+    }
   }
 }
 
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
+  VulnerabilidadesRoute: VulnerabilidadesRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
