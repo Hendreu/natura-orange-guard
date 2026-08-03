@@ -11,6 +11,7 @@
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as AtivosRouteImport } from './routes/ativos'
+import { Route as SlaRouteImport } from './routes/sla'
 import { Route as VulnerabilidadesRouteImport } from './routes/vulnerabilidades'
 
 const IndexRoute = IndexRouteImport.update({
@@ -23,6 +24,11 @@ const AtivosRoute = AtivosRouteImport.update({
   path: '/ativos',
   getParentRoute: () => rootRouteImport,
 } as any)
+const SlaRoute = SlaRouteImport.update({
+  id: '/sla',
+  path: '/sla',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const VulnerabilidadesRoute = VulnerabilidadesRouteImport.update({
   id: '/vulnerabilidades',
   path: '/vulnerabilidades',
@@ -32,30 +38,34 @@ const VulnerabilidadesRoute = VulnerabilidadesRouteImport.update({
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/ativos': typeof AtivosRoute
+  '/sla': typeof SlaRoute
   '/vulnerabilidades': typeof VulnerabilidadesRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/ativos': typeof AtivosRoute
+  '/sla': typeof SlaRoute
   '/vulnerabilidades': typeof VulnerabilidadesRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
   '/ativos': typeof AtivosRoute
+  '/sla': typeof SlaRoute
   '/vulnerabilidades': typeof VulnerabilidadesRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths: '/' | '/ativos' | '/vulnerabilidades'
+  fullPaths: '/' | '/ativos' | '/sla' | '/vulnerabilidades'
   fileRoutesByTo: FileRoutesByTo
-  to: '/' | '/ativos' | '/vulnerabilidades'
-  id: '__root__' | '/' | '/ativos' | '/vulnerabilidades'
+  to: '/' | '/ativos' | '/sla' | '/vulnerabilidades'
+  id: '__root__' | '/' | '/ativos' | '/sla' | '/vulnerabilidades'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   AtivosRoute: typeof AtivosRoute
+  SlaRoute: typeof SlaRoute
   VulnerabilidadesRoute: typeof VulnerabilidadesRoute
 }
 
@@ -75,6 +85,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AtivosRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/sla': {
+      id: '/sla'
+      path: '/sla'
+      fullPath: '/sla'
+      preLoaderRoute: typeof SlaRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/vulnerabilidades': {
       id: '/vulnerabilidades'
       path: '/vulnerabilidades'
@@ -88,6 +105,7 @@ declare module '@tanstack/react-router' {
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   AtivosRoute: AtivosRoute,
+  SlaRoute: SlaRoute,
   VulnerabilidadesRoute: VulnerabilidadesRoute,
 }
 export const routeTree = rootRouteImport
