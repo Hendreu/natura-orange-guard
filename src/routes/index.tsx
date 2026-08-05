@@ -110,6 +110,8 @@ function Overview() {
           value={data.kpis.vulns}
           trend={data.trends["vulns"]}
           accent
+          action="abrir inventário"
+          onClick={() => goToVulns()}
           sub={
             <>
               <span className="text-baixa">Corr: {fmt(data.kpis.vulns_corr)}</span>{" "}
@@ -117,14 +119,29 @@ function Overview() {
             </>
           }
         />
-        <StatSlab label="QIDs únicos" value={data.kpis.qids} trend={data.trends["qids"]} />
-        <StatSlab label="Ativos distintos" value={data.kpis.assets} trend={data.trends["assets"]} />
+        <StatSlab
+          label="QIDs únicos"
+          value={data.kpis.qids}
+          trend={data.trends["qids"]}
+          action="listar QIDs"
+          onClick={() => goToVulns()}
+        />
+        <StatSlab
+          label="Ativos distintos"
+          value={data.kpis.assets}
+          trend={data.trends["assets"]}
+          action="ver ativos"
+          onClick={() => navigate({ to: "/ativos" })}
+        />
         <StatSlab
           label="Frentes ativas"
           value={data.kpis.workfronts}
           trend={data.trends["workfronts"]}
+          action="ver frentes"
+          onClick={() => setOpenSev("Crítica")}
         />
       </section>
+
 
       <section className="mb-6 grid gap-4 lg:grid-cols-2">
         <div className="slab corner-cut p-5">
