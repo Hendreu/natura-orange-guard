@@ -236,7 +236,7 @@ function Overview() {
                   >
                     <span className="flex items-center gap-3">
                       <span
-                        className="inline-block h-4 w-4"
+                        className="inline-block h-4 w-4 rounded-full"
                         style={{ background: severityToken[sev] }}
                       />
                       <span className="stencil text-xs">{sev}</span>
@@ -299,9 +299,9 @@ function Overview() {
                               {a.avg_age}d
                             </td>
                             <td className="w-[28%] px-2 py-2">
-                              <div className="h-3 w-full bg-steel">
+                              <div className="h-3 w-full rounded-full bg-steel">
                                 <div
-                                  className="h-3"
+                                  className="h-3 rounded-full"
                                   style={{
                                     width: `${Math.max(2, (a.total / block.total) * 100)}%`,
                                     background: severityToken[sev],
