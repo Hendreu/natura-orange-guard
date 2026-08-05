@@ -36,9 +36,17 @@ export const Route = createFileRoute("/")({
 });
 
 function Overview() {
+  const navigate = useNavigate();
   const [team, setTeam] = useState(teamNames[0] as string);
   const [openSev, setOpenSev] = useState<string | null>("Crítica");
   const data = teams[team]!;
+
+  const goToVulns = (extra: { sev?: string; q?: string } = {}) =>
+    navigate({
+      to: "/vulnerabilidades",
+      search: { team, sev: extra.sev, q: extra.q },
+    });
+
 
   const sevData = useMemo(
     () => severityOrder.map((s, i) => ({ name: s, total: data.chartSev[i] ?? 0 })),

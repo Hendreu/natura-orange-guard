@@ -99,12 +99,29 @@ function Squads() {
                 </div>
               </div>
 
-              <Link
-                to="/vulnerabilidades"
-                className="stencil mt-4 inline-block border-2 border-primary px-4 py-2 text-[10px] text-primary hover:bg-primary hover:text-primary-foreground"
-              >
-                Ver vulnerabilidades
-              </Link>
+              <div className="mt-4 flex flex-wrap gap-2">
+                <Link
+                  to="/vulnerabilidades"
+                  search={{ team: t }}
+                  className="stencil border border-primary px-4 py-2 text-[10px] text-primary hover:bg-primary hover:text-primary-foreground"
+                >
+                  Ver vulnerabilidades
+                </Link>
+                <Link
+                  to="/vulnerabilidades"
+                  search={{ team: t, sev: "Crítica" }}
+                  className="stencil border border-critica px-4 py-2 text-[10px] text-critica hover:bg-critica hover:text-foreground"
+                >
+                  Só críticas
+                </Link>
+                <Link
+                  to="/ativos"
+                  className="stencil border border-border px-4 py-2 text-[10px] text-muted-foreground hover:border-primary hover:text-foreground"
+                >
+                  Ativos
+                </Link>
+              </div>
+
             </article>
           );
         })}
