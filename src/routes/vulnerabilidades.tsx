@@ -3,7 +3,7 @@ import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { Shell } from "@/components/Shell";
 import { fmt, qids, severityOrder, severityToken, teamNames } from "@/lib/sla-data";
 
-type VulnSearch = { q?: string; sev?: string; team?: string };
+type VulnSearch = { q?: string | undefined; sev?: string | undefined; team?: string | undefined };
 
 export const Route = createFileRoute("/vulnerabilidades")({
   validateSearch: (search: Record<string, unknown>): VulnSearch => ({
@@ -39,8 +39,12 @@ function Vulnerabilidades() {
 
   const setParam = (key: keyof VulnSearch, value: string) =>
     navigate({
-      search: (prev) => ({ ...prev, [key]: value && value !== "Todas" ? value : undefined }),
+      search: (prev: VulnSearch) => ({
+        ...prev,
+        [key]: value && value !== "Todas" ? value : undefined,
+      }),
     });
+
 
   const rows = useMemo(() => {
     const term = q.trim().toLowerCase();
