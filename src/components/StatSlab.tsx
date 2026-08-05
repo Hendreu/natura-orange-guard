@@ -26,6 +26,8 @@ export function StatSlab({
   sub,
   accent = false,
   invertTrend = false,
+  onClick,
+  action,
 }: {
   label: string;
   value: number | string;
@@ -33,9 +35,11 @@ export function StatSlab({
   sub?: React.ReactNode | undefined;
   accent?: boolean | undefined;
   invertTrend?: boolean | undefined;
+  onClick?: (() => void) | undefined;
+  action?: string | undefined;
 }) {
-  return (
-    <div className={`${accent ? "slab-signal" : "slab"} corner-cut p-4`}>
+  const body = (
+    <>
       <p className="stencil text-[10px] text-muted-foreground">{label}</p>
       <p
         className={`font-display text-4xl leading-none font-bold ${accent ? "text-primary" : "text-foreground"}`}
@@ -43,9 +47,23 @@ export function StatSlab({
         {typeof value === "number" ? fmt(value) : value}
       </p>
       {sub ? <div className="mt-2 text-[11px] text-muted-foreground">{sub}</div> : null}
-      <div className="mt-2">
+      <div className="mt-2 flex items-center justify-between gap-2">
         <TrendTag trend={trend} invert={invertTrend} />
+        {action ? <span className="stencil text-[9px] text-primary">{action} →</span> : null}
       </div>
-    </div>
+    </>
   );
+
+  const cls = `${accent ? "slab-signal" : "slab"} corner-cut p-4`;
+
+  if (onClick) {
+    return (
+      <button type="button" onClick={onClick} className={`${cls} tappable w-full text-left`}>
+        {body}
+      </button>
+    );
+  }
+
+  return <div className={cls}>{body}</div>;
 }
+
