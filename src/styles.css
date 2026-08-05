@@ -122,28 +122,28 @@
   }
 }
 
-/* Brutalist primitives */
+/* Brutalist primitives (tom mais calmo) */
 @utility slab {
   background: var(--card);
-  border: 2px solid var(--border);
-  box-shadow: 6px 6px 0 0 oklch(0 0 0 / 55%);
+  border: 1px solid var(--border);
+  box-shadow: 3px 3px 0 0 oklch(0 0 0 / 28%);
 }
 
 @utility slab-signal {
   background: var(--card);
-  border: 2px solid var(--primary);
-  box-shadow: 6px 6px 0 0 var(--primary);
+  border: 1px solid var(--primary);
+  box-shadow: 3px 3px 0 0 color-mix(in oklab, var(--primary) 55%, transparent);
 }
 
 @utility stencil {
   font-family: var(--font-display);
   text-transform: uppercase;
-  letter-spacing: 0.18em;
+  letter-spacing: 0.14em;
   font-weight: 700;
 }
 
 @utility corner-cut {
-  clip-path: polygon(0 0, calc(100% - 14px) 0, 100% 14px, 100% 100%, 14px 100%, 0 calc(100% - 14px));
+  clip-path: polygon(0 0, calc(100% - 10px) 0, 100% 10px, 100% 100%, 10px 100%, 0 calc(100% - 10px));
 }
 
 @utility scan-strip {
@@ -153,3 +153,24 @@
     transparent 8px 16px
   );
 }
+
+/* Superfícies clicáveis */
+@utility tappable {
+  cursor: pointer;
+  transition:
+    transform 140ms ease,
+    box-shadow 140ms ease,
+    border-color 140ms ease;
+
+  &:hover {
+    transform: translate(-1px, -1px);
+    border-color: var(--primary);
+    box-shadow: 5px 5px 0 0 color-mix(in oklab, var(--primary) 45%, transparent);
+  }
+
+  &:active {
+    transform: translate(1px, 1px);
+    box-shadow: 1px 1px 0 0 oklch(0 0 0 / 30%);
+  }
+}
+
