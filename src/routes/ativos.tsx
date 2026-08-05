@@ -54,7 +54,7 @@ function Ativos() {
             value={q}
             onChange={(e) => setQ(e.target.value)}
             placeholder="IP, DNS ou sistema operacional..."
-            className="w-full border-2 border-border bg-input px-3 py-2 text-xs outline-none focus:border-primary"
+            className="w-full border border-border bg-input px-3 py-2 text-xs outline-none focus:border-primary"
           />
         </label>
         <label>
@@ -62,7 +62,7 @@ function Ativos() {
           <select
             value={team}
             onChange={(e) => setTeam(e.target.value)}
-            className="border-2 border-border bg-input px-3 py-2 text-xs outline-none focus:border-primary"
+            className="border border-border bg-input px-3 py-2 text-xs outline-none focus:border-primary"
           >
             {["Todas", ...teamNames].map((t) => (
               <option key={t}>{t}</option>
@@ -83,7 +83,7 @@ function Ativos() {
                 <p className="font-display text-lg leading-none font-bold text-primary">{a.ip}</p>
                 <p className="truncate text-[11px] text-muted-foreground">{a.dns}</p>
               </div>
-              <span className="stencil border-2 border-border px-2 py-1 text-[9px] text-muted-foreground">
+              <span className="stencil border border-border px-2 py-1 text-[9px] text-muted-foreground">
                 {a.team}
               </span>
             </div>

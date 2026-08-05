@@ -78,7 +78,7 @@ function Overview() {
             <button
               key={t}
               onClick={() => setTeam(t)}
-              className={`stencil border-2 px-4 py-2 text-[11px] transition-transform ${
+              className={`stencil border px-4 py-2 text-[11px] transition-transform ${
                 t === team
                   ? "border-primary bg-primary text-primary-foreground"
                   : "border-border bg-card text-muted-foreground hover:-translate-y-0.5 hover:text-foreground"
@@ -236,7 +236,7 @@ function Overview() {
                   >
                     <span className="flex items-center gap-3">
                       <span
-                        className="inline-block h-4 w-4"
+                        className="inline-block h-4 w-4 rounded-full"
                         style={{ background: severityToken[sev] }}
                       />
                       <span className="stencil text-xs">{sev}</span>
@@ -262,7 +262,7 @@ function Overview() {
                   <div className="overflow-x-auto p-4">
                     <table className="w-full text-xs">
                       <thead>
-                        <tr className="border-b-2 border-border">
+                        <tr className="border-b border-border">
                           <th className="stencil px-2 py-2 text-left text-[10px] text-muted-foreground">
                             Frente de ação
                           </th>
@@ -299,9 +299,9 @@ function Overview() {
                               {a.avg_age}d
                             </td>
                             <td className="w-[28%] px-2 py-2">
-                              <div className="h-3 w-full bg-steel">
+                              <div className="h-3 w-full rounded-full bg-steel">
                                 <div
-                                  className="h-3"
+                                  className="h-3 rounded-full"
                                   style={{
                                     width: `${Math.max(2, (a.total / block.total) * 100)}%`,
                                     background: severityToken[sev],

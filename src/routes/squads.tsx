@@ -82,7 +82,7 @@ function Squads() {
                 ))}
               </div>
 
-              <div className="mt-4 grid grid-cols-3 gap-3 border-t-2 border-border pt-4 text-center">
+              <div className="mt-4 grid grid-cols-3 gap-3 border-t border-border pt-4 text-center">
                 <div>
                   <p className="font-display text-xl font-bold">{fmt(d.kpis.vulns)}</p>
                   <p className="stencil text-[9px] text-muted-foreground">Vulns</p>

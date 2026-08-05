@@ -128,7 +128,7 @@ function Vulnerabilidades() {
       <div className="slab overflow-x-auto">
         <table className="w-full text-xs">
           <thead>
-            <tr className="border-b-2 border-border bg-secondary">
+            <tr className="border-b border-border bg-secondary">
               {["QID", "Título", "Squad", "Sev", "Vulns", "Idade", ""].map((h) => (
                 <th
                   key={h}
@@ -166,7 +166,7 @@ function Vulnerabilidades() {
                   <td className="px-3 py-2 text-primary">{open === r.qid ? "−" : "+"}</td>
                 </tr>
                 {open === r.qid && (
-                  <tr className="border-b-2 border-border">
+                  <tr className="border-b border-border">
                     <td colSpan={7} className="bg-secondary px-5 py-4">
                       <p className="stencil mb-2 text-[10px] text-primary">
                         Frente: {r.action} — corrigíveis {fmt(r.corr)} / não corrigíveis{" "}
@@ -204,7 +204,7 @@ function Filter({
       <select
         value={value}
         onChange={(e) => onChange(e.target.value)}
-        className="border-2 border-border bg-input px-3 py-2 text-xs text-foreground outline-none focus:border-primary"
+        className="border border-border bg-input px-3 py-2 text-xs text-foreground outline-none focus:border-primary"
       >
         {options.map((o) => (
           <option key={o} value={o}>

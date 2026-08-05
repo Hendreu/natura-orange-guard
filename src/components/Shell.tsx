@@ -23,8 +23,8 @@ export function Shell({
 
   return (
     <div className="flex min-h-screen">
-      <aside className="sticky top-0 hidden h-screen w-[230px] shrink-0 flex-col border-r-2 border-border bg-card lg:flex">
-        <div className="border-b-2 border-border p-5">
+      <aside className="sticky top-0 hidden h-screen w-[230px] shrink-0 flex-col border-r border-border bg-card lg:flex">
+        <div className="border-b border-border p-5">
           <div className="scan-strip mb-4 h-2 w-full" />
           <p className="font-display text-xl leading-none font-bold">
             NATURA<span className="text-primary">/SEC</span>
@@ -39,7 +39,7 @@ export function Shell({
               <Link
                 key={n.to}
                 to={n.to}
-                className={`mb-2 flex items-center gap-3 border-2 px-3 py-2.5 text-[11px] transition-colors ${
+                className={`mb-2 flex items-center gap-3 border px-3 py-2.5 text-[11px] transition-colors ${
                   active
                     ? "border-primary bg-primary text-primary-foreground"
                     : "border-transparent text-muted-foreground hover:border-border hover:text-foreground"
@@ -51,7 +51,7 @@ export function Shell({
             );
           })}
         </nav>
-        <div className="border-t-2 border-border p-4">
+        <div className="border-t border-border p-4">
           <p className="flex items-center gap-2 text-[10px] text-baixa">
             <Activity size={12} /> BASE SINCRONIZADA
           </p>
@@ -60,7 +60,7 @@ export function Shell({
       </aside>
 
       <div className="min-w-0 flex-1">
-        <header className="border-b-2 border-border bg-card px-6 py-5">
+        <header className="border-b border-border bg-card px-6 py-5">
           <p className="stencil text-[10px] text-primary">
             Natura // Divisão de Segurança da Informação
           </p>
@@ -71,7 +71,7 @@ export function Shell({
               <Link
                 key={n.to}
                 to={n.to}
-                className={`stencil border-2 px-3 py-1.5 text-[10px] ${
+                className={`stencil border px-3 py-1.5 text-[10px] ${
                   path === n.to
                     ? "border-primary bg-primary text-primary-foreground"
                     : "border-border text-muted-foreground"
