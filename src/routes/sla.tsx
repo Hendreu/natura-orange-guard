@@ -1,4 +1,4 @@
-import { createFileRoute } from "@tanstack/react-router";
+import { createFileRoute, Link } from "@tanstack/react-router";
 import {
   Bar,
   BarChart,
@@ -57,9 +57,11 @@ function Sla() {
     >
       <section className="mb-6 grid gap-4 sm:grid-cols-2 xl:grid-cols-5">
         {rows.map((r) => (
-          <div
+          <Link
             key={r.name}
-            className={`${r.aderencia >= 80 ? "slab" : "slab-signal"} corner-cut p-4`}
+            to="/vulnerabilidades"
+            search={{ team: r.name }}
+            className={`${r.aderencia >= 80 ? "slab" : "slab-signal"} corner-cut tappable block p-4`}
           >
             <p className="stencil text-[10px] text-muted-foreground">{r.name}</p>
             <p
@@ -73,9 +75,11 @@ function Sla() {
             <p className="mt-2 text-[11px] text-muted-foreground">
               {fmt(r.fora)} fora do prazo / {fmt(r.dentro + r.fora)} total
             </p>
-          </div>
+            <p className="stencil mt-2 text-[9px] text-primary">ver backlog →</p>
+          </Link>
         ))}
       </section>
+
 
       <section className="slab corner-cut p-5">
         <h2 className="stencil mb-4 text-xs text-primary">Volume dentro vs fora do SLA</h2>

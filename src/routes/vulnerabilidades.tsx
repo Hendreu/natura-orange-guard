@@ -1,9 +1,16 @@
 import { Fragment, useMemo, useState } from "react";
-import { createFileRoute } from "@tanstack/react-router";
+import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { Shell } from "@/components/Shell";
 import { fmt, qids, severityOrder, severityToken, teamNames } from "@/lib/sla-data";
 
+type VulnSearch = { q?: string | undefined; sev?: string | undefined; team?: string | undefined };
+
 export const Route = createFileRoute("/vulnerabilidades")({
+  validateSearch: (search: Record<string, unknown>): VulnSearch => ({
+    q: typeof search["q"] === "string" ? search["q"] : undefined,
+    sev: typeof search["sev"] === "string" ? search["sev"] : undefined,
+    team: typeof search["team"] === "string" ? search["team"] : undefined,
+  }),
   head: () => ({
     meta: [
       { title: "Vulnerabilidades — Natura SecOps" },
@@ -23,10 +30,21 @@ export const Route = createFileRoute("/vulnerabilidades")({
 });
 
 function Vulnerabilidades() {
-  const [q, setQ] = useState("");
-  const [sev, setSev] = useState<string>("Todas");
-  const [team, setTeam] = useState<string>("Todas");
+  const search = Route.useSearch();
+  const navigate = useNavigate({ from: "/vulnerabilidades" });
+  const q = search.q ?? "";
+  const sev = search.sev ?? "Todas";
+  const team = search.team ?? "Todas";
   const [open, setOpen] = useState<number | null>(null);
+
+  const setParam = (key: keyof VulnSearch, value: string) =>
+    navigate({
+      search: (prev: VulnSearch) => ({
+        ...prev,
+        [key]: value && value !== "Todas" ? value : undefined,
+      }),
+    });
+
 
   const rows = useMemo(() => {
     const term = q.trim().toLowerCase();
@@ -43,28 +61,69 @@ function Vulnerabilidades() {
       .slice(0, 120);
   }, [q, sev, team]);
 
+  const activeFilters = [
+    sev !== "Todas" ? { key: "sev" as const, label: `Sev: ${sev}` } : null,
+    team !== "Todas" ? { key: "team" as const, label: `Squad: ${team}` } : null,
+    q ? { key: "q" as const, label: `Busca: ${q}` } : null,
+  ].filter(Boolean) as { key: keyof VulnSearch; label: string }[];
+
+
   return (
     <Shell
       title="Vulnerabilidades"
       subtitle="Inventário de QIDs consolidado — filtre por squad, severidade ou termo e abra a solução recomendada."
     >
-      <div className="slab mb-6 flex flex-wrap items-end gap-4 p-4">
+      <div className="slab mb-4 flex flex-wrap items-end gap-4 p-4">
         <label className="flex-1 min-w-[220px]">
           <span className="stencil mb-2 block text-[10px] text-muted-foreground">Busca</span>
           <input
             value={q}
-            onChange={(e) => setQ(e.target.value)}
+            onChange={(e) => setParam("q", e.target.value)}
             placeholder="QID, título ou frente de ação..."
-            className="w-full border-2 border-border bg-input px-3 py-2 text-xs text-foreground outline-none focus:border-primary"
+            className="w-full border border-border bg-input px-3 py-2 text-xs text-foreground outline-none focus:border-primary"
           />
         </label>
-        <Filter label="Severidade" value={sev} onChange={setSev} options={["Todas", ...severityOrder]} />
-        <Filter label="Squad" value={team} onChange={setTeam} options={["Todas", ...teamNames]} />
+        <Filter
+          label="Severidade"
+          value={sev}
+          onChange={(v) => setParam("sev", v)}
+          options={["Todas", ...severityOrder]}
+        />
+        <Filter
+          label="Squad"
+          value={team}
+          onChange={(v) => setParam("team", v)}
+          options={["Todas", ...teamNames]}
+        />
         <div className="ml-auto text-right">
           <p className="font-display text-2xl leading-none font-bold text-primary">{rows.length}</p>
           <p className="stencil text-[9px] text-muted-foreground">registros exibidos</p>
         </div>
       </div>
+
+      {activeFilters.length > 0 && (
+        <div className="mb-6 flex flex-wrap items-center gap-2">
+          <span className="stencil text-[10px] text-muted-foreground">Filtros ativos:</span>
+          {activeFilters.map((f) => (
+            <button
+              key={f.key}
+              onClick={() => setParam(f.key, "")}
+              className="stencil border border-primary px-3 py-1 text-[10px] text-primary hover:bg-primary hover:text-primary-foreground"
+            >
+              {f.label} ✕
+            </button>
+          ))}
+          <button
+            onClick={() =>
+              navigate({ search: () => ({ q: undefined, sev: undefined, team: undefined }) })
+            }
+            className="stencil border border-border px-3 py-1 text-[10px] text-muted-foreground hover:border-primary hover:text-foreground"
+          >
+            Limpar tudo
+          </button>
+        </div>
+      )}
+
 
       <div className="slab overflow-x-auto">
         <table className="w-full text-xs">

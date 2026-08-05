@@ -62,37 +62,40 @@
 
 :root {
   --radius: 0px;
-  --background: oklch(0.16 0.012 60);
-  --foreground: oklch(0.95 0.008 80);
-  --card: oklch(0.21 0.014 60);
-  --card-foreground: oklch(0.95 0.008 80);
-  --popover: oklch(0.21 0.014 60);
-  --popover-foreground: oklch(0.95 0.008 80);
-  --primary: oklch(0.7 0.19 47);
-  --primary-foreground: oklch(0.16 0.012 60);
-  --secondary: oklch(0.27 0.016 60);
-  --secondary-foreground: oklch(0.95 0.008 80);
-  --muted: oklch(0.27 0.016 60);
-  --muted-foreground: oklch(0.68 0.02 70);
-  --accent: oklch(0.7 0.19 47);
-  --accent-foreground: oklch(0.16 0.012 60);
-  --destructive: oklch(0.58 0.22 25);
-  --destructive-foreground: oklch(0.97 0.01 80);
-  --border: oklch(0.36 0.02 60);
-  --input: oklch(0.27 0.016 60);
-  --ring: oklch(0.7 0.19 47);
-  --critica: oklch(0.58 0.22 25);
-  --alta: oklch(0.7 0.19 47);
-  --media: oklch(0.82 0.16 90);
-  --baixa: oklch(0.72 0.15 160);
-  --signal: oklch(0.78 0.17 60);
-  --steel: oklch(0.3 0.018 60);
-  --grid-line: oklch(1 0 0 / 6%);
+  /* Paleta derivada dos logos SRC/GSI: azul-petróleo, laranja terroso, verde oliva, creme */
+  --background: oklch(0.23 0.022 245);
+  --foreground: oklch(0.94 0.012 85);
+  --card: oklch(0.28 0.022 245);
+  --card-foreground: oklch(0.94 0.012 85);
+  --popover: oklch(0.28 0.022 245);
+  --popover-foreground: oklch(0.94 0.012 85);
+  --primary: oklch(0.58 0.16 40);
+  --primary-foreground: oklch(0.96 0.012 85);
+  --secondary: oklch(0.32 0.02 245);
+  --secondary-foreground: oklch(0.94 0.012 85);
+  --muted: oklch(0.32 0.02 245);
+  --muted-foreground: oklch(0.72 0.015 85);
+  --accent: oklch(0.58 0.16 40);
+  --accent-foreground: oklch(0.96 0.012 85);
+  --destructive: oklch(0.55 0.17 32);
+  --destructive-foreground: oklch(0.96 0.012 85);
+  --border: oklch(0.38 0.018 245);
+  --input: oklch(0.32 0.02 245);
+  --ring: oklch(0.58 0.16 40);
+  --critica: oklch(0.56 0.17 32);
+  --alta: oklch(0.66 0.14 48);
+  --media: oklch(0.79 0.11 88);
+  --baixa: oklch(0.68 0.1 132);
+  --signal: oklch(0.72 0.12 60);
+  --steel: oklch(0.34 0.02 245);
+  --grid-line: oklch(1 0 0 / 3.5%);
 }
 
+
 .dark {
-  --background: oklch(0.16 0.012 60);
+  --background: oklch(0.23 0.022 245);
 }
+
 
 @layer base {
   * {
@@ -119,28 +122,28 @@
   }
 }
 
-/* Brutalist primitives */
+/* Brutalist primitives (tom mais calmo) */
 @utility slab {
   background: var(--card);
-  border: 2px solid var(--border);
-  box-shadow: 6px 6px 0 0 oklch(0 0 0 / 55%);
+  border: 1px solid var(--border);
+  box-shadow: 3px 3px 0 0 oklch(0 0 0 / 28%);
 }
 
 @utility slab-signal {
   background: var(--card);
-  border: 2px solid var(--primary);
-  box-shadow: 6px 6px 0 0 var(--primary);
+  border: 1px solid var(--primary);
+  box-shadow: 3px 3px 0 0 color-mix(in oklab, var(--primary) 55%, transparent);
 }
 
 @utility stencil {
   font-family: var(--font-display);
   text-transform: uppercase;
-  letter-spacing: 0.18em;
+  letter-spacing: 0.14em;
   font-weight: 700;
 }
 
 @utility corner-cut {
-  clip-path: polygon(0 0, calc(100% - 14px) 0, 100% 14px, 100% 100%, 14px 100%, 0 calc(100% - 14px));
+  clip-path: polygon(0 0, calc(100% - 10px) 0, 100% 10px, 100% 100%, 10px 100%, 0 calc(100% - 10px));
 }
 
 @utility scan-strip {
@@ -150,3 +153,24 @@
     transparent 8px 16px
   );
 }
+
+/* Superfícies clicáveis */
+@utility tappable {
+  cursor: pointer;
+  transition:
+    transform 140ms ease,
+    box-shadow 140ms ease,
+    border-color 140ms ease;
+
+  &:hover {
+    transform: translate(-1px, -1px);
+    border-color: var(--primary);
+    box-shadow: 5px 5px 0 0 color-mix(in oklab, var(--primary) 45%, transparent);
+  }
+
+  &:active {
+    transform: translate(1px, 1px);
+    box-shadow: 1px 1px 0 0 oklch(0 0 0 / 30%);
+  }
+}
+

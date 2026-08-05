@@ -1,5 +1,5 @@
 import { useMemo, useState } from "react";
-import { createFileRoute } from "@tanstack/react-router";
+import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import {
   Bar,
   BarChart,
@@ -14,6 +14,7 @@ import {
 import { Shell } from "@/components/Shell";
 import { StatSlab, TrendTag } from "@/components/StatSlab";
 import { fmt, severityOrder, severityToken, teamNames, teams } from "@/lib/sla-data";
+
 
 export const Route = createFileRoute("/")({
   head: () => ({
@@ -35,9 +36,17 @@ export const Route = createFileRoute("/")({
 });
 
 function Overview() {
+  const navigate = useNavigate();
   const [team, setTeam] = useState(teamNames[0] as string);
   const [openSev, setOpenSev] = useState<string | null>("Crítica");
   const data = teams[team]!;
+
+  const goToVulns = (extra: { sev?: string; q?: string } = {}) =>
+    navigate({
+      to: "/vulnerabilidades",
+      search: { team, sev: extra.sev, q: extra.q },
+    });
+
 
   const sevData = useMemo(
     () => severityOrder.map((s, i) => ({ name: s, total: data.chartSev[i] ?? 0 })),
@@ -101,6 +110,8 @@ function Overview() {
           value={data.kpis.vulns}
           trend={data.trends["vulns"]}
           accent
+          action="abrir inventário"
+          onClick={() => goToVulns()}
           sub={
             <>
               <span className="text-baixa">Corr: {fmt(data.kpis.vulns_corr)}</span>{" "}
@@ -108,14 +119,29 @@ function Overview() {
             </>
           }
         />
-        <StatSlab label="QIDs únicos" value={data.kpis.qids} trend={data.trends["qids"]} />
-        <StatSlab label="Ativos distintos" value={data.kpis.assets} trend={data.trends["assets"]} />
+        <StatSlab
+          label="QIDs únicos"
+          value={data.kpis.qids}
+          trend={data.trends["qids"]}
+          action="listar QIDs"
+          onClick={() => goToVulns()}
+        />
+        <StatSlab
+          label="Ativos distintos"
+          value={data.kpis.assets}
+          trend={data.trends["assets"]}
+          action="ver ativos"
+          onClick={() => navigate({ to: "/ativos" })}
+        />
         <StatSlab
           label="Frentes ativas"
           value={data.kpis.workfronts}
           trend={data.trends["workfronts"]}
+          action="ver frentes"
+          onClick={() => setOpenSev("Crítica")}
         />
       </section>
+
 
       <section className="mb-6 grid gap-4 lg:grid-cols-2">
         <div className="slab corner-cut p-5">
@@ -202,26 +228,35 @@ function Overview() {
             const open = openSev === sev;
             const actions = Object.entries(block.actions).sort((a, b) => b[1].total - a[1].total);
             return (
-              <div key={sev} className="border-2 border-border">
-                <button
-                  onClick={() => setOpenSev(open ? null : sev)}
-                  className="flex w-full items-center justify-between gap-4 bg-secondary px-4 py-3 text-left hover:bg-steel"
-                >
-                  <span className="flex items-center gap-3">
-                    <span
-                      className="inline-block h-4 w-4"
-                      style={{ background: severityToken[sev] }}
-                    />
-                    <span className="stencil text-xs">{sev}</span>
-                  </span>
-                  <span className="flex items-center gap-4">
-                    <span className="font-display text-xl font-bold">{fmt(block.total)}</span>
-                    <span className="stencil text-[10px] text-muted-foreground">
-                      {actions.length} frentes
+              <div key={sev} className="border border-border">
+                <div className="flex items-stretch bg-secondary">
+                  <button
+                    onClick={() => setOpenSev(open ? null : sev)}
+                    className="flex flex-1 items-center justify-between gap-4 px-4 py-3 text-left hover:bg-steel"
+                  >
+                    <span className="flex items-center gap-3">
+                      <span
+                        className="inline-block h-4 w-4"
+                        style={{ background: severityToken[sev] }}
+                      />
+                      <span className="stencil text-xs">{sev}</span>
                     </span>
-                    <span className="text-primary">{open ? "−" : "+"}</span>
-                  </span>
-                </button>
+                    <span className="flex items-center gap-4">
+                      <span className="font-display text-xl font-bold">{fmt(block.total)}</span>
+                      <span className="stencil text-[10px] text-muted-foreground">
+                        {actions.length} frentes
+                      </span>
+                      <span className="text-primary">{open ? "−" : "+"}</span>
+                    </span>
+                  </button>
+                  <button
+                    onClick={() => goToVulns({ sev })}
+                    className="stencil border-l border-border px-4 text-[10px] text-primary hover:bg-primary hover:text-primary-foreground"
+                  >
+                    QIDs →
+                  </button>
+                </div>
+
 
                 {open && (
                   <div className="overflow-x-auto p-4">
@@ -247,10 +282,17 @@ function Overview() {
                       </thead>
                       <tbody>
                         {actions.map(([name, a]) => (
-                          <tr key={name} className="border-b border-border/60">
+                          <tr
+                            key={name}
+                            onClick={() => goToVulns({ sev, q: name })}
+                            className="cursor-pointer border-b border-border/60 hover:bg-steel"
+                          >
                             <td className="px-2 py-2">{name}</td>
                             <td className="px-2 py-2 text-right font-bold">{fmt(a.total)}</td>
-                            <td className="px-2 py-2 text-right text-muted-foreground">{a.qids}</td>
+                            <td className="px-2 py-2 text-right text-primary underline-offset-2 hover:underline">
+                              {a.qids}
+                            </td>
+
                             <td
                               className={`px-2 py-2 text-right ${a.avg_age > 180 ? "text-critica" : "text-muted-foreground"}`}
                             >
