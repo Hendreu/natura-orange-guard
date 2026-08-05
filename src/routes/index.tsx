@@ -228,26 +228,35 @@ function Overview() {
             const open = openSev === sev;
             const actions = Object.entries(block.actions).sort((a, b) => b[1].total - a[1].total);
             return (
-              <div key={sev} className="border-2 border-border">
-                <button
-                  onClick={() => setOpenSev(open ? null : sev)}
-                  className="flex w-full items-center justify-between gap-4 bg-secondary px-4 py-3 text-left hover:bg-steel"
-                >
-                  <span className="flex items-center gap-3">
-                    <span
-                      className="inline-block h-4 w-4"
-                      style={{ background: severityToken[sev] }}
-                    />
-                    <span className="stencil text-xs">{sev}</span>
-                  </span>
-                  <span className="flex items-center gap-4">
-                    <span className="font-display text-xl font-bold">{fmt(block.total)}</span>
-                    <span className="stencil text-[10px] text-muted-foreground">
-                      {actions.length} frentes
+              <div key={sev} className="border border-border">
+                <div className="flex items-stretch bg-secondary">
+                  <button
+                    onClick={() => setOpenSev(open ? null : sev)}
+                    className="flex flex-1 items-center justify-between gap-4 px-4 py-3 text-left hover:bg-steel"
+                  >
+                    <span className="flex items-center gap-3">
+                      <span
+                        className="inline-block h-4 w-4"
+                        style={{ background: severityToken[sev] }}
+                      />
+                      <span className="stencil text-xs">{sev}</span>
                     </span>
-                    <span className="text-primary">{open ? "−" : "+"}</span>
-                  </span>
-                </button>
+                    <span className="flex items-center gap-4">
+                      <span className="font-display text-xl font-bold">{fmt(block.total)}</span>
+                      <span className="stencil text-[10px] text-muted-foreground">
+                        {actions.length} frentes
+                      </span>
+                      <span className="text-primary">{open ? "−" : "+"}</span>
+                    </span>
+                  </button>
+                  <button
+                    onClick={() => goToVulns({ sev })}
+                    className="stencil border-l border-border px-4 text-[10px] text-primary hover:bg-primary hover:text-primary-foreground"
+                  >
+                    QIDs →
+                  </button>
+                </div>
+
 
                 {open && (
                   <div className="overflow-x-auto p-4">
