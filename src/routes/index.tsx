@@ -78,7 +78,7 @@ function Overview() {
             <button
               key={t}
               onClick={() => setTeam(t)}
-              className={`stencil border-2 px-4 py-2 text-[11px] transition-transform ${
+              className={`stencil border px-4 py-2 text-[11px] transition-transform ${
                 t === team
                   ? "border-primary bg-primary text-primary-foreground"
                   : "border-border bg-card text-muted-foreground hover:-translate-y-0.5 hover:text-foreground"
@@ -262,7 +262,7 @@ function Overview() {
                   <div className="overflow-x-auto p-4">
                     <table className="w-full text-xs">
                       <thead>
-                        <tr className="border-b-2 border-border">
+                        <tr className="border-b border-border">
                           <th className="stencil px-2 py-2 text-left text-[10px] text-muted-foreground">
                             Frente de ação
                           </th>
