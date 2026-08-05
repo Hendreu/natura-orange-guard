@@ -1,9 +1,16 @@
 import { Fragment, useMemo, useState } from "react";
-import { createFileRoute } from "@tanstack/react-router";
+import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { Shell } from "@/components/Shell";
 import { fmt, qids, severityOrder, severityToken, teamNames } from "@/lib/sla-data";
 
+type VulnSearch = { q?: string; sev?: string; team?: string };
+
 export const Route = createFileRoute("/vulnerabilidades")({
+  validateSearch: (search: Record<string, unknown>): VulnSearch => ({
+    q: typeof search["q"] === "string" ? search["q"] : undefined,
+    sev: typeof search["sev"] === "string" ? search["sev"] : undefined,
+    team: typeof search["team"] === "string" ? search["team"] : undefined,
+  }),
   head: () => ({
     meta: [
       { title: "Vulnerabilidades — Natura SecOps" },
@@ -23,10 +30,17 @@ export const Route = createFileRoute("/vulnerabilidades")({
 });
 
 function Vulnerabilidades() {
-  const [q, setQ] = useState("");
-  const [sev, setSev] = useState<string>("Todas");
-  const [team, setTeam] = useState<string>("Todas");
+  const search = Route.useSearch();
+  const navigate = useNavigate({ from: "/vulnerabilidades" });
+  const q = search.q ?? "";
+  const sev = search.sev ?? "Todas";
+  const team = search.team ?? "Todas";
   const [open, setOpen] = useState<number | null>(null);
+
+  const setParam = (key: keyof VulnSearch, value: string) =>
+    navigate({
+      search: (prev) => ({ ...prev, [key]: value && value !== "Todas" ? value : undefined }),
+    });
 
   const rows = useMemo(() => {
     const term = q.trim().toLowerCase();
@@ -42,6 +56,13 @@ function Vulnerabilidades() {
       )
       .slice(0, 120);
   }, [q, sev, team]);
+
+  const activeFilters = [
+    sev !== "Todas" ? { key: "sev" as const, label: `Sev: ${sev}` } : null,
+    team !== "Todas" ? { key: "team" as const, label: `Squad: ${team}` } : null,
+    q ? { key: "q" as const, label: `Busca: ${q}` } : null,
+  ].filter(Boolean) as { key: keyof VulnSearch; label: string }[];
+
 
   return (
     <Shell
