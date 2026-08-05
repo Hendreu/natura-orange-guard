@@ -282,10 +282,17 @@ function Overview() {
                       </thead>
                       <tbody>
                         {actions.map(([name, a]) => (
-                          <tr key={name} className="border-b border-border/60">
+                          <tr
+                            key={name}
+                            onClick={() => goToVulns({ sev, q: name })}
+                            className="cursor-pointer border-b border-border/60 hover:bg-steel"
+                          >
                             <td className="px-2 py-2">{name}</td>
                             <td className="px-2 py-2 text-right font-bold">{fmt(a.total)}</td>
-                            <td className="px-2 py-2 text-right text-muted-foreground">{a.qids}</td>
+                            <td className="px-2 py-2 text-right text-primary underline-offset-2 hover:underline">
+                              {a.qids}
+                            </td>
+
                             <td
                               className={`px-2 py-2 text-right ${a.avg_age > 180 ? "text-critica" : "text-muted-foreground"}`}
                             >
