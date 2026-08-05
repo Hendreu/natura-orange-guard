@@ -73,23 +73,57 @@ function Vulnerabilidades() {
       title="Vulnerabilidades"
       subtitle="Inventário de QIDs consolidado — filtre por squad, severidade ou termo e abra a solução recomendada."
     >
-      <div className="slab mb-6 flex flex-wrap items-end gap-4 p-4">
+      <div className="slab mb-4 flex flex-wrap items-end gap-4 p-4">
         <label className="flex-1 min-w-[220px]">
           <span className="stencil mb-2 block text-[10px] text-muted-foreground">Busca</span>
           <input
             value={q}
-            onChange={(e) => setQ(e.target.value)}
+            onChange={(e) => setParam("q", e.target.value)}
             placeholder="QID, título ou frente de ação..."
-            className="w-full border-2 border-border bg-input px-3 py-2 text-xs text-foreground outline-none focus:border-primary"
+            className="w-full border border-border bg-input px-3 py-2 text-xs text-foreground outline-none focus:border-primary"
           />
         </label>
-        <Filter label="Severidade" value={sev} onChange={setSev} options={["Todas", ...severityOrder]} />
-        <Filter label="Squad" value={team} onChange={setTeam} options={["Todas", ...teamNames]} />
+        <Filter
+          label="Severidade"
+          value={sev}
+          onChange={(v) => setParam("sev", v)}
+          options={["Todas", ...severityOrder]}
+        />
+        <Filter
+          label="Squad"
+          value={team}
+          onChange={(v) => setParam("team", v)}
+          options={["Todas", ...teamNames]}
+        />
         <div className="ml-auto text-right">
           <p className="font-display text-2xl leading-none font-bold text-primary">{rows.length}</p>
           <p className="stencil text-[9px] text-muted-foreground">registros exibidos</p>
         </div>
       </div>
+
+      {activeFilters.length > 0 && (
+        <div className="mb-6 flex flex-wrap items-center gap-2">
+          <span className="stencil text-[10px] text-muted-foreground">Filtros ativos:</span>
+          {activeFilters.map((f) => (
+            <button
+              key={f.key}
+              onClick={() => setParam(f.key, "")}
+              className="stencil border border-primary px-3 py-1 text-[10px] text-primary hover:bg-primary hover:text-primary-foreground"
+            >
+              {f.label} ✕
+            </button>
+          ))}
+          <button
+            onClick={() =>
+              navigate({ search: () => ({ q: undefined, sev: undefined, team: undefined }) })
+            }
+            className="stencil border border-border px-3 py-1 text-[10px] text-muted-foreground hover:border-primary hover:text-foreground"
+          >
+            Limpar tudo
+          </button>
+        </div>
+      )}
+
 
       <div className="slab overflow-x-auto">
         <table className="w-full text-xs">
