@@ -33,3 +33,5 @@ dist-ssr
 *.sw?
 
 .omo/
+.playwright-mcp/
+dev-server.*
