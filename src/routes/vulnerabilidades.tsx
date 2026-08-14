@@ -13,13 +13,24 @@ import { Shell } from "@/components/Shell";
 import { useDebouncedValue } from "@/hooks/use-debounced-value";
 import { fmt, qidsQueryOptions, severityOrder, severityToken, teamNames } from "@/lib/sla-data";
 
-type VulnSearch = { q?: string | undefined; sev?: string | undefined; team?: string | undefined };
+type VulnSearch = {
+  q?: string | undefined;
+  sev?: string | undefined;
+  team?: string | undefined;
+  tagFilter?: "all" | "all_clouds" | "all_onpremises";
+};
 
 export const Route = createFileRoute("/vulnerabilidades")({
   validateSearch: (search: Record<string, unknown>): VulnSearch => ({
     q: typeof search["q"] === "string" ? search["q"] : undefined,
     sev: typeof search["sev"] === "string" ? search["sev"] : undefined,
     team: typeof search["team"] === "string" ? search["team"] : undefined,
+    tagFilter:
+      search["tagFilter"] === "all" ||
+      search["tagFilter"] === "all_clouds" ||
+      search["tagFilter"] === "all_onpremises"
+        ? search["tagFilter"]
+        : undefined,
   }),
   head: () => ({
     meta: [
@@ -45,6 +56,7 @@ function Vulnerabilidades() {
   const q = search.q ?? "";
   const sev = search.sev ?? "Todas";
   const team = search.team ?? "Todas";
+  const tagFilter = search.tagFilter ?? "all";
   const [open, setOpen] = useState<number | null>(null);
   const [qInput, setQInput] = useState(q);
   const debouncedQ = useDebouncedValue(qInput, 300);
@@ -79,7 +91,7 @@ function Vulnerabilidades() {
     data: rows = [],
     isLoading,
     isError,
-  } = useQuery(qidsQueryOptions({ sev, team, q: debouncedQ }));
+  } = useQuery(qidsQueryOptions({ sev, team, q: debouncedQ, tagFilter }));
 
   const activeFilters = [
     sev !== "Todas" ? { key: "sev" as const, label: `Sev: ${sev}` } : null,
@@ -141,7 +153,7 @@ function Vulnerabilidades() {
             ))}
             <button
               onClick={() =>
-                navigate({ search: () => ({ q: undefined, sev: undefined, team: undefined }) })
+                navigate({ search: () => ({ q: undefined, sev: undefined, team: undefined, tagFilter: undefined }) })
               }
               className="stencil border border-border px-3 py-1 text-[10px] text-muted-foreground transition-colors hover:border-primary hover:text-foreground"
             >
@@ -189,7 +201,7 @@ function Vulnerabilidades() {
                     <button
                       onClick={() =>
                         navigate({
-                          search: () => ({ q: undefined, sev: undefined, team: undefined }),
+                          search: () => ({ q: undefined, sev: undefined, team: undefined, tagFilter: undefined }),
                         })
                       }
                       className="stencil mt-3 border border-border px-4 py-1.5 text-[10px] text-muted-foreground transition-colors hover:border-primary hover:text-foreground"
