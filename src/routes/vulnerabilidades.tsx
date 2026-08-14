@@ -17,7 +17,7 @@ type VulnSearch = {
   q?: string | undefined;
   sev?: string | undefined;
   team?: string | undefined;
-  tagFilter?: "all" | "all_clouds" | "all_onpremises";
+  tagFilter?: ("all" | "all_clouds" | "all_onpremises") | undefined;
 };
 
 export const Route = createFileRoute("/vulnerabilidades")({

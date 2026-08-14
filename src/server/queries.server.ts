@@ -41,7 +41,13 @@ function thresholdExpr() {
   return sql`CASE v."Severity"::int WHEN 5 THEN 15 WHEN 4 THEN 30 WHEN 3 THEN 90 ELSE 180 END`;
 }
 
-export async function getTeamKpis({ team, tagFilter }: { team: string; tagFilter?: TagFilter }) {
+export async function getTeamKpis({
+  team,
+  tagFilter,
+}: {
+  team: string;
+  tagFilter?: TagFilter | undefined;
+}) {
   const tagSql = tagFilterSql(tagFilter);
   const [row] = await sql`
     SELECT
@@ -78,7 +84,7 @@ export async function getTeamChartSev({
   tagFilter,
 }: {
   team: string;
-  tagFilter?: TagFilter;
+  tagFilter?: TagFilter | undefined;
 }) {
   const tagSql = tagFilterSql(tagFilter);
   const rows = await sql`
@@ -95,7 +101,13 @@ export async function getTeamChartSev({
   return SEVERITY_ORDER.map((s) => map.get(s) ?? 0);
 }
 
-export async function getTeamSla({ team, tagFilter }: { team: string; tagFilter?: TagFilter }) {
+export async function getTeamSla({
+  team,
+  tagFilter,
+}: {
+  team: string;
+  tagFilter?: TagFilter | undefined;
+}) {
   const tagSql = tagFilterSql(tagFilter);
   const rows = await sql`
     WITH base AS (
@@ -132,7 +144,13 @@ export async function getTeamSla({ team, tagFilter }: { team: string; tagFilter?
   return result;
 }
 
-export async function getTeamRaw({ team, tagFilter }: { team: string; tagFilter?: TagFilter }) {
+export async function getTeamRaw({
+  team,
+  tagFilter,
+}: {
+  team: string;
+  tagFilter?: TagFilter | undefined;
+}) {
   const tagSql = tagFilterSql(tagFilter);
   const rows = await sql`
     WITH base AS (
@@ -176,7 +194,7 @@ export async function getTeamData({
   tagFilter,
 }: {
   team: string;
-  tagFilter?: TagFilter;
+  tagFilter?: TagFilter | undefined;
 }): Promise<TeamData> {
   const [kpis, chartSev, slaData, raw] = await Promise.all([
     getTeamKpis({ team, tagFilter }),
@@ -198,7 +216,7 @@ export async function getTeamData({
 export async function getAllTeamsData(): Promise<Record<string, TeamData>> {
   const result: Record<string, TeamData> = {};
   for (const team of TEAM_NAMES) {
-    result[team] = await getTeamData(team);
+    result[team] = await getTeamData({ team });
   }
   return result;
 }
@@ -212,7 +230,7 @@ export async function getQids({
   sev?: string | undefined;
   team?: string | undefined;
   q?: string | undefined;
-  tagFilter?: TagFilter;
+  tagFilter?: TagFilter | undefined;
 }): Promise<QidRow[]> {
   const teamFilter = team && team !== "Todas" ? sql`AND a."Tags" ~* ${teamRegex(team)}` : sql``;
   const sevFilter = sev && sev !== "Todas" ? sql`AND ${severityLabelExpr()} = ${sev}` : sql``;
@@ -268,7 +286,7 @@ export async function getAssets({
 }: {
   team?: string | undefined;
   q?: string | undefined;
-  tagFilter?: TagFilter;
+  tagFilter?: TagFilter | undefined;
 }): Promise<AssetRow[]> {
   const teamFilter = team && team !== "Todas" ? sql`AND a."Tags" ~* ${teamRegex(team)}` : sql``;
   const qFilter = q
@@ -464,7 +482,7 @@ export async function getReports({
 }: {
   team?: string | undefined;
   os?: string | undefined;
-  tagFilter?: TagFilter;
+  tagFilter?: TagFilter | undefined;
 }): Promise<ReportData> {
   const teamFilter = team && team !== "Todas" ? sql`AND a."Tags" ~* ${teamRegex(team)}` : sql``;
   const osFilter = os ? sql`AND a."OS" ILIKE ${`%${os}%`}` : sql``;

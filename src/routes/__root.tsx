@@ -7,6 +7,7 @@ import {
   HeadContent,
   Scripts,
 } from "@tanstack/react-router";
+import { z } from "zod";
 import { useEffect, type ReactNode } from "react";
 
 import appCss from "../styles.css?url";
@@ -72,7 +73,12 @@ function ErrorComponent({ error, reset }: { error: Error; reset: () => void }) {
   );
 }
 
+const rootSearchSchema = z.object({
+  tagFilter: z.enum(["all", "all_clouds", "all_onpremises"]).optional(),
+});
+
 export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()({
+  validateSearch: rootSearchSchema,
   head: () => ({
     meta: [
       { charSet: "utf-8" },

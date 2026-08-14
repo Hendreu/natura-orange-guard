@@ -9,13 +9,13 @@ import {
 import { TAG_FILTER_OPTIONS, type TagFilter } from "@/lib/constants";
 
 export function TagFilter() {
-  const search = useSearch({ strict: false });
-  const navigate = useNavigate({ strict: false });
-  const value = (search?.tagFilter as TagFilter) ?? "all";
+  const search = useSearch({ from: "/" });
+  const navigate = useNavigate({ from: "/" });
+  const value = search.tagFilter ?? "all";
 
   const setTagFilter = (next: TagFilter) => {
     navigate({
-      search: (prev: Record<string, unknown>) => ({
+      search: (prev) => ({
         ...prev,
         tagFilter: next === "all" ? undefined : next,
       }),

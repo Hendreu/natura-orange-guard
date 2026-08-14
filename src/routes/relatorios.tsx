@@ -46,7 +46,7 @@ type RelatoriosSearch = {
   team?: string | undefined;
   os?: string | undefined;
   q?: string | undefined;
-  tagFilter?: "all" | "all_clouds" | "all_onpremises";
+  tagFilter?: ("all" | "all_clouds" | "all_onpremises") | undefined;
 };
 
 export const Route = createFileRoute("/relatorios")({

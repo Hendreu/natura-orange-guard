@@ -16,7 +16,7 @@ import { assetsQueryOptions, fmt, teamNames } from "@/lib/sla-data";
 type AtivosSearch = {
   q?: string | undefined;
   team?: string | undefined;
-  tagFilter?: "all" | "all_clouds" | "all_onpremises";
+  tagFilter?: ("all" | "all_clouds" | "all_onpremises") | undefined;
 };
 
 export const Route = createFileRoute("/ativos")({

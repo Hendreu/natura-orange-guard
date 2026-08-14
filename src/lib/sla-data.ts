@@ -48,8 +48,8 @@ export type TeamData = {
 
 export type Severity = (typeof SEVERITY_ORDER)[number];
 
-export const teamNames = [...TEAM_NAMES];
-export const severityOrder = [...SEVERITY_ORDER];
+export const teamNames = [...TEAM_NAMES] as string[];
+export const severityOrder = [...SEVERITY_ORDER] as string[];
 
 export const severityToken: Record<string, string> = {
   Crítica: "var(--critica)",
@@ -85,7 +85,7 @@ export type AssetRow = {
   crit: number;
 };
 
-export const overviewQueryOptions = (team: string, tagFilter?: TagFilter) =>
+export const overviewQueryOptions = (team: string, tagFilter?: TagFilter | undefined) =>
   queryOptions({
     queryKey: ["overview", team, tagFilter],
     queryFn: () => fetchTeamData({ data: { team, tagFilter } }),
@@ -107,14 +107,18 @@ export const qidsQueryOptions = (filters: {
   sev?: string;
   team?: string;
   q?: string;
-  tagFilter?: TagFilter;
+  tagFilter?: TagFilter | undefined;
 }) =>
   queryOptions({
     queryKey: ["qids", filters],
     queryFn: () => fetchQids({ data: filters }),
   });
 
-export const assetsQueryOptions = (filters: { team?: string; q?: string; tagFilter?: TagFilter }) =>
+export const assetsQueryOptions = (filters: {
+  team?: string;
+  q?: string;
+  tagFilter?: TagFilter | undefined;
+}) =>
   queryOptions({
     queryKey: ["assets", filters],
     queryFn: () => fetchAssets({ data: filters }),
@@ -207,7 +211,7 @@ export type ReportData = {
 export const reportsQueryOptions = (filters: {
   team?: string | undefined;
   os?: string | undefined;
-  tagFilter?: TagFilter;
+  tagFilter?: TagFilter | undefined;
 }) =>
   queryOptions({
     queryKey: ["reports", filters],
