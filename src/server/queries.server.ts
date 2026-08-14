@@ -224,17 +224,55 @@ export async function getTeamData({
   return { kpis, trends, chartSev, slaData, raw };
 }
 
-export async function getOverview({
-  tagFilter,
-}: {
-  tagFilter?: TagFilter | undefined;
-}): Promise<TeamData> {
-  const [kpis, chartSev, slaData, raw] = await Promise.all([
-    getTeamKpis({ tagFilter }),
-    getTeamChartSev({ tagFilter }),
-    getTeamSla({ tagFilter }),
-    getTeamRaw({ tagFilter }),
-  ]);
+function aggregateTeamData(teams: TeamData[]): TeamData {
+  const kpis = {
+    vulns: teams.reduce((a, t) => a + t.kpis.vulns, 0),
+    vulns_corr: teams.reduce((a, t) => a + t.kpis.vulns_corr, 0),
+    vulns_nao_corr: teams.reduce((a, t) => a + t.kpis.vulns_nao_corr, 0),
+    qids: teams.reduce((a, t) => a + t.kpis.qids, 0),
+    assets: teams.reduce((a, t) => a + t.kpis.assets, 0),
+    qds: teams.length ? Math.round(teams.reduce((a, t) => a + t.kpis.qds, 0) / teams.length) : 0,
+    qds_corr: teams.length
+      ? Math.round(teams.reduce((a, t) => a + t.kpis.qds_corr, 0) / teams.length)
+      : 0,
+    workfronts: teams.reduce((a, t) => a + t.kpis.workfronts, 0),
+  };
+
+  const chartSev = SEVERITY_ORDER.map((_, i) => teams.reduce((a, t) => a + t.chartSev[i], 0));
+
+  const slaData: Record<string, SlaBucket> = {};
+  for (const s of SEVERITY_ORDER) {
+    slaData[s] = {
+      DentroSLA_Corr: teams.reduce((a, t) => a + t.slaData[s].DentroSLA_Corr, 0),
+      DentroSLA_NaoCorr: teams.reduce((a, t) => a + t.slaData[s].DentroSLA_NaoCorr, 0),
+      ForaSLA_Corr: teams.reduce((a, t) => a + t.slaData[s].ForaSLA_Corr, 0),
+      ForaSLA_NaoCorr: teams.reduce((a, t) => a + t.slaData[s].ForaSLA_NaoCorr, 0),
+    };
+  }
+
+  const raw: Record<string, SeverityBlock> = {};
+  for (const s of SEVERITY_ORDER) {
+    raw[s] = { total: 0, actions: {} };
+    for (const team of teams) {
+      raw[s].total += team.raw[s].total;
+      for (const [action, data] of Object.entries(team.raw[s].actions)) {
+        const acc = raw[s].actions[action];
+        if (!acc) {
+          raw[s].actions[action] = { ...data };
+        } else {
+          const total = acc.total + data.total;
+          acc.avg_age =
+            total > 0
+              ? Math.round(((acc.avg_age * acc.total + data.avg_age * data.total) / total) * 10) /
+                10
+              : 0;
+          acc.total = total;
+          acc.qids += data.qids;
+        }
+      }
+    }
+  }
+
   const trends: Record<string, Trend> = {
     vulns: { diff: 0, pct: 0 },
     qids: { diff: 0, pct: 0 },
@@ -243,7 +281,17 @@ export async function getOverview({
     qds_corr: { diff: 0, pct: 0 },
     workfronts: { diff: 0, pct: 0 },
   };
+
   return { kpis, trends, chartSev, slaData, raw };
+}
+
+export async function getOverview({
+  tagFilter,
+}: {
+  tagFilter?: TagFilter | undefined;
+}): Promise<TeamData> {
+  const teams = await Promise.all(TEAM_NAMES.map((team) => getTeamData({ team, tagFilter })));
+  return aggregateTeamData(teams);
 }
 
 export async function getAllTeamsData(): Promise<Record<string, TeamData>> {
