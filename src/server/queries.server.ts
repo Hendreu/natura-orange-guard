@@ -41,7 +41,14 @@ function thresholdExpr() {
   return sql`CASE v."Severity"::int WHEN 5 THEN 15 WHEN 4 THEN 30 WHEN 3 THEN 90 ELSE 180 END`;
 }
 
-export async function getTeamKpis(team: string) {
+export async function getTeamKpis({
+  team,
+  tagFilter,
+}: {
+  team: string;
+  tagFilter?: TagFilter;
+}) {
+  const tagSql = tagFilterSql(tagFilter);
   const [row] = await sql`
     SELECT
       COUNT(*)::int as "vulns",
@@ -58,6 +65,7 @@ export async function getTeamKpis(team: string) {
     WHERE v."Status" IN ${sql(ACTIVE_STATUSES)}
       AND v."Severity"::int IN (1,2,3,4,5)
       AND a."Tags" ~* ${teamRegex(team)}
+      ${tagSql}
   `;
   return row as {
     vulns: number;
@@ -71,7 +79,14 @@ export async function getTeamKpis(team: string) {
   };
 }
 
-export async function getTeamChartSev(team: string) {
+export async function getTeamChartSev({
+  team,
+  tagFilter,
+}: {
+  team: string;
+  tagFilter?: TagFilter;
+}) {
+  const tagSql = tagFilterSql(tagFilter);
   const rows = await sql`
     SELECT ${severityLabelExpr()} as "sev", COUNT(*)::int as "total"
     FROM vulnerabilities v
@@ -79,13 +94,21 @@ export async function getTeamChartSev(team: string) {
     WHERE v."Status" IN ${sql(ACTIVE_STATUSES)}
       AND v."Severity"::int IN (1,2,3,4,5)
       AND a."Tags" ~* ${teamRegex(team)}
+      ${tagSql}
     GROUP BY v."Severity"::int
   `;
   const map = new Map(rows.map((r) => [r["sev"], r["total"]]));
   return SEVERITY_ORDER.map((s) => map.get(s) ?? 0);
 }
 
-export async function getTeamSla(team: string) {
+export async function getTeamSla({
+  team,
+  tagFilter,
+}: {
+  team: string;
+  tagFilter?: TagFilter;
+}) {
+  const tagSql = tagFilterSql(tagFilter);
   const rows = await sql`
     WITH base AS (
       SELECT v."Severity", kb."Solution", ${ageExpr()} as age, ${thresholdExpr()} as threshold
@@ -95,6 +118,7 @@ export async function getTeamSla(team: string) {
       WHERE v."Status" IN ${sql(ACTIVE_STATUSES)}
         AND v."Severity"::int IN (1,2,3,4,5)
         AND a."Tags" ~* ${teamRegex(team)}
+        ${tagSql}
     )
     SELECT
       CASE "Severity"::int WHEN 5 THEN 'Crítica' WHEN 4 THEN 'Alta' WHEN 3 THEN 'Média' ELSE 'Baixa' END as "sev",
@@ -120,7 +144,14 @@ export async function getTeamSla(team: string) {
   return result;
 }
 
-export async function getTeamRaw(team: string) {
+export async function getTeamRaw({
+  team,
+  tagFilter,
+}: {
+  team: string;
+  tagFilter?: TagFilter;
+}) {
+  const tagSql = tagFilterSql(tagFilter);
   const rows = await sql`
     WITH base AS (
       SELECT v."Severity", v."QID", kb."Category", ${ageExpr()} as age
@@ -130,6 +161,7 @@ export async function getTeamRaw(team: string) {
       WHERE v."Status" IN ${sql(ACTIVE_STATUSES)}
         AND v."Severity"::int IN (1,2,3,4,5)
         AND a."Tags" ~* ${teamRegex(team)}
+        ${tagSql}
     )
     SELECT
       CASE "Severity"::int WHEN 5 THEN 'Crítica' WHEN 4 THEN 'Alta' WHEN 3 THEN 'Média' ELSE 'Baixa' END as "sev",
@@ -157,12 +189,18 @@ export async function getTeamRaw(team: string) {
   return result;
 }
 
-export async function getTeamData(team: string): Promise<TeamData> {
+export async function getTeamData({
+  team,
+  tagFilter,
+}: {
+  team: string;
+  tagFilter?: TagFilter;
+}): Promise<TeamData> {
   const [kpis, chartSev, slaData, raw] = await Promise.all([
-    getTeamKpis(team),
-    getTeamChartSev(team),
-    getTeamSla(team),
-    getTeamRaw(team),
+    getTeamKpis({ team, tagFilter }),
+    getTeamChartSev({ team, tagFilter }),
+    getTeamSla({ team, tagFilter }),
+    getTeamRaw({ team, tagFilter }),
   ]);
   const trends: Record<string, Trend> = {
     vulns: { diff: 0, pct: 0 },
@@ -187,16 +225,19 @@ export async function getQids({
   sev,
   team,
   q,
+  tagFilter,
 }: {
   sev?: string | undefined;
   team?: string | undefined;
   q?: string | undefined;
+  tagFilter?: TagFilter;
 }): Promise<QidRow[]> {
   const teamFilter = team && team !== "Todas" ? sql`AND a."Tags" ~* ${teamRegex(team)}` : sql``;
   const sevFilter = sev && sev !== "Todas" ? sql`AND ${severityLabelExpr()} = ${sev}` : sql``;
   const qFilter = q
     ? sql`AND (kb."Title" ILIKE ${`%${q}%`} OR kb."Category" ILIKE ${`%${q}%`} OR v."QID" ILIKE ${`%${q}%`})`
     : sql``;
+  const tagSql = tagFilterSql(tagFilter);
   const teamExpr = team && team !== "Todas" ? sql`${team}` : extractTeamExpr();
 
   const rows = await sql`
@@ -219,6 +260,7 @@ export async function getQids({
       ${teamFilter}
       ${sevFilter}
       ${qFilter}
+      ${tagSql}
     GROUP BY v."QID", ${teamExpr}, kb."Category", v."Severity"::int
     ORDER BY count DESC
     LIMIT 120
@@ -240,14 +282,17 @@ export async function getQids({
 export async function getAssets({
   team,
   q,
+  tagFilter,
 }: {
   team?: string | undefined;
   q?: string | undefined;
+  tagFilter?: TagFilter;
 }): Promise<AssetRow[]> {
   const teamFilter = team && team !== "Todas" ? sql`AND a."Tags" ~* ${teamRegex(team)}` : sql``;
   const qFilter = q
     ? sql`AND (a."IP" ILIKE ${`%${q}%`} OR a."DNS" ILIKE ${`%${q}%`} OR a."OS" ILIKE ${`%${q}%`})`
     : sql``;
+  const tagSql = tagFilterSql(tagFilter);
 
   const rows = await sql`
     SELECT
@@ -264,6 +309,7 @@ export async function getAssets({
       AND v."Severity"::int IN (1,2,3,4,5)
       ${teamFilter}
       ${qFilter}
+      ${tagSql}
     GROUP BY a."IP", a."DNS", a."OS", ${extractTeamExpr()}
     ORDER BY vulns DESC
     LIMIT 100
@@ -432,12 +478,15 @@ export type ReportData = {
 export async function getReports({
   team,
   os,
+  tagFilter,
 }: {
   team?: string | undefined;
   os?: string | undefined;
+  tagFilter?: TagFilter;
 }): Promise<ReportData> {
   const teamFilter = team && team !== "Todas" ? sql`AND a."Tags" ~* ${teamRegex(team)}` : sql``;
   const osFilter = os ? sql`AND a."OS" ILIKE ${`%${os}%`}` : sql``;
+  const tagSql = tagFilterSql(tagFilter);
 
   const [kpis] = await sql`
     SELECT
@@ -450,6 +499,7 @@ export async function getReports({
       AND v."Severity"::int IN (1,2,3,4,5)
       ${teamFilter}
       ${osFilter}
+      ${tagSql}
   `;
 
   const osRows = await sql`
@@ -464,6 +514,7 @@ export async function getReports({
       AND v."Severity"::int IN (1,2,3,4,5)
       ${teamFilter}
       ${osFilter}
+      ${tagSql}
     GROUP BY a."OS"
     ORDER BY vulns DESC
     LIMIT 20
@@ -482,6 +533,7 @@ export async function getReports({
       AND v."Severity"::int IN (1,2,3,4,5)
       ${teamFilter}
       ${osFilter}
+      ${tagSql}
     GROUP BY v."QID", v."Severity"::int
     ORDER BY count DESC
     LIMIT 25
@@ -499,6 +551,7 @@ export async function getReports({
       AND v."Severity"::int IN (1,2,3,4,5)
       ${teamFilter}
       ${osFilter}
+      ${tagSql}
     GROUP BY kb."Category", v."Severity"::int
     ORDER BY count DESC
     LIMIT 20
@@ -519,6 +572,7 @@ export async function getReports({
       AND v."Severity"::int IN (1,2,3,4,5)
       ${teamFilter}
       ${osFilter}
+      ${tagSql}
     GROUP BY a."QG_HostID", a."DNS", a."IP", a."OS", a."Tags"
     ORDER BY vulns DESC
     LIMIT 100
@@ -535,6 +589,7 @@ export async function getReports({
     WHERE v."Status" IN ${sql(ACTIVE_STATUSES)}
       AND v."Severity"::int IN (1,2,3,4,5)
       ${osFilter}
+      ${tagSql}
     GROUP BY ${extractTeamExpr()}
     ORDER BY vulns DESC
     LIMIT 50
