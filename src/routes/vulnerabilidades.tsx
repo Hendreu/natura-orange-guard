@@ -153,7 +153,14 @@ function Vulnerabilidades() {
             ))}
             <button
               onClick={() =>
-                navigate({ search: () => ({ q: undefined, sev: undefined, team: undefined, tagFilter: undefined }) })
+                navigate({
+                  search: () => ({
+                    q: undefined,
+                    sev: undefined,
+                    team: undefined,
+                    tagFilter: undefined,
+                  }),
+                })
               }
               className="stencil border border-border px-3 py-1 text-[10px] text-muted-foreground transition-colors hover:border-primary hover:text-foreground"
             >
@@ -201,7 +208,12 @@ function Vulnerabilidades() {
                     <button
                       onClick={() =>
                         navigate({
-                          search: () => ({ q: undefined, sev: undefined, team: undefined, tagFilter: undefined }),
+                          search: () => ({
+                            q: undefined,
+                            sev: undefined,
+                            team: undefined,
+                            tagFilter: undefined,
+                          }),
                         })
                       }
                       className="stencil mt-3 border border-border px-4 py-1.5 text-[10px] text-muted-foreground transition-colors hover:border-primary hover:text-foreground"

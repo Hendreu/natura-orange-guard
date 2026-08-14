@@ -141,7 +141,11 @@ function Ativos() {
               </button>
             ))}
             <button
-              onClick={() => navigate({ search: () => ({ q: undefined, team: undefined, tagFilter: undefined }) })}
+              onClick={() =>
+                navigate({
+                  search: () => ({ q: undefined, team: undefined, tagFilter: undefined }),
+                })
+              }
               className="stencil border border-border px-3 py-1 text-[10px] text-muted-foreground transition-colors hover:border-primary hover:text-foreground"
             >
               Limpar tudo
@@ -182,7 +186,11 @@ function Ativos() {
                 Nenhum resultado para os filtros selecionados
               </p>
               <button
-                onClick={() => navigate({ search: () => ({ q: undefined, team: undefined, tagFilter: undefined }) })}
+                onClick={() =>
+                  navigate({
+                    search: () => ({ q: undefined, team: undefined, tagFilter: undefined }),
+                  })
+                }
                 className="stencil mt-3 border border-border px-4 py-1.5 text-[10px] text-muted-foreground transition-colors hover:border-primary hover:text-foreground"
               >
                 Limpar filtros

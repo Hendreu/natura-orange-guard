@@ -41,13 +41,7 @@ function thresholdExpr() {
   return sql`CASE v."Severity"::int WHEN 5 THEN 15 WHEN 4 THEN 30 WHEN 3 THEN 90 ELSE 180 END`;
 }
 
-export async function getTeamKpis({
-  team,
-  tagFilter,
-}: {
-  team: string;
-  tagFilter?: TagFilter;
-}) {
+export async function getTeamKpis({ team, tagFilter }: { team: string; tagFilter?: TagFilter }) {
   const tagSql = tagFilterSql(tagFilter);
   const [row] = await sql`
     SELECT
@@ -101,13 +95,7 @@ export async function getTeamChartSev({
   return SEVERITY_ORDER.map((s) => map.get(s) ?? 0);
 }
 
-export async function getTeamSla({
-  team,
-  tagFilter,
-}: {
-  team: string;
-  tagFilter?: TagFilter;
-}) {
+export async function getTeamSla({ team, tagFilter }: { team: string; tagFilter?: TagFilter }) {
   const tagSql = tagFilterSql(tagFilter);
   const rows = await sql`
     WITH base AS (
@@ -144,13 +132,7 @@ export async function getTeamSla({
   return result;
 }
 
-export async function getTeamRaw({
-  team,
-  tagFilter,
-}: {
-  team: string;
-  tagFilter?: TagFilter;
-}) {
+export async function getTeamRaw({ team, tagFilter }: { team: string; tagFilter?: TagFilter }) {
   const tagSql = tagFilterSql(tagFilter);
   const rows = await sql`
     WITH base AS (
