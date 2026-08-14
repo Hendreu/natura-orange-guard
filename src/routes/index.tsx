@@ -1,5 +1,6 @@
 import { useMemo, useState } from "react";
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
+import { z } from "zod";
 import {
   Bar,
   BarChart,
@@ -27,7 +28,12 @@ import {
 import { Check, ChevronsUpDown } from "lucide-react";
 import { cn } from "@/lib/utils";
 
+const indexSearchSchema = z.object({
+  tagFilter: z.enum(["all", "all_clouds", "all_onpremises"]).optional(),
+});
+
 export const Route = createFileRoute("/")({
+  validateSearch: (search: Record<string, unknown>) => indexSearchSchema.parse(search),
   head: () => ({
     meta: [
       { title: "Natura SecOps — Plataforma de Gestão de Vulnerabilidades" },
@@ -48,15 +54,22 @@ export const Route = createFileRoute("/")({
 
 function Overview() {
   const navigate = useNavigate();
+  const search = Route.useSearch();
   const [team, setTeam] = useState(teamNames[0] as string);
   const [teamOpen, setTeamOpen] = useState(false);
   const [openSev, setOpenSev] = useState<string | null>("Crítica");
-  const { data, isLoading, isError } = useQuery(overviewQueryOptions(team));
+  const tagFilter = search.tagFilter ?? "all";
+  const { data, isLoading, isError } = useQuery(overviewQueryOptions(team, tagFilter));
 
   const goToVulns = (extra: { sev?: string; q?: string } = {}) =>
     navigate({
       to: "/vulnerabilidades",
-      search: { team, sev: extra.sev, q: extra.q },
+      search: {
+        team,
+        tagFilter: tagFilter === "all" ? undefined : tagFilter,
+        sev: extra.sev,
+        q: extra.q,
+      },
     });
 
   const sevData = useMemo(
