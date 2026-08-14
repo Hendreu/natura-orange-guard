@@ -18,4 +18,4 @@ echo "    http://<SERVER-IP>:${PORT}/"
 echo "========================================"
 echo ""
 
-exec bun .output/server/index.mjs
+exec node .output/server/index.mjs
