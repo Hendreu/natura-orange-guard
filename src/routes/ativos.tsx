@@ -111,7 +111,7 @@ function Ativos() {
                 <SelectValue />
               </SelectTrigger>
               <SelectContent>
-                {["Todas", ...teamNames].map((t) => (
+                {["Todas", "All Cloud", "All On-Prem", ...teamNames].map((t) => (
                   <SelectItem key={t} value={t} className="text-xs">
                     {t}
                   </SelectItem>

@@ -10,6 +10,13 @@ export const fetchTeamData = createServerFn({ method: "GET" })
     return await getTeamData(data);
   });
 
+export const fetchOverview = createServerFn({ method: "GET" })
+  .validator(z.object({ tagFilter: tagFilterSchema }))
+  .handler(async ({ data }) => {
+    const { getOverview } = await import("../server/queries.server");
+    return await getOverview(data);
+  });
+
 export const fetchAllTeamsData = createServerFn({ method: "GET" }).handler(async () => {
   const { getAllTeamsData } = await import("../server/queries.server");
   return await getAllTeamsData();

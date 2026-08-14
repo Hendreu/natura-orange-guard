@@ -2,6 +2,7 @@ import { queryOptions } from "@tanstack/react-query";
 import { TEAM_NAMES, SEVERITY_ORDER, type TagFilter } from "./constants";
 import {
   fetchTeamData,
+  fetchOverview,
   fetchAllTeamsData,
   fetchQids,
   fetchAssets,
@@ -89,6 +90,12 @@ export const overviewQueryOptions = (team: string, tagFilter?: TagFilter | undef
   queryOptions({
     queryKey: ["overview", team, tagFilter],
     queryFn: () => fetchTeamData({ data: { team, tagFilter } }),
+  });
+
+export const overviewAllQueryOptions = (tagFilter?: TagFilter | undefined) =>
+  queryOptions({
+    queryKey: ["overview-all", tagFilter],
+    queryFn: () => fetchOverview({ data: { tagFilter } }),
   });
 
 export const squadsQueryOptions = () =>

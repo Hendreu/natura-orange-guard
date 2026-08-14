@@ -128,7 +128,7 @@ function Vulnerabilidades() {
             label="Squad"
             value={team}
             onChange={(v) => setParam("team", v)}
-            options={["Todas", ...teamNames]}
+            options={["Todas", "All Cloud", "All On-Prem", ...teamNames]}
           />
           <div className="ml-auto text-right">
             <p className="font-display text-2xl leading-none font-bold tabular-nums text-primary">

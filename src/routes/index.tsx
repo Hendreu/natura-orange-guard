@@ -15,7 +15,14 @@ import {
 import { Shell } from "@/components/Shell";
 import { StatSlab, TrendTag } from "@/components/StatSlab";
 import { useQuery } from "@tanstack/react-query";
-import { fmt, severityOrder, severityToken, teamNames, overviewQueryOptions } from "@/lib/sla-data";
+import {
+  fmt,
+  severityOrder,
+  severityToken,
+  teamNames,
+  overviewQueryOptions,
+  overviewAllQueryOptions,
+} from "@/lib/sla-data";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import {
   Command,
@@ -55,17 +62,19 @@ export const Route = createFileRoute("/")({
 function Overview() {
   const navigate = useNavigate();
   const search = Route.useSearch();
-  const [team, setTeam] = useState(teamNames[0] as string);
+  const [team, setTeam] = useState("Todas");
   const [teamOpen, setTeamOpen] = useState(false);
   const [openSev, setOpenSev] = useState<string | null>("Crítica");
   const tagFilter = search.tagFilter ?? "full";
-  const { data, isLoading, isError } = useQuery(overviewQueryOptions(team, tagFilter));
+  const queryOptions =
+    team === "Todas" ? overviewAllQueryOptions(tagFilter) : overviewQueryOptions(team, tagFilter);
+  const { data, isLoading, isError } = useQuery(queryOptions);
 
   const goToVulns = (extra: { sev?: string; q?: string } = {}) =>
     navigate({
       to: "/vulnerabilidades",
       search: {
-        team,
+        team: team === "Todas" ? undefined : team,
         tagFilter: tagFilter === "full" ? undefined : tagFilter,
         sev: extra.sev,
         q: extra.q,
@@ -134,7 +143,7 @@ function Overview() {
                     Nenhum squad encontrado
                   </CommandEmpty>
                   <CommandGroup>
-                    {teamNames.map((t) => (
+                    {["Todas", "All Cloud", "All On-Prem", ...teamNames].map((t) => (
                       <CommandItem
                         key={t}
                         value={t}
@@ -157,11 +166,11 @@ function Overview() {
           </Popover>
           <div className="mt-auto flex items-center gap-3 border-t border-border pt-3">
             <span className="font-display text-3xl leading-none font-bold text-primary">
-              {String(teamNames.indexOf(team) + 1).padStart(2, "0")}
+              {team === "Todas" ? "ALL" : String(teamNames.indexOf(team) + 1).padStart(2, "0")}
             </span>
             <div className="flex flex-col gap-0.5">
               <span className="stencil text-[9px] text-muted-foreground">
-                de {teamNames.length} squads
+                {team === "Todas" ? "todos os squads" : `de ${teamNames.length} squads`}
               </span>
               <span className="stencil text-[9px] text-muted-foreground">base Qualys</span>
             </div>

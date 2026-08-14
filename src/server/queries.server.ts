@@ -29,6 +29,13 @@ function tagFilterSql(tagFilter: TagFilter | undefined) {
   return sql``;
 }
 
+function squadFilterSql(team: string | undefined) {
+  if (!team || team === "Todas") return sql``;
+  if (team === "All Cloud") return sql`AND a."Tags" ILIKE ${"%cloud%"}`;
+  if (team === "All On-Prem") return sql`AND (a."Tags" IS NULL OR a."Tags" NOT ILIKE ${"%cloud%"})`;
+  return sql`AND a."Tags" ~* ${teamRegex(team)}`;
+}
+
 function severityLabelExpr() {
   return sql`CASE v."Severity"::int WHEN 5 THEN 'Crítica' WHEN 4 THEN 'Alta' WHEN 3 THEN 'Média' ELSE 'Baixa' END`;
 }
@@ -45,10 +52,11 @@ export async function getTeamKpis({
   team,
   tagFilter,
 }: {
-  team: string;
+  team?: string;
   tagFilter?: TagFilter | undefined;
 }) {
   const tagSql = tagFilterSql(tagFilter);
+  const teamSql = squadFilterSql(team);
   const [row] = await sql`
     SELECT
       COUNT(*)::int as "vulns",
@@ -64,7 +72,7 @@ export async function getTeamKpis({
     LEFT JOIN "KnowledgeBase" kb ON v."QID" = kb."QID"
     WHERE v."Status" IN ${sql(ACTIVE_STATUSES)}
       AND v."Severity"::int IN (1,2,3,4,5)
-      AND a."Tags" ~* ${teamRegex(team)}
+      ${teamSql}
       ${tagSql}
   `;
   return row as {
@@ -83,17 +91,18 @@ export async function getTeamChartSev({
   team,
   tagFilter,
 }: {
-  team: string;
+  team?: string;
   tagFilter?: TagFilter | undefined;
 }) {
   const tagSql = tagFilterSql(tagFilter);
+  const teamSql = squadFilterSql(team);
   const rows = await sql`
     SELECT ${severityLabelExpr()} as "sev", COUNT(*)::int as "total"
     FROM vulnerabilities v
     JOIN "All_Assets" a ON v."QG_HostID" = a."QG_HostID"
     WHERE v."Status" IN ${sql(ACTIVE_STATUSES)}
       AND v."Severity"::int IN (1,2,3,4,5)
-      AND a."Tags" ~* ${teamRegex(team)}
+      ${teamSql}
       ${tagSql}
     GROUP BY v."Severity"::int
   `;
@@ -105,10 +114,11 @@ export async function getTeamSla({
   team,
   tagFilter,
 }: {
-  team: string;
+  team?: string;
   tagFilter?: TagFilter | undefined;
 }) {
   const tagSql = tagFilterSql(tagFilter);
+  const teamSql = squadFilterSql(team);
   const rows = await sql`
     WITH base AS (
       SELECT v."Severity", kb."Solution", ${ageExpr()} as age, ${thresholdExpr()} as threshold
@@ -117,7 +127,7 @@ export async function getTeamSla({
       LEFT JOIN "KnowledgeBase" kb ON v."QID" = kb."QID"
       WHERE v."Status" IN ${sql(ACTIVE_STATUSES)}
         AND v."Severity"::int IN (1,2,3,4,5)
-        AND a."Tags" ~* ${teamRegex(team)}
+        ${teamSql}
         ${tagSql}
     )
     SELECT
@@ -148,10 +158,11 @@ export async function getTeamRaw({
   team,
   tagFilter,
 }: {
-  team: string;
+  team?: string;
   tagFilter?: TagFilter | undefined;
 }) {
   const tagSql = tagFilterSql(tagFilter);
+  const teamSql = squadFilterSql(team);
   const rows = await sql`
     WITH base AS (
       SELECT v."Severity", v."QID", kb."Category", ${ageExpr()} as age
@@ -160,7 +171,7 @@ export async function getTeamRaw({
       LEFT JOIN "KnowledgeBase" kb ON v."QID" = kb."QID"
       WHERE v."Status" IN ${sql(ACTIVE_STATUSES)}
         AND v."Severity"::int IN (1,2,3,4,5)
-        AND a."Tags" ~* ${teamRegex(team)}
+        ${teamSql}
         ${tagSql}
     )
     SELECT
@@ -213,6 +224,28 @@ export async function getTeamData({
   return { kpis, trends, chartSev, slaData, raw };
 }
 
+export async function getOverview({
+  tagFilter,
+}: {
+  tagFilter?: TagFilter | undefined;
+}): Promise<TeamData> {
+  const [kpis, chartSev, slaData, raw] = await Promise.all([
+    getTeamKpis({ tagFilter }),
+    getTeamChartSev({ tagFilter }),
+    getTeamSla({ tagFilter }),
+    getTeamRaw({ tagFilter }),
+  ]);
+  const trends: Record<string, Trend> = {
+    vulns: { diff: 0, pct: 0 },
+    qids: { diff: 0, pct: 0 },
+    assets: { diff: 0, pct: 0 },
+    qds: { diff: 0, pct: 0 },
+    qds_corr: { diff: 0, pct: 0 },
+    workfronts: { diff: 0, pct: 0 },
+  };
+  return { kpis, trends, chartSev, slaData, raw };
+}
+
 export async function getAllTeamsData(): Promise<Record<string, TeamData>> {
   const result: Record<string, TeamData> = {};
   for (const team of TEAM_NAMES) {
@@ -232,7 +265,7 @@ export async function getQids({
   q?: string | undefined;
   tagFilter?: TagFilter | undefined;
 }): Promise<QidRow[]> {
-  const teamFilter = team && team !== "Todas" ? sql`AND a."Tags" ~* ${teamRegex(team)}` : sql``;
+  const teamFilter = squadFilterSql(team);
   const sevFilter = sev && sev !== "Todas" ? sql`AND ${severityLabelExpr()} = ${sev}` : sql``;
   const qFilter = q
     ? sql`AND (kb."Title" ILIKE ${`%${q}%`} OR kb."Category" ILIKE ${`%${q}%`} OR v."QID" ILIKE ${`%${q}%`})`
@@ -288,7 +321,7 @@ export async function getAssets({
   q?: string | undefined;
   tagFilter?: TagFilter | undefined;
 }): Promise<AssetRow[]> {
-  const teamFilter = team && team !== "Todas" ? sql`AND a."Tags" ~* ${teamRegex(team)}` : sql``;
+  const teamFilter = squadFilterSql(team);
   const qFilter = q
     ? sql`AND (a."IP" ILIKE ${`%${q}%`} OR a."DNS" ILIKE ${`%${q}%`} OR a."OS" ILIKE ${`%${q}%`})`
     : sql``;
@@ -484,7 +517,7 @@ export async function getReports({
   os?: string | undefined;
   tagFilter?: TagFilter | undefined;
 }): Promise<ReportData> {
-  const teamFilter = team && team !== "Todas" ? sql`AND a."Tags" ~* ${teamRegex(team)}` : sql``;
+  const teamFilter = squadFilterSql(team);
   const osFilter = os ? sql`AND a."OS" ILIKE ${`%${os}%`}` : sql``;
   const tagSql = tagFilterSql(tagFilter);
 
