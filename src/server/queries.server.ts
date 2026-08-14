@@ -1,5 +1,6 @@
 import sql from "@/lib/db";
 import { TEAM_NAMES, SEVERITY_ORDER, ACTIVE_STATUSES } from "@/lib/constants";
+import type { TagFilter } from "@/lib/constants";
 import type {
   Trend,
   ActionGroup,
@@ -16,6 +17,16 @@ function teamRegex(team: string) {
 
 function extractTeamExpr() {
   return sql`COALESCE(NULLIF(regexp_replace(a."Tags", '.*(^|[|,])Times:([^|,]+).*', '\\2', 'i'), ''), 'Unknown')`;
+}
+
+function tagFilterSql(tagFilter: TagFilter | undefined) {
+  if (tagFilter === "all_clouds") {
+    return sql`AND a."Tags" ILIKE ${"%cloud%"}`;
+  }
+  if (tagFilter === "all_onpremises") {
+    return sql`AND (a."Tags" IS NULL OR a."Tags" NOT ILIKE ${"%cloud%"})`;
+  }
+  return sql``;
 }
 
 function severityLabelExpr() {
