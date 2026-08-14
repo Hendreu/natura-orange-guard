@@ -1,5 +1,5 @@
 import { queryOptions } from "@tanstack/react-query";
-import { TEAM_NAMES, SEVERITY_ORDER } from "./constants";
+import { TEAM_NAMES, SEVERITY_ORDER, type TagFilter } from "./constants";
 import {
   fetchTeamData,
   fetchAllTeamsData,
@@ -85,10 +85,10 @@ export type AssetRow = {
   crit: number;
 };
 
-export const overviewQueryOptions = (team: string) =>
+export const overviewQueryOptions = (team: string, tagFilter?: TagFilter) =>
   queryOptions({
-    queryKey: ["overview", team],
-    queryFn: () => fetchTeamData({ data: { team } }),
+    queryKey: ["overview", team, tagFilter],
+    queryFn: () => fetchTeamData({ data: { team, tagFilter } }),
   });
 
 export const squadsQueryOptions = () =>
@@ -103,13 +103,18 @@ export const slaQueryOptions = () =>
     queryFn: () => fetchAllTeamsData({}),
   });
 
-export const qidsQueryOptions = (filters: { sev?: string; team?: string; q?: string }) =>
+export const qidsQueryOptions = (filters: {
+  sev?: string;
+  team?: string;
+  q?: string;
+  tagFilter?: TagFilter;
+}) =>
   queryOptions({
     queryKey: ["qids", filters],
     queryFn: () => fetchQids({ data: filters }),
   });
 
-export const assetsQueryOptions = (filters: { team?: string; q?: string }) =>
+export const assetsQueryOptions = (filters: { team?: string; q?: string; tagFilter?: TagFilter }) =>
   queryOptions({
     queryKey: ["assets", filters],
     queryFn: () => fetchAssets({ data: filters }),
@@ -202,6 +207,7 @@ export type ReportData = {
 export const reportsQueryOptions = (filters: {
   team?: string | undefined;
   os?: string | undefined;
+  tagFilter?: TagFilter;
 }) =>
   queryOptions({
     queryKey: ["reports", filters],
