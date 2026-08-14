@@ -12,7 +12,7 @@ services:
       PORT: "3000"
       DATABASE_URL: postgres://qualys_vis:%242a%2412%24%2FKFqujDMFqhK4b6IvMjQUeJR8YwfcU0Dj6EuYk0XzsP4hWAL1hSmu@10.224.1.244:5432/qualys_db
     ports:
-      - "3000:3000"
+      - "2355:3000"
     healthcheck:
       test:
         [
