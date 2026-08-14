@@ -46,6 +46,7 @@ type RelatoriosSearch = {
   team?: string | undefined;
   os?: string | undefined;
   q?: string | undefined;
+  tagFilter?: "all" | "all_clouds" | "all_onpremises";
 };
 
 export const Route = createFileRoute("/relatorios")({
@@ -53,6 +54,12 @@ export const Route = createFileRoute("/relatorios")({
     team: typeof search["team"] === "string" ? search["team"] : undefined,
     os: typeof search["os"] === "string" ? search["os"] : undefined,
     q: typeof search["q"] === "string" ? search["q"] : undefined,
+    tagFilter:
+      search["tagFilter"] === "all" ||
+      search["tagFilter"] === "all_clouds" ||
+      search["tagFilter"] === "all_onpremises"
+        ? search["tagFilter"]
+        : undefined,
   }),
   head: () => ({
     meta: [
@@ -80,6 +87,7 @@ function Relatorios() {
   const team = search.team ?? "Todas";
   const os = search.os ?? "";
   const q = search.q ?? "";
+  const tagFilter = search.tagFilter ?? "all";
   const [qInput, setQInput] = useState(q);
   const [osInput, setOsInput] = useState(os);
   const debouncedQ = useDebouncedValue(qInput, 300);
@@ -132,8 +140,12 @@ function Relatorios() {
   }, [debouncedOs, os, navigate]);
 
   const filters = useMemo(
-    () => ({ team: team === "Todas" ? undefined : team, os: os || undefined }),
-    [team, os],
+    () => ({
+      team: team === "Todas" ? undefined : team,
+      os: os || undefined,
+      tagFilter: tagFilter === "all" ? undefined : tagFilter,
+    }),
+    [team, os, tagFilter],
   );
   const { data, isLoading, isError } = useQuery(reportsQueryOptions(filters));
 
@@ -355,7 +367,7 @@ function FilterBar({
           ))}
           <button
             onClick={() =>
-              navigate({ search: () => ({ team: undefined, os: undefined, q: undefined }) })
+              navigate({ search: () => ({ team: undefined, os: undefined, q: undefined, tagFilter: undefined }) })
             }
             className="stencil border border-border px-3 py-1 text-[10px] text-muted-foreground transition-colors hover:border-primary hover:text-foreground"
           >
@@ -538,7 +550,7 @@ function AssetsTab({ assets, q }: { assets: ReportData["assets"]; q: string }) {
           </p>
           <button
             onClick={() =>
-              navigate({ search: () => ({ team: undefined, os: undefined, q: undefined }) })
+              navigate({ search: () => ({ team: undefined, os: undefined, q: undefined, tagFilter: undefined }) })
             }
             className="stencil mt-3 border border-border px-4 py-1.5 text-[10px] text-muted-foreground transition-colors hover:border-primary hover:text-foreground"
           >
