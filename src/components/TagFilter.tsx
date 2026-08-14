@@ -1,4 +1,4 @@
-import { useNavigate, useSearch } from "@tanstack/react-router";
+import { useNavigate, useRouterState } from "@tanstack/react-router";
 import {
   Select,
   SelectContent,
@@ -9,9 +9,9 @@ import {
 import { TAG_FILTER_OPTIONS, type TagFilter } from "@/lib/constants";
 
 export function TagFilter() {
-  const search = useSearch({ from: "/" });
-  const navigate = useNavigate({ from: "/" });
-  const value = search.tagFilter ?? "full";
+  const navigate = useNavigate();
+  const search = useRouterState({ select: (s) => s.location.search });
+  const value = (search.tagFilter as TagFilter | undefined) ?? "full";
 
   const setTagFilter = (next: TagFilter) => {
     navigate({
