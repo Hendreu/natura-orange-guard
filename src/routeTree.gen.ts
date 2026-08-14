@@ -11,6 +11,8 @@
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as AtivosRouteImport } from './routes/ativos'
+import { Route as HardeningRouteImport } from './routes/hardening'
+import { Route as RelatoriosRouteImport } from './routes/relatorios'
 import { Route as SlaRouteImport } from './routes/sla'
 import { Route as SquadsRouteImport } from './routes/squads'
 import { Route as VulnerabilidadesRouteImport } from './routes/vulnerabilidades'
@@ -23,6 +25,16 @@ const IndexRoute = IndexRouteImport.update({
 const AtivosRoute = AtivosRouteImport.update({
   id: '/ativos',
   path: '/ativos',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const HardeningRoute = HardeningRouteImport.update({
+  id: '/hardening',
+  path: '/hardening',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const RelatoriosRoute = RelatoriosRouteImport.update({
+  id: '/relatorios',
+  path: '/relatorios',
   getParentRoute: () => rootRouteImport,
 } as any)
 const SlaRoute = SlaRouteImport.update({
@@ -44,6 +56,8 @@ const VulnerabilidadesRoute = VulnerabilidadesRouteImport.update({
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/ativos': typeof AtivosRoute
+  '/hardening': typeof HardeningRoute
+  '/relatorios': typeof RelatoriosRoute
   '/sla': typeof SlaRoute
   '/squads': typeof SquadsRoute
   '/vulnerabilidades': typeof VulnerabilidadesRoute
@@ -51,6 +65,8 @@ export interface FileRoutesByFullPath {
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/ativos': typeof AtivosRoute
+  '/hardening': typeof HardeningRoute
+  '/relatorios': typeof RelatoriosRoute
   '/sla': typeof SlaRoute
   '/squads': typeof SquadsRoute
   '/vulnerabilidades': typeof VulnerabilidadesRoute
@@ -59,21 +75,47 @@ export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
   '/ativos': typeof AtivosRoute
+  '/hardening': typeof HardeningRoute
+  '/relatorios': typeof RelatoriosRoute
   '/sla': typeof SlaRoute
   '/squads': typeof SquadsRoute
   '/vulnerabilidades': typeof VulnerabilidadesRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths: '/' | '/ativos' | '/sla' | '/squads' | '/vulnerabilidades'
+  fullPaths:
+    | '/'
+    | '/ativos'
+    | '/hardening'
+    | '/relatorios'
+    | '/sla'
+    | '/squads'
+    | '/vulnerabilidades'
   fileRoutesByTo: FileRoutesByTo
-  to: '/' | '/ativos' | '/sla' | '/squads' | '/vulnerabilidades'
-  id: '__root__' | '/' | '/ativos' | '/sla' | '/squads' | '/vulnerabilidades'
+  to:
+    | '/'
+    | '/ativos'
+    | '/hardening'
+    | '/relatorios'
+    | '/sla'
+    | '/squads'
+    | '/vulnerabilidades'
+  id:
+    | '__root__'
+    | '/'
+    | '/ativos'
+    | '/hardening'
+    | '/relatorios'
+    | '/sla'
+    | '/squads'
+    | '/vulnerabilidades'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   AtivosRoute: typeof AtivosRoute
+  HardeningRoute: typeof HardeningRoute
+  RelatoriosRoute: typeof RelatoriosRoute
   SlaRoute: typeof SlaRoute
   SquadsRoute: typeof SquadsRoute
   VulnerabilidadesRoute: typeof VulnerabilidadesRoute
@@ -93,6 +135,20 @@ declare module '@tanstack/react-router' {
       path: '/ativos'
       fullPath: '/ativos'
       preLoaderRoute: typeof AtivosRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/hardening': {
+      id: '/hardening'
+      path: '/hardening'
+      fullPath: '/hardening'
+      preLoaderRoute: typeof HardeningRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/relatorios': {
+      id: '/relatorios'
+      path: '/relatorios'
+      fullPath: '/relatorios'
+      preLoaderRoute: typeof RelatoriosRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/sla': {
@@ -122,6 +178,8 @@ declare module '@tanstack/react-router' {
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   AtivosRoute: AtivosRoute,
+  HardeningRoute: HardeningRoute,
+  RelatoriosRoute: RelatoriosRoute,
   SlaRoute: SlaRoute,
   SquadsRoute: SquadsRoute,
   VulnerabilidadesRoute: VulnerabilidadesRoute,
@@ -129,3 +187,13 @@ const rootRouteChildren: RootRouteChildren = {
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
   ._addFileTypes<FileRouteTypes>()
+
+import type { getRouter } from './router.tsx'
+import type { startInstance } from './start.ts'
+declare module '@tanstack/react-start' {
+  interface Register {
+    ssr: true
+    router: Awaited<ReturnType<typeof getRouter>>
+    config: Awaited<ReturnType<typeof startInstance.getOptions>>
+  }
+}

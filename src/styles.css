@@ -57,45 +57,39 @@
   --color-sidebar-border: var(--border);
   --color-sidebar-ring: var(--ring);
   --font-display: "Chakra Petch", sans-serif;
+  --font-sans: "DM Sans", system-ui, sans-serif;
   --font-mono: "JetBrains Mono", monospace;
 }
 
 :root {
   --radius: 14px;
-  /* Paleta derivada dos logos SRC/GSI: azul-petróleo, laranja terroso, verde oliva, creme */
-  --background: oklch(0.23 0.022 245);
-  --foreground: oklch(0.94 0.012 85);
-  --card: oklch(0.28 0.022 245);
-  --card-foreground: oklch(0.94 0.012 85);
-  --popover: oklch(0.28 0.022 245);
-  --popover-foreground: oklch(0.94 0.012 85);
-  --primary: oklch(0.58 0.16 40);
-  --primary-foreground: oklch(0.96 0.012 85);
-  --secondary: oklch(0.32 0.02 245);
-  --secondary-foreground: oklch(0.94 0.012 85);
-  --muted: oklch(0.32 0.02 245);
-  --muted-foreground: oklch(0.72 0.015 85);
-  --accent: oklch(0.58 0.16 40);
-  --accent-foreground: oklch(0.96 0.012 85);
-  --destructive: oklch(0.55 0.17 32);
-  --destructive-foreground: oklch(0.96 0.012 85);
-  --border: oklch(0.38 0.018 245);
-  --input: oklch(0.32 0.02 245);
-  --ring: oklch(0.58 0.16 40);
-  --critica: oklch(0.56 0.17 32);
-  --alta: oklch(0.66 0.14 48);
-  --media: oklch(0.79 0.11 88);
-  --baixa: oklch(0.68 0.1 132);
-  --signal: oklch(0.72 0.12 60);
-  --steel: oklch(0.34 0.02 245);
-  --grid-line: oklch(1 0 0 / 3.5%);
+  --background: #f7f5f0;
+  --foreground: #2c2c2c;
+  --card: #fdfcfa;
+  --card-foreground: #2c2c2c;
+  --popover: #fdfcfa;
+  --popover-foreground: #2c2c2c;
+  --primary: #e89b72;
+  --primary-foreground: #2c2c2c;
+  --secondary: #b8c4a7;
+  --secondary-foreground: #2c2c2c;
+  --muted: #edeae4;
+  --muted-foreground: #6e6a63;
+  --accent: #8fa3b8;
+  --accent-foreground: #fdfcfa;
+  --destructive: #e07a6e;
+  --destructive-foreground: #fdfcfa;
+  --border: #d9d5cc;
+  --input: #e8e5de;
+  --ring: #e89b72;
+  --critica: #e07a6e;
+  --alta: #d4a056;
+  --media: #c9b67a;
+  --baixa: #9db88e;
+  --signal: #e89b72;
+  --steel: #edeae4;
+  --grid-line: #d9d5cc;
 }
-
-
-.dark {
-  --background: oklch(0.23 0.022 245);
-}
-
 
 @layer base {
   * {
@@ -109,7 +103,7 @@
       linear-gradient(90deg, var(--grid-line) 1px, transparent 1px);
     background-size: 48px 48px;
     color: var(--color-foreground);
-    font-family: var(--font-mono);
+    font-family: var(--font-sans);
   }
 
   h1,
@@ -117,7 +111,7 @@
   h3,
   h4 {
     font-family: var(--font-display);
-    letter-spacing: 0em;
+    letter-spacing: -0.01em;
   }
 
   button,
@@ -141,20 +135,20 @@
   background: var(--card);
   border: 1px solid var(--border);
   border-radius: var(--radius-lg);
-  box-shadow: 0 6px 18px -8px oklch(0 0 0 / 35%);
+  box-shadow: 0 4px 14px -6px oklch(0.35 0.01 70 / 12%);
 }
 
 @utility slab-signal {
   background: var(--card);
-  border: 1px solid color-mix(in oklab, var(--primary) 70%, transparent);
+  border: 1px solid color-mix(in oklab, var(--primary) 55%, transparent);
   border-radius: var(--radius-lg);
-  box-shadow: 0 8px 22px -10px color-mix(in oklab, var(--primary) 60%, transparent);
+  box-shadow: 0 6px 18px -8px color-mix(in oklab, var(--primary) 40%, transparent);
 }
 
 @utility stencil {
   font-family: var(--font-display);
   text-transform: uppercase;
-  letter-spacing: 0.08em;
+  letter-spacing: 0.06em;
   font-weight: 600;
 }
 
@@ -163,11 +157,7 @@
 }
 
 @utility scan-strip {
-  background-image: repeating-linear-gradient(
-    -45deg,
-    var(--primary) 0 8px,
-    transparent 8px 16px
-  );
+  background-image: repeating-linear-gradient(-45deg, var(--primary) 0 8px, transparent 8px 16px);
 }
 
 /* Superfícies clicáveis */
@@ -190,4 +180,3 @@
     box-shadow: 0 4px 12px -8px oklch(0 0 0 / 40%);
   }
 }
-

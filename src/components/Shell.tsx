@@ -1,6 +1,6 @@
 import { Link, useRouterState } from "@tanstack/react-router";
 import type { ReactNode } from "react";
-import { Activity, Boxes, Bug, Gauge, ShieldHalf, Timer } from "lucide-react";
+import { Activity, Boxes, Bug, Cloud, FileBarChart, Gauge, ShieldHalf, Timer } from "lucide-react";
 
 const nav = [
   { to: "/", label: "Visão geral", icon: Gauge },
@@ -8,6 +8,8 @@ const nav = [
   { to: "/ativos", label: "Ativos", icon: Boxes },
   { to: "/sla", label: "SLA & Risco", icon: Timer },
   { to: "/squads", label: "Squads", icon: ShieldHalf },
+  { to: "/hardening", label: "Hardening", icon: Cloud },
+  { to: "/relatorios", label: "Relatórios", icon: FileBarChart },
 ];
 
 export function Shell({
@@ -25,11 +27,13 @@ export function Shell({
     <div className="flex min-h-screen">
       <aside className="sticky top-0 hidden h-screen w-[230px] shrink-0 flex-col border-r border-border bg-card lg:flex">
         <div className="border-b border-border p-5">
-          <div className="scan-strip mb-4 h-2 w-full" />
-          <p className="font-display text-xl leading-none font-bold">
-            NATURA<span className="text-primary">/SEC</span>
-          </p>
-          <p className="stencil mt-1 text-[9px] text-muted-foreground">Security Operations</p>
+          <div className="mb-3 flex items-center gap-3">
+            <img src="/logo-icon.png" alt="SRC" className="h-9 w-9 rounded-full object-cover" />
+            <p className="font-display text-lg leading-none font-bold">
+              Natura<span className="text-primary">Sec</span>
+            </p>
+          </div>
+          <p className="text-[10px] text-muted-foreground">Security Operations</p>
         </div>
         <nav className="flex-1 p-3">
           {nav.map((n) => {
@@ -39,21 +43,21 @@ export function Shell({
               <Link
                 key={n.to}
                 to={n.to}
-                className={`mb-2 flex items-center gap-3 border px-3 py-2.5 text-[11px] transition-colors ${
+                className={`mb-2 flex items-center gap-3 rounded-xl px-3 py-2.5 text-[12px] font-medium transition-colors ${
                   active
-                    ? "border-primary bg-primary text-primary-foreground"
-                    : "border-transparent text-muted-foreground hover:border-border hover:text-foreground"
+                    ? "bg-primary text-primary-foreground"
+                    : "text-muted-foreground hover:bg-muted hover:text-foreground"
                 }`}
               >
-                <Icon size={15} strokeWidth={2.5} />
-                <span className="stencil">{n.label}</span>
+                <Icon size={16} strokeWidth={2} />
+                <span>{n.label}</span>
               </Link>
             );
           })}
         </nav>
         <div className="border-t border-border p-4">
           <p className="flex items-center gap-2 text-[10px] text-baixa">
-            <Activity size={12} /> BASE SINCRONIZADA
+            <Activity size={12} /> Base sincronizada
           </p>
           <p className="mt-1 text-[10px] text-muted-foreground">Snapshot: Semana 3 / Julho</p>
         </div>
@@ -61,20 +65,22 @@ export function Shell({
 
       <div className="min-w-0 flex-1">
         <header className="border-b border-border bg-card px-6 py-5">
-          <p className="stencil text-[10px] text-primary">
-            Natura // Divisão de Segurança da Informação
+          <p className="text-[10px] font-medium tracking-wide text-primary">
+            Natura / Segurança da Informação
           </p>
-          <h1 className="font-display text-3xl leading-none font-bold sm:text-4xl">{title}</h1>
-          <p className="mt-2 text-xs text-muted-foreground">{subtitle}</p>
+          <h1 className="font-display text-3xl leading-none font-bold text-foreground sm:text-4xl">
+            {title}
+          </h1>
+          <p className="mt-2 text-sm text-muted-foreground">{subtitle}</p>
           <nav className="mt-4 flex flex-wrap gap-2 lg:hidden">
             {nav.map((n) => (
               <Link
                 key={n.to}
                 to={n.to}
-                className={`stencil border px-3 py-1.5 text-[10px] ${
+                className={`rounded-xl px-3 py-1.5 text-[10px] font-medium ${
                   path === n.to
-                    ? "border-primary bg-primary text-primary-foreground"
-                    : "border-border text-muted-foreground"
+                    ? "bg-primary text-primary-foreground"
+                    : "border border-border text-muted-foreground"
                 }`}
               >
                 {n.label}
@@ -83,8 +89,8 @@ export function Shell({
           </nav>
         </header>
         <main className="p-6">{children}</main>
-        <footer className="stencil px-6 pb-8 text-[10px] text-muted-foreground">
-          Natura SecOps // dados consolidados — uso interno
+        <footer className="px-6 pb-8 text-[10px] text-muted-foreground">
+          Natura SecOps — dados consolidados, uso interno
         </footer>
       </div>
     </div>

@@ -13,8 +13,19 @@ import {
 } from "recharts";
 import { Shell } from "@/components/Shell";
 import { StatSlab, TrendTag } from "@/components/StatSlab";
-import { fmt, severityOrder, severityToken, teamNames, teams } from "@/lib/sla-data";
-
+import { useQuery } from "@tanstack/react-query";
+import { fmt, severityOrder, severityToken, teamNames, overviewQueryOptions } from "@/lib/sla-data";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import {
+  Command,
+  CommandEmpty,
+  CommandGroup,
+  CommandInput,
+  CommandItem,
+  CommandList,
+} from "@/components/ui/command";
+import { Check, ChevronsUpDown } from "lucide-react";
+import { cn } from "@/lib/utils";
 
 export const Route = createFileRoute("/")({
   head: () => ({
@@ -38,8 +49,9 @@ export const Route = createFileRoute("/")({
 function Overview() {
   const navigate = useNavigate();
   const [team, setTeam] = useState(teamNames[0] as string);
+  const [teamOpen, setTeamOpen] = useState(false);
   const [openSev, setOpenSev] = useState<string | null>("Crítica");
-  const data = teams[team]!;
+  const { data, isLoading, isError } = useQuery(overviewQueryOptions(team));
 
   const goToVulns = (extra: { sev?: string; q?: string } = {}) =>
     navigate({
@@ -47,15 +59,14 @@ function Overview() {
       search: { team, sev: extra.sev, q: extra.q },
     });
 
-
   const sevData = useMemo(
-    () => severityOrder.map((s, i) => ({ name: s, total: data.chartSev[i] ?? 0 })),
+    () => severityOrder.map((s, i) => ({ name: s, total: data?.chartSev[i] ?? 0 })),
     [data],
   );
 
   const slaChart = useMemo(
     () =>
-      Object.entries(data.slaData).map(([sev, b]) => ({
+      Object.entries(data?.slaData ?? {}).map(([sev, b]) => ({
         name: sev,
         "Dentro SLA": b.DentroSLA_Corr + b.DentroSLA_NaoCorr,
         "Fora SLA": b.ForaSLA_Corr + b.ForaSLA_NaoCorr,
@@ -67,38 +78,99 @@ function Overview() {
   const dentro = slaChart.reduce((a, r) => a + r["Dentro SLA"], 0);
   const aderencia = totalSla ? Math.round((dentro / totalSla) * 100) : 0;
 
+  if (isLoading || !data)
+    return (
+      <Shell title="Visão geral" subtitle="Carregando base Qualys…">
+        <OverviewSkeleton />
+      </Shell>
+    );
+  if (isError)
+    return (
+      <Shell title="Visão geral" subtitle="Erro de conexão">
+        <ErrorState />
+      </Shell>
+    );
+
   return (
     <Shell
       title="Visão geral"
       subtitle="Comparativo semanal — Semana 2 vs Semana 3 de Julho // base consolidada Qualys"
     >
-      <div className="mb-6 flex flex-wrap items-center justify-between gap-4">
-        <nav className="flex flex-wrap gap-2" aria-label="Seleção de squad">
-          {teamNames.map((t) => (
-            <button
-              key={t}
-              onClick={() => setTeam(t)}
-              className={`stencil border px-4 py-2 text-[11px] transition-transform ${
-                t === team
-                  ? "border-primary bg-primary text-primary-foreground"
-                  : "border-border bg-card text-muted-foreground hover:-translate-y-0.5 hover:text-foreground"
-              }`}
-            >
-              {t}
-            </button>
-          ))}
-        </nav>
-        <div className="flex gap-3">
-          <div className="slab-signal px-4 py-2 text-center">
-            <p className="font-display text-2xl leading-none font-bold text-primary">
-              {data.kpis.qds}
-            </p>
-            <p className="stencil text-[9px] text-muted-foreground">Score QDS</p>
+      <div className="mb-6 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+        {/* Squad selector + context panel */}
+        <div className="slab corner-cut flex flex-col p-4 sm:col-span-2 lg:col-span-1">
+          <p className="stencil text-[10px] text-muted-foreground">Squad ativo</p>
+          <Popover open={teamOpen} onOpenChange={setTeamOpen}>
+            <PopoverTrigger asChild>
+              <button
+                className="stencil mt-3 flex w-full items-center justify-between gap-2 border border-border bg-card px-4 py-2.5 text-[11px] text-muted-foreground transition-transform hover:-translate-y-0.5 hover:border-primary hover:text-foreground"
+                aria-label="Selecionar squad"
+              >
+                <span className="flex items-center gap-2">
+                  <span>Squad</span>
+                  <span className="text-primary">{team}</span>
+                </span>
+                <ChevronsUpDown className="h-3 w-3 opacity-50" />
+              </button>
+            </PopoverTrigger>
+            <PopoverContent className="w-[260px] p-0" align="start" sideOffset={6}>
+              <Command>
+                <CommandInput placeholder="Buscar squad..." className="font-mono text-xs" />
+                <CommandList className="max-h-[280px]">
+                  <CommandEmpty className="stencil py-4 text-center text-[10px] text-muted-foreground">
+                    Nenhum squad encontrado
+                  </CommandEmpty>
+                  <CommandGroup>
+                    {teamNames.map((t) => (
+                      <CommandItem
+                        key={t}
+                        value={t}
+                        onSelect={() => {
+                          setTeam(t);
+                          setTeamOpen(false);
+                        }}
+                        className="stencil gap-2 text-[11px] data-[selected=true]:bg-primary data-[selected=true]:text-primary-foreground"
+                      >
+                        <Check
+                          className={cn("h-3.5 w-3.5", team === t ? "opacity-100" : "opacity-0")}
+                        />
+                        {t}
+                      </CommandItem>
+                    ))}
+                  </CommandGroup>
+                </CommandList>
+              </Command>
+            </PopoverContent>
+          </Popover>
+          <div className="mt-auto flex items-center gap-3 border-t border-border pt-3">
+            <span className="font-display text-3xl leading-none font-bold text-primary">
+              {String(teamNames.indexOf(team) + 1).padStart(2, "0")}
+            </span>
+            <div className="flex flex-col gap-0.5">
+              <span className="stencil text-[9px] text-muted-foreground">
+                de {teamNames.length} squads
+              </span>
+              <span className="stencil text-[9px] text-muted-foreground">base Qualys</span>
+            </div>
+          </div>
+        </div>
+
+        {/* QDS Score */}
+        <div className="slab-signal corner-cut flex flex-col p-4">
+          <p className="stencil text-[10px] text-muted-foreground">Score QDS</p>
+          <p className="mt-2 font-display text-4xl leading-none font-bold text-primary">
+            {data.kpis.qds}
+          </p>
+          <div className="mt-auto pt-2">
             <TrendTag trend={data.trends["qds"]} />
           </div>
-          <div className="slab px-4 py-2 text-center">
-            <p className="font-display text-2xl leading-none font-bold">{data.kpis.qds_corr}</p>
-            <p className="stencil text-[9px] text-muted-foreground">QDS corrigíveis</p>
+        </div>
+
+        {/* QDS Corrigíveis */}
+        <div className="slab corner-cut flex flex-col p-4">
+          <p className="stencil text-[10px] text-muted-foreground">QDS corrigíveis</p>
+          <p className="mt-2 font-display text-4xl leading-none font-bold">{data.kpis.qds_corr}</p>
+          <div className="mt-auto pt-2">
             <TrendTag trend={data.trends["qds_corr"]} />
           </div>
         </div>
@@ -141,7 +213,6 @@ function Overview() {
           onClick={() => setOpenSev("Crítica")}
         />
       </section>
-
 
       <section className="mb-6 grid gap-4 lg:grid-cols-2">
         <div className="slab corner-cut p-5">
@@ -257,7 +328,6 @@ function Overview() {
                   </button>
                 </div>
 
-
                 {open && (
                   <div className="overflow-x-auto p-4">
                     <table className="w-full text-xs">
@@ -321,5 +391,38 @@ function Overview() {
         </div>
       </section>
     </Shell>
+  );
+}
+
+function OverviewSkeleton() {
+  return (
+    <div className="space-y-6">
+      <section className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+        {Array.from({ length: 4 }).map((_, i) => (
+          <div key={i} className="slab corner-cut bg-steel h-[120px] animate-pulse" />
+        ))}
+      </section>
+      <section className="grid gap-4 lg:grid-cols-2">
+        <div className="slab corner-cut bg-steel h-[300px] animate-pulse" />
+        <div className="slab corner-cut bg-steel h-[300px] animate-pulse" />
+      </section>
+    </div>
+  );
+}
+
+function ErrorState() {
+  return (
+    <div className="slab corner-cut p-6 text-center">
+      <h2 className="stencil text-sm text-critica">Erro ao carregar dados</h2>
+      <p className="mt-2 text-xs text-muted-foreground">
+        Não foi possível consultar a base Qualys.
+      </p>
+      <button
+        onClick={() => window.location.reload()}
+        className="mt-4 stencil border border-primary px-4 py-2 text-[10px] text-primary hover:bg-primary hover:text-primary-foreground"
+      >
+        Tentar novamente
+      </button>
+    </div>
   );
 }

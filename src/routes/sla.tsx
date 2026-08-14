@@ -9,8 +9,9 @@ import {
   XAxis,
   YAxis,
 } from "recharts";
+import { useQuery } from "@tanstack/react-query";
 import { Shell } from "@/components/Shell";
-import { fmt, teams, teamNames } from "@/lib/sla-data";
+import { fmt, slaQueryOptions, teamNames } from "@/lib/sla-data";
 
 export const Route = createFileRoute("/sla")({
   head: () => ({
@@ -32,8 +33,11 @@ export const Route = createFileRoute("/sla")({
 });
 
 function Sla() {
+  const { data: teams = {}, isLoading, isError } = useQuery(slaQueryOptions());
+
   const rows = teamNames.map((t) => {
-    const d = teams[t]!;
+    const d = teams[t];
+    if (!d) return { name: t, dentro: 0, fora: 0, aderencia: 0 };
     let dentro = 0;
     let fora = 0;
     Object.values(d.slaData).forEach((b) => {
@@ -49,6 +53,36 @@ function Sla() {
     "Dentro SLA": r.dentro,
     "Fora SLA": r.fora,
   }));
+
+  if (isLoading) {
+    return (
+      <Shell
+        title="SLA & Risco"
+        subtitle="Comparativo de aderência entre squads — quanto do backlog está dentro do prazo acordado."
+      >
+        <section className="mb-6 grid gap-4 sm:grid-cols-2 xl:grid-cols-5">
+          {Array.from({ length: 5 }).map((_, i) => (
+            <div key={i} className="slab corner-cut bg-steel h-[120px] animate-pulse" />
+          ))}
+        </section>
+        <section className="slab corner-cut bg-steel h-[420px] animate-pulse" />
+      </Shell>
+    );
+  }
+
+  if (isError) {
+    return (
+      <Shell
+        title="SLA & Risco"
+        subtitle="Comparativo de aderência entre squads — quanto do backlog está dentro do prazo acordado."
+      >
+        <div className="slab corner-cut p-6 text-center">
+          <h2 className="stencil text-sm text-critica">Erro ao carregar SLA</h2>
+          <p className="mt-2 text-xs text-muted-foreground">Falha na consulta à base Qualys.</p>
+        </div>
+      </Shell>
+    );
+  }
 
   return (
     <Shell
@@ -79,7 +113,6 @@ function Sla() {
           </Link>
         ))}
       </section>
-
 
       <section className="slab corner-cut p-5">
         <h2 className="stencil mb-4 text-xs text-primary">Volume dentro vs fora do SLA</h2>

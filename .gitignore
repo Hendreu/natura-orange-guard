@@ -15,6 +15,7 @@ dist-ssr
 .tanstack/**
 .nitro
 *.local
+.env
 
 # Wrangler / Cloudflare
 .wrangler/
@@ -30,3 +31,5 @@ dist-ssr
 *.njsproj
 *.sln
 *.sw?
+
+.omo/

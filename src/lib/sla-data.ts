@@ -1,4 +1,13 @@
-import raw from "@/data/teams.json";
+import { queryOptions } from "@tanstack/react-query";
+import { TEAM_NAMES, SEVERITY_ORDER } from "./constants";
+import {
+  fetchTeamData,
+  fetchAllTeamsData,
+  fetchQids,
+  fetchAssets,
+  fetchHardening,
+  fetchReports,
+} from "./data.fn";
 
 export type Trend = { diff: number; pct: number };
 
@@ -37,11 +46,10 @@ export type TeamData = {
   raw: Record<string, SeverityBlock>;
 };
 
-export const teams = raw as unknown as Record<string, TeamData>;
-export const teamNames = Object.keys(teams);
+export type Severity = (typeof SEVERITY_ORDER)[number];
 
-export const severityOrder = ["Crítica", "Alta", "Média", "Baixa"] as const;
-export type Severity = (typeof severityOrder)[number];
+export const teamNames = [...TEAM_NAMES];
+export const severityOrder = [...SEVERITY_ORDER];
 
 export const severityToken: Record<string, string> = {
   Crítica: "var(--critica)",
@@ -53,9 +61,6 @@ export const severityToken: Record<string, string> = {
 export function fmt(n: number) {
   return n.toLocaleString("pt-BR");
 }
-
-import qidsJson from "@/data/qids.json";
-import assetsJson from "@/data/assets.json";
 
 export type QidRow = {
   qid: number;
@@ -80,5 +85,125 @@ export type AssetRow = {
   crit: number;
 };
 
-export const qids = qidsJson as QidRow[];
-export const assets = assetsJson as AssetRow[];
+export const overviewQueryOptions = (team: string) =>
+  queryOptions({
+    queryKey: ["overview", team],
+    queryFn: () => fetchTeamData({ data: { team } }),
+  });
+
+export const squadsQueryOptions = () =>
+  queryOptions({
+    queryKey: ["squads"],
+    queryFn: () => fetchAllTeamsData({}),
+  });
+
+export const slaQueryOptions = () =>
+  queryOptions({
+    queryKey: ["sla"],
+    queryFn: () => fetchAllTeamsData({}),
+  });
+
+export const qidsQueryOptions = (filters: { sev?: string; team?: string; q?: string }) =>
+  queryOptions({
+    queryKey: ["qids", filters],
+    queryFn: () => fetchQids({ data: filters }),
+  });
+
+export const assetsQueryOptions = (filters: { team?: string; q?: string }) =>
+  queryOptions({
+    queryKey: ["assets", filters],
+    queryFn: () => fetchAssets({ data: filters }),
+  });
+
+export type HardeningCategory = {
+  name: string;
+  count: number;
+  sev: string;
+};
+
+export type HardeningQid = {
+  qid: number;
+  title: string;
+  count: number;
+  sev: string;
+};
+
+export type HardeningData = {
+  score: number;
+  cloudAssets: number;
+  cloudAssetsWithCritical: number;
+  cloudVulns: number;
+  categories: HardeningCategory[];
+  topQids: HardeningQid[];
+};
+
+export const hardeningQueryOptions = () =>
+  queryOptions({
+    queryKey: ["hardening"],
+    queryFn: () => fetchHardening({}),
+  });
+
+export type ReportCategory = {
+  name: string;
+  count: number;
+  sev: string;
+};
+
+export type ReportAsset = {
+  qgHostId: string;
+  hostname: string;
+  ip: string;
+  os: string;
+  team: string;
+  vulns: number;
+  critical: number;
+  compliancePct: number;
+};
+
+export type ReportTeamRow = {
+  team: string;
+  assets: number;
+  vulns: number;
+  critical: number;
+  compliancePct: number;
+};
+
+export type ReportKpis = {
+  totalAssets: number;
+  assetsWithCritical: number;
+  complianceScore: number;
+  totalVulns: number;
+};
+
+export type ReportOsRow = {
+  os: string;
+  assets: number;
+  vulns: number;
+  critical: number;
+  compliancePct: number;
+};
+
+export type ReportTopQid = {
+  qid: number;
+  title: string;
+  sev: string;
+  count: number;
+};
+
+export type ReportData = {
+  kpis: ReportKpis;
+  osRows: ReportOsRow[];
+  topQids: ReportTopQid[];
+  categories: ReportCategory[];
+  assets: ReportAsset[];
+  teamRows: ReportTeamRow[];
+};
+
+export const reportsQueryOptions = (filters: {
+  team?: string | undefined;
+  os?: string | undefined;
+}) =>
+  queryOptions({
+    queryKey: ["reports", filters],
+    queryFn: () => fetchReports({ data: filters }),
+  });
