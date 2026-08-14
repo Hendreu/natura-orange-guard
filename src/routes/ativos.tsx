@@ -13,12 +13,22 @@ import { Shell } from "@/components/Shell";
 import { useDebouncedValue } from "@/hooks/use-debounced-value";
 import { assetsQueryOptions, fmt, teamNames } from "@/lib/sla-data";
 
-type AtivosSearch = { q?: string | undefined; team?: string | undefined };
+type AtivosSearch = {
+  q?: string | undefined;
+  team?: string | undefined;
+  tagFilter?: "all" | "all_clouds" | "all_onpremises";
+};
 
 export const Route = createFileRoute("/ativos")({
   validateSearch: (search: Record<string, unknown>): AtivosSearch => ({
     q: typeof search["q"] === "string" ? search["q"] : undefined,
     team: typeof search["team"] === "string" ? search["team"] : undefined,
+    tagFilter:
+      search["tagFilter"] === "all" ||
+      search["tagFilter"] === "all_clouds" ||
+      search["tagFilter"] === "all_onpremises"
+        ? search["tagFilter"]
+        : undefined,
   }),
   head: () => ({
     meta: [
@@ -43,6 +53,7 @@ function Ativos() {
   const navigate = useNavigate({ from: "/ativos" });
   const q = search.q ?? "";
   const team = search.team ?? "Todas";
+  const tagFilter = search.tagFilter ?? "all";
   const [qInput, setQInput] = useState(q);
   const debouncedQ = useDebouncedValue(qInput, 300);
 
@@ -65,7 +76,7 @@ function Ativos() {
     data: rows = [],
     isLoading,
     isError,
-  } = useQuery(assetsQueryOptions({ team, q: debouncedQ }));
+  } = useQuery(assetsQueryOptions({ team, q: debouncedQ, tagFilter }));
 
   const max = rows[0]?.vulns ?? 1;
 
@@ -130,7 +141,7 @@ function Ativos() {
               </button>
             ))}
             <button
-              onClick={() => navigate({ search: () => ({ q: undefined, team: undefined }) })}
+              onClick={() => navigate({ search: () => ({ q: undefined, team: undefined, tagFilter: undefined }) })}
               className="stencil border border-border px-3 py-1 text-[10px] text-muted-foreground transition-colors hover:border-primary hover:text-foreground"
             >
               Limpar tudo
@@ -171,7 +182,7 @@ function Ativos() {
                 Nenhum resultado para os filtros selecionados
               </p>
               <button
-                onClick={() => navigate({ search: () => ({ q: undefined, team: undefined }) })}
+                onClick={() => navigate({ search: () => ({ q: undefined, team: undefined, tagFilter: undefined }) })}
                 className="stencil mt-3 border border-border px-4 py-1.5 text-[10px] text-muted-foreground transition-colors hover:border-primary hover:text-foreground"
               >
                 Limpar filtros
