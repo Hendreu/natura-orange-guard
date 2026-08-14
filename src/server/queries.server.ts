@@ -104,7 +104,7 @@ export async function getTeamChartSev({
       AND v."Severity"::int IN (1,2,3,4,5)
       ${teamSql}
       ${tagSql}
-    GROUP BY v."Severity"::int
+    GROUP BY ${severityLabelExpr()}
   `;
   const map = new Map(rows.map((r) => [r["sev"], r["total"]]));
   return SEVERITY_ORDER.map((s) => map.get(s) ?? 0);
@@ -121,7 +121,7 @@ export async function getTeamSla({
   const teamSql = squadFilterSql(team);
   const rows = await sql`
     WITH base AS (
-      SELECT v."Severity", kb."Solution", ${ageExpr()} as age, ${thresholdExpr()} as threshold
+      SELECT ${severityLabelExpr()} as sev_label, kb."Solution", ${ageExpr()} as age, ${thresholdExpr()} as threshold
       FROM vulnerabilities v
       JOIN "All_Assets" a ON v."QG_HostID" = a."QG_HostID"
       LEFT JOIN "KnowledgeBase" kb ON v."QID" = kb."QID"
@@ -131,13 +131,13 @@ export async function getTeamSla({
         ${tagSql}
     )
     SELECT
-      CASE "Severity"::int WHEN 5 THEN 'Crítica' WHEN 4 THEN 'Alta' WHEN 3 THEN 'Média' ELSE 'Baixa' END as "sev",
+      sev_label as "sev",
       COUNT(*) FILTER (WHERE age <= threshold AND "Solution" IS NOT NULL)::int as "DentroSLA_Corr",
       COUNT(*) FILTER (WHERE age <= threshold AND "Solution" IS NULL)::int as "DentroSLA_NaoCorr",
       COUNT(*) FILTER (WHERE age > threshold AND "Solution" IS NOT NULL)::int as "ForaSLA_Corr",
       COUNT(*) FILTER (WHERE age > threshold AND "Solution" IS NULL)::int as "ForaSLA_NaoCorr"
     FROM base
-    GROUP BY "Severity"::int
+    GROUP BY sev_label
   `;
   const result: Record<string, SlaBucket> = {};
   for (const s of SEVERITY_ORDER) {
@@ -165,7 +165,7 @@ export async function getTeamRaw({
   const teamSql = squadFilterSql(team);
   const rows = await sql`
     WITH base AS (
-      SELECT v."Severity", v."QID", kb."Category", ${ageExpr()} as age
+      SELECT ${severityLabelExpr()} as sev_label, v."QID", COALESCE(kb."Category", 'Unknown') as "action", ${ageExpr()} as age
       FROM vulnerabilities v
       JOIN "All_Assets" a ON v."QG_HostID" = a."QG_HostID"
       LEFT JOIN "KnowledgeBase" kb ON v."QID" = kb."QID"
@@ -175,13 +175,13 @@ export async function getTeamRaw({
         ${tagSql}
     )
     SELECT
-      CASE "Severity"::int WHEN 5 THEN 'Crítica' WHEN 4 THEN 'Alta' WHEN 3 THEN 'Média' ELSE 'Baixa' END as "sev",
-      "Category" as "action",
+      sev_label as "sev",
+      "action",
       COUNT(*)::int as "total",
       ROUND(AVG(age)::numeric, 1)::float as "avg_age",
       COUNT(DISTINCT "QID")::int as "qids"
     FROM base
-    GROUP BY "Severity"::int, "Category"
+    GROUP BY sev_label, "action"
   `;
   const result: Record<string, SeverityBlock> = {};
   for (const s of SEVERITY_ORDER) {
@@ -342,7 +342,7 @@ export async function getQids({
       ${sevFilter}
       ${qFilter}
       ${tagSql}
-    GROUP BY v."QID", ${teamExpr}, kb."Category", v."Severity"::int
+    GROUP BY v."QID", ${teamExpr}, COALESCE(kb."Category", 'Unknown'), ${severityLabelExpr()}
     ORDER BY count DESC
     LIMIT 120
   `;
@@ -615,7 +615,7 @@ export async function getReports({
       ${teamFilter}
       ${osFilter}
       ${tagSql}
-    GROUP BY v."QID", v."Severity"::int
+    GROUP BY v."QID", ${severityLabelExpr()}
     ORDER BY count DESC
     LIMIT 25
   `;
@@ -633,7 +633,7 @@ export async function getReports({
       ${teamFilter}
       ${osFilter}
       ${tagSql}
-    GROUP BY kb."Category", v."Severity"::int
+    GROUP BY COALESCE(kb."Category", 'Unknown'), ${severityLabelExpr()}
     ORDER BY count DESC
     LIMIT 20
   `;
@@ -664,11 +664,12 @@ export async function getReports({
       ${extractTeamExpr()} as "team",
       COUNT(DISTINCT a."QG_HostID")::int as "assets",
       COUNT(*)::int as "vulns",
-      COUNT(*) FILTER (WHERE v."Severity"::int = 5)::int as "critical"
+      COUNT(DISTINCT a."QG_HostID") FILTER (WHERE v."Severity"::int = 5)::int as "critical"
     FROM vulnerabilities v
     JOIN "All_Assets" a ON v."QG_HostID" = a."QG_HostID"
     WHERE v."Status" IN ${sql(ACTIVE_STATUSES)}
       AND v."Severity"::int IN (1,2,3,4,5)
+      ${teamFilter}
       ${osFilter}
       ${tagSql}
     GROUP BY ${extractTeamExpr()}
