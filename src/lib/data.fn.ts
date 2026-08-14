@@ -1,11 +1,13 @@
 import { createServerFn } from "@tanstack/react-start";
 import { z } from "zod";
 
+const tagFilterSchema = z.enum(["all", "all_clouds", "all_onpremises"]).optional();
+
 export const fetchTeamData = createServerFn({ method: "GET" })
-  .validator(z.object({ team: z.string() }))
+  .validator(z.object({ team: z.string(), tagFilter: tagFilterSchema }))
   .handler(async ({ data }) => {
     const { getTeamData } = await import("../server/queries.server");
-    return await getTeamData(data.team);
+    return await getTeamData(data);
   });
 
 export const fetchAllTeamsData = createServerFn({ method: "GET" }).handler(async () => {
@@ -17,6 +19,7 @@ const qidsFilterSchema = z.object({
   sev: z.string().optional(),
   team: z.string().optional(),
   q: z.string().optional(),
+  tagFilter: tagFilterSchema,
 });
 
 export const fetchQids = createServerFn({ method: "GET" })
@@ -29,6 +32,7 @@ export const fetchQids = createServerFn({ method: "GET" })
 const assetsFilterSchema = z.object({
   team: z.string().optional(),
   q: z.string().optional(),
+  tagFilter: tagFilterSchema,
 });
 
 export const fetchAssets = createServerFn({ method: "GET" })
@@ -46,6 +50,7 @@ export const fetchHardening = createServerFn({ method: "GET" }).handler(async ()
 const reportsFilterSchema = z.object({
   team: z.string().optional(),
   os: z.string().optional(),
+  tagFilter: tagFilterSchema,
 });
 
 export const fetchReports = createServerFn({ method: "GET" })
