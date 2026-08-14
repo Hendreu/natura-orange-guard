@@ -16,7 +16,7 @@ import { assetsQueryOptions, fmt, teamNames } from "@/lib/sla-data";
 type AtivosSearch = {
   q?: string | undefined;
   team?: string | undefined;
-  tagFilter?: ("all" | "all_clouds" | "all_onpremises") | undefined;
+  tagFilter?: ("full" | "full-cloud" | "full-on-premise") | undefined;
 };
 
 export const Route = createFileRoute("/ativos")({
@@ -24,9 +24,9 @@ export const Route = createFileRoute("/ativos")({
     q: typeof search["q"] === "string" ? search["q"] : undefined,
     team: typeof search["team"] === "string" ? search["team"] : undefined,
     tagFilter:
-      search["tagFilter"] === "all" ||
-      search["tagFilter"] === "all_clouds" ||
-      search["tagFilter"] === "all_onpremises"
+      search["tagFilter"] === "full" ||
+      search["tagFilter"] === "full-cloud" ||
+      search["tagFilter"] === "full-on-premise"
         ? search["tagFilter"]
         : undefined,
   }),
@@ -53,7 +53,7 @@ function Ativos() {
   const navigate = useNavigate({ from: "/ativos" });
   const q = search.q ?? "";
   const team = search.team ?? "Todas";
-  const tagFilter = search.tagFilter ?? "all";
+  const tagFilter = search.tagFilter ?? "full";
   const [qInput, setQInput] = useState(q);
   const debouncedQ = useDebouncedValue(qInput, 300);
 

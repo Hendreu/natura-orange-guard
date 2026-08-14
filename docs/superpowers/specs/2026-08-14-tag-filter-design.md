@@ -3,9 +3,9 @@
 ## Objetivo
 Adicionar um filtro global por tag nas páginas Dashboard, Ativos, Vulnerabilidades e Relatórios, permitindo alternar entre:
 
-- `all` — mostra todos os ativos.
-- `all_clouds` — mostra apenas ativos cuja coluna `Tags` contenha a palavra `cloud` (case-insensitive).
-- `all_onpremises` — mostra apenas ativos cuja coluna `Tags` **não** contenha `cloud`.
+- `full` — mostra todos os ativos.
+- `full-cloud` — mostra apenas ativos cuja coluna `Tags` contenha a palavra `cloud` (case-insensitive).
+- `full-on-premise` — mostra apenas ativos cuja coluna `Tags` **não** contenha `cloud`.
 
 ## Regra de classificação
 
@@ -23,7 +23,7 @@ Exemplos:
 
 ## Abordagem escolhida
 
-**Filtro global via URL (`?tagFilter=all|all_clouds|all_onpremises`).**
+**Filtro global via URL (`?tagFilter=full|full-cloud|full-on-premise`).**
 
 Motivos:
 - Funciona em todas as páginas sem precisar de estado global complexo.
@@ -36,9 +36,9 @@ Motivos:
 Um seletor simples (dropdown ou grupo de tabs) será adicionado no layout superior, provavelmente em `src/routes/__root.tsx` ou em um componente de header compartilhado.
 
 Opções exibidas:
-- `Todos`
-- `Cloud`
-- `On-Premises`
+- `Full`
+- `Full Cloud`
+- `Full On-Premise`
 
 O valor selecionado sincroniza com o query param `tagFilter`.
 
@@ -58,9 +58,9 @@ Cada página:
 
 As queries em `src/server/queries.server.ts` receberão um parâmetro opcional `tagFilter`. A condição SQL gerada será:
 
-- `all_clouds`: `LOWER(a."Tags") LIKE '%cloud%'`
-- `all_onpremises`: `LOWER(a."Tags") NOT LIKE '%cloud%' OR a."Tags" IS NULL`
-- `all`: sem condição adicional
+- `full-cloud`: `LOWER(a."Tags") LIKE '%cloud%'`
+- `full-on-premise`: `LOWER(a."Tags") NOT LIKE '%cloud%' OR a."Tags" IS NULL`
+- `full`: sem condição adicional
 
 ## Escopo fora desta tarefa
 

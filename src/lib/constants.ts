@@ -66,9 +66,9 @@ export const SLA_THRESHOLDS: Record<string, number> = {
 export const ACTIVE_STATUSES = ["Active", "New", "Re-Opened"] as const;
 
 export const TAG_FILTER_OPTIONS = [
-  { value: "all", label: "Todos" },
-  { value: "all_clouds", label: "Cloud" },
-  { value: "all_onpremises", label: "On-Premises" },
+  { value: "full", label: "Full" },
+  { value: "full-cloud", label: "Full Cloud" },
+  { value: "full-on-premise", label: "Full On-Premise" },
 ] as const;
 
 export type TagFilter = (typeof TAG_FILTER_OPTIONS)[number]["value"];

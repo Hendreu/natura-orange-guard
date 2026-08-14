@@ -29,7 +29,7 @@ import { Check, ChevronsUpDown } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 const indexSearchSchema = z.object({
-  tagFilter: z.enum(["all", "all_clouds", "all_onpremises"]).optional(),
+  tagFilter: z.enum(["full", "full-cloud", "full-on-premise"]).optional(),
 });
 
 export const Route = createFileRoute("/")({
@@ -58,7 +58,7 @@ function Overview() {
   const [team, setTeam] = useState(teamNames[0] as string);
   const [teamOpen, setTeamOpen] = useState(false);
   const [openSev, setOpenSev] = useState<string | null>("Crítica");
-  const tagFilter = search.tagFilter ?? "all";
+  const tagFilter = search.tagFilter ?? "full";
   const { data, isLoading, isError } = useQuery(overviewQueryOptions(team, tagFilter));
 
   const goToVulns = (extra: { sev?: string; q?: string } = {}) =>
@@ -66,7 +66,7 @@ function Overview() {
       to: "/vulnerabilidades",
       search: {
         team,
-        tagFilter: tagFilter === "all" ? undefined : tagFilter,
+        tagFilter: tagFilter === "full" ? undefined : tagFilter,
         sev: extra.sev,
         q: extra.q,
       },

@@ -20,10 +20,10 @@ function extractTeamExpr() {
 }
 
 function tagFilterSql(tagFilter: TagFilter | undefined) {
-  if (tagFilter === "all_clouds") {
+  if (tagFilter === "full-cloud") {
     return sql`AND a."Tags" ILIKE ${"%cloud%"}`;
   }
-  if (tagFilter === "all_onpremises") {
+  if (tagFilter === "full-on-premise") {
     return sql`AND (a."Tags" IS NULL OR a."Tags" NOT ILIKE ${"%cloud%"})`;
   }
   return sql``;

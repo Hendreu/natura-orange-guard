@@ -17,7 +17,7 @@ type VulnSearch = {
   q?: string | undefined;
   sev?: string | undefined;
   team?: string | undefined;
-  tagFilter?: ("all" | "all_clouds" | "all_onpremises") | undefined;
+  tagFilter?: ("full" | "full-cloud" | "full-on-premise") | undefined;
 };
 
 export const Route = createFileRoute("/vulnerabilidades")({
@@ -26,9 +26,9 @@ export const Route = createFileRoute("/vulnerabilidades")({
     sev: typeof search["sev"] === "string" ? search["sev"] : undefined,
     team: typeof search["team"] === "string" ? search["team"] : undefined,
     tagFilter:
-      search["tagFilter"] === "all" ||
-      search["tagFilter"] === "all_clouds" ||
-      search["tagFilter"] === "all_onpremises"
+      search["tagFilter"] === "full" ||
+      search["tagFilter"] === "full-cloud" ||
+      search["tagFilter"] === "full-on-premise"
         ? search["tagFilter"]
         : undefined,
   }),
@@ -56,7 +56,7 @@ function Vulnerabilidades() {
   const q = search.q ?? "";
   const sev = search.sev ?? "Todas";
   const team = search.team ?? "Todas";
-  const tagFilter = search.tagFilter ?? "all";
+  const tagFilter = search.tagFilter ?? "full";
   const [open, setOpen] = useState<number | null>(null);
   const [qInput, setQInput] = useState(q);
   const debouncedQ = useDebouncedValue(qInput, 300);

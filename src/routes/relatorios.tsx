@@ -46,7 +46,7 @@ type RelatoriosSearch = {
   team?: string | undefined;
   os?: string | undefined;
   q?: string | undefined;
-  tagFilter?: ("all" | "all_clouds" | "all_onpremises") | undefined;
+  tagFilter?: ("full" | "full-cloud" | "full-on-premise") | undefined;
 };
 
 export const Route = createFileRoute("/relatorios")({
@@ -55,9 +55,9 @@ export const Route = createFileRoute("/relatorios")({
     os: typeof search["os"] === "string" ? search["os"] : undefined,
     q: typeof search["q"] === "string" ? search["q"] : undefined,
     tagFilter:
-      search["tagFilter"] === "all" ||
-      search["tagFilter"] === "all_clouds" ||
-      search["tagFilter"] === "all_onpremises"
+      search["tagFilter"] === "full" ||
+      search["tagFilter"] === "full-cloud" ||
+      search["tagFilter"] === "full-on-premise"
         ? search["tagFilter"]
         : undefined,
   }),
@@ -87,7 +87,7 @@ function Relatorios() {
   const team = search.team ?? "Todas";
   const os = search.os ?? "";
   const q = search.q ?? "";
-  const tagFilter = search.tagFilter ?? "all";
+  const tagFilter = search.tagFilter ?? "full";
   const [qInput, setQInput] = useState(q);
   const [osInput, setOsInput] = useState(os);
   const debouncedQ = useDebouncedValue(qInput, 300);
@@ -143,7 +143,7 @@ function Relatorios() {
     () => ({
       team: team === "Todas" ? undefined : team,
       os: os || undefined,
-      tagFilter: tagFilter === "all" ? undefined : tagFilter,
+      tagFilter: tagFilter === "full" ? undefined : tagFilter,
     }),
     [team, os, tagFilter],
   );

@@ -1,7 +1,7 @@
 import { createServerFn } from "@tanstack/react-start";
 import { z } from "zod";
 
-const tagFilterSchema = z.enum(["all", "all_clouds", "all_onpremises"]).optional();
+const tagFilterSchema = z.enum(["full", "full-cloud", "full-on-premise"]).optional();
 
 export const fetchTeamData = createServerFn({ method: "GET" })
   .validator(z.object({ team: z.string(), tagFilter: tagFilterSchema }))

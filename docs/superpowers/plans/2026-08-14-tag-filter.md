@@ -2,7 +2,7 @@
 
 > **For agentic workers:** REQUIRED SUB-SKILL: Use `superpowers:subagent-driven-development` (recommended) or `superpowers:executing-plans` to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
 
-**Goal:** Add a global URL-based tag filter (`all`, `all_clouds`, `all_onpremises`) that filters assets by the presence/absence of the word `cloud` in the `Tags` column, applied to Dashboard, Ativos, Vulnerabilidades and Relatórios.
+**Goal:** Add a global URL-based tag filter (`full`, `full-cloud`, `full-on-premise`) that filters assets by the presence/absence of the word `cloud` in the `Tags` column, applied to Dashboard, Ativos, Vulnerabilidades and Relatórios.
 
 **Architecture:** A shared `TagFilter` component reads/writes `?tagFilter=` in the URL. Each affected route validates the param and forwards it to server functions. Server functions pass it to `queries.server.ts`, where a helper appends the corresponding SQL predicate on `All_Assets."Tags"`.
 
@@ -25,7 +25,7 @@
 
 **Interfaces:**
 - Consumes: nothing
-- Produces: `type TagFilter = "all" | "all_clouds" | "all_onpremises"` and `function tagFilterSql(tagFilter: TagFilter | undefined)`
+- Produces: `type TagFilter = "full" | "full-cloud" | "full-on-premise"` and `function tagFilterSql(tagFilter: TagFilter | undefined)`
 
 - [ ] **Step 1.1: Define the type in constants**
 
@@ -33,9 +33,9 @@ Add to `src/lib/constants.ts` (append at the bottom):
 
 ```ts
 export const TAG_FILTER_OPTIONS = [
-  { value: "all", label: "Todos" },
-  { value: "all_clouds", label: "Cloud" },
-  { value: "all_onpremises", label: "On-Premises" },
+{ value: "full", label: "Full" },
+{ value: "full-cloud", label: "Full Cloud" },
+{ value: "full-on-premise", label: "Full On-Premise" },
 ] as const;
 
 export type TagFilter = (typeof TAG_FILTER_OPTIONS)[number]["value"];
@@ -49,10 +49,10 @@ At the top of `src/server/queries.server.ts`, after the existing helpers, add:
 import type { TagFilter } from "@/lib/constants";
 
 function tagFilterSql(tagFilter: TagFilter | undefined) {
-  if (tagFilter === "all_clouds") {
+  if (tagFilter === "full-cloud") {
     return sql`AND a."Tags" ILIKE ${"%cloud%"}`;
   }
-  if (tagFilter === "all_onpremises") {
+  if (tagFilter === "full-on-premise") {
     return sql`AND (a."Tags" IS NULL OR a."Tags" NOT ILIKE ${"%cloud%"})`;
   }
   return sql``;
@@ -153,7 +153,7 @@ $env:GIT_MASTER='1'; git commit -m "feat(tag-filter): apply tagFilter to server 
 import type { TagFilter } from "@/lib/constants";
 
 export const fetchTeamData = createServerFn({ method: "GET" })
-  .validator(z.object({ team: z.string(), tagFilter: z.enum(["all", "all_clouds", "all_onpremises"]).optional() }))
+  .validator(z.object({ team: z.string(), tagFilter: z.enum(["full", "full-cloud", "full-on-premise"]).optional() }))
   .handler(async ({ data }) => {
     const { getTeamData } = await import("../server/queries.server");
     return await getTeamData(data);
@@ -163,19 +163,19 @@ const qidsFilterSchema = z.object({
   sev: z.string().optional(),
   team: z.string().optional(),
   q: z.string().optional(),
-  tagFilter: z.enum(["all", "all_clouds", "all_onpremises"]).optional(),
+  tagFilter: z.enum(["full", "full-cloud", "full-on-premise"]).optional(),
 });
 
 const assetsFilterSchema = z.object({
   team: z.string().optional(),
   q: z.string().optional(),
-  tagFilter: z.enum(["all", "all_clouds", "all_onpremises"]).optional(),
+  tagFilter: z.enum(["full", "full-cloud", "full-on-premise"]).optional(),
 });
 
 const reportsFilterSchema = z.object({
   team: z.string().optional(),
   os: z.string().optional(),
-  tagFilter: z.enum(["all", "all_clouds", "all_onpremises"]).optional(),
+  tagFilter: z.enum(["full", "full-cloud", "full-on-premise"]).optional(),
 });
 ```
 
@@ -263,13 +263,13 @@ import { TAG_FILTER_OPTIONS, type TagFilter } from "@/lib/constants";
 export function TagFilter() {
   const search = useSearch({ strict: false });
   const navigate = useNavigate({ strict: false });
-  const value = (search?.tagFilter as TagFilter) ?? "all";
+  const value = (search?.tagFilter as TagFilter) ?? "full";
 
   const setTagFilter = (next: TagFilter) => {
     navigate({
       search: (prev: Record<string, unknown>) => ({
         ...prev,
-        tagFilter: next === "all" ? undefined : next,
+        tagFilter: next === "full" ? undefined : next,
       }),
     });
   };
@@ -353,7 +353,7 @@ $env:GIT_MASTER='1'; git commit -m "feat(tag-filter): render TagFilter in Shell"
 Add to `validateSearch`:
 
 ```ts
-tagFilter: z.enum(["all", "all_clouds", "all_onpremises"]).optional(),
+tagFilter: z.enum(["full", "full-cloud", "full-on-premise"]).optional(),
 ```
 
 Or use a shared schema import if created.
@@ -361,7 +361,7 @@ Or use a shared schema import if created.
 Read it inside `Overview`:
 
 ```ts
-const tagFilter = search.tagFilter ?? "all";
+const tagFilter = search.tagFilter ?? "full";
 const { data, isLoading, isError } = useQuery(overviewQueryOptions(team, tagFilter));
 ```
 
@@ -371,7 +371,7 @@ Also update `goToVulns` so it carries the current `tagFilter` when navigating:
 const goToVulns = (extra: { sev?: string; q?: string } = {}) =>
   navigate({
     to: "/vulnerabilidades",
-    search: { team, tagFilter: tagFilter === "all" ? undefined : tagFilter, sev: extra.sev, q: extra.q },
+    search: { team, tagFilter: tagFilter === "full" ? undefined : tagFilter, sev: extra.sev, q: extra.q },
   });
 ```
 
@@ -399,7 +399,7 @@ Add `tagFilter` to `AtivosSearch` and `validateSearch`.
 Read it:
 
 ```ts
-const tagFilter = search.tagFilter ?? "all";
+const tagFilter = search.tagFilter ?? "full";
 ```
 
 Pass it to the query:
@@ -434,7 +434,7 @@ Add `tagFilter` to `VulnSearch` and `validateSearch`.
 Read it and pass to query:
 
 ```ts
-const tagFilter = search.tagFilter ?? "all";
+const tagFilter = search.tagFilter ?? "full";
 const { data: rows = [] } = useQuery(qidsQueryOptions({ sev, team, q: debouncedQ, tagFilter }));
 ```
 
@@ -464,7 +464,7 @@ Add `tagFilter` to `RelatoriosSearch` and `validateSearch`.
 Read it:
 
 ```ts
-const tagFilter = search.tagFilter ?? "all";
+const tagFilter = search.tagFilter ?? "full";
 ```
 
 Update the `filters` memo:
@@ -474,7 +474,7 @@ const filters = useMemo(
   () => ({
     team: team === "Todas" ? undefined : team,
     os: os || undefined,
-    tagFilter: tagFilter === "all" ? undefined : tagFilter,
+    tagFilter: tagFilter === "full" ? undefined : tagFilter,
   }),
   [team, os, tagFilter],
 );
@@ -522,10 +522,10 @@ Expected: no lint errors.
 
 1. Start dev server: `bun dev`
 2. Open `http://localhost:3000`
-3. Change the "Ambiente" selector to `Cloud` — URL should update to `/?tagFilter=all_clouds` and numbers should change.
+3. Change the "Ambiente" selector to `Full Cloud` — URL should update to `/?tagFilter=full-cloud` and numbers should change.
 4. Navigate to Ativos, Vulnerabilidades, Relatórios — verify `tagFilter` stays in URL and results reflect the selection.
-5. Select `On-Premises` and confirm only non-cloud tags are shown.
-6. Select `Todos` and confirm `tagFilter` is removed from URL.
+5. Select `Full On-Premise` and confirm only non-cloud tags are shown.
+6. Select `Full` and confirm `tagFilter` is removed from URL.
 
 - [ ] **Step 11.4: Final push**
 
@@ -537,9 +537,9 @@ $env:GIT_MASTER='1'; git push origin main
 
 ## Spec coverage check
 
-- `all` shows everything → default value, no SQL predicate added. ✅ Task 2
-- `all_clouds` shows tags containing `cloud` → `ILIKE '%cloud%'`. ✅ Task 2
-- `all_onpremises` shows tags without `cloud` → `NOT ILIKE '%cloud%' OR NULL`. ✅ Task 2
+- `full` shows everything → default value, no SQL predicate added. ✅ Task 2
+- `full-cloud` shows tags containing `cloud` → `ILIKE '%cloud%'`. ✅ Task 2
+- `full-on-premise` shows tags without `cloud` → `NOT ILIKE '%cloud%' OR NULL`. ✅ Task 2
 - Global across Dashboard, Ativos, Vulnerabilidades, Relatórios → Shell component + each route. ✅ Tasks 5-10
 - URL-based persistence → `useNavigate` + `useSearch` in `TagFilter`. ✅ Task 5
 
@@ -551,4 +551,4 @@ No TBDs, TODOs, or vague steps. Each step includes exact file paths and code sni
 
 - `TagFilter` type defined in `src/lib/constants.ts` and imported where needed.
 - Query option signatures consistently accept `tagFilter?: TagFilter`.
-- Server function validators use `z.enum(["all", "all_clouds", "all_onpremises"]).optional()`.
+- Server function validators use `z.enum(["full", "full-cloud", "full-on-premise"]).optional()`.
