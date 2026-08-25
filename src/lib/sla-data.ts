@@ -124,7 +124,7 @@ export const slaQueryOptions = () =>
   });
 
 export const qidsQueryOptions = (filters: {
-  sev?: string;
+  sev?: string[];
   team?: string;
   q?: string;
   tagFilter?: TagFilter | undefined;

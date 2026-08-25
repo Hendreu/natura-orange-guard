@@ -24,7 +24,7 @@ import {
 
 type VulnSearch = {
   q?: string | undefined;
-  sev?: string | undefined;
+  sev?: string[] | undefined;
   team?: string | undefined;
   tagFilter?: ("full" | "full-cloud" | "full-on-premise") | undefined;
   categories?: string[] | undefined;
@@ -49,7 +49,7 @@ const defaultStatuses = ["Active", "New", "Re-Opened"];
 export const Route = createFileRoute("/vulnerabilidades")({
   validateSearch: (search: Record<string, unknown>): VulnSearch => ({
     q: typeof search["q"] === "string" ? search["q"] : undefined,
-    sev: typeof search["sev"] === "string" ? search["sev"] : undefined,
+    sev: parseArray(search["sev"]),
     team: typeof search["team"] === "string" ? search["team"] : undefined,
     tagFilter:
       search["tagFilter"] === "full" ||
@@ -82,9 +82,9 @@ function Vulnerabilidades() {
   const search = Route.useSearch();
   const navigate = useNavigate({ from: "/vulnerabilidades" });
   const q = search.q ?? "";
-  const sev = search.sev ?? "Todas";
   const team = search.team ?? "Todas";
   const tagFilter = search.tagFilter ?? "full";
+  const selectedSevs = useMemo(() => search.sev ?? [], [search.sev]);
   const categories = useMemo(() => search.categories ?? [], [search.categories]);
   const statuses = useMemo(() => search.statuses ?? defaultStatuses, [search.statuses]);
   const [open, setOpen] = useState<number | null>(null);
@@ -115,6 +115,14 @@ function Vulnerabilidades() {
       }),
     });
 
+  const setSeverities = (values: string[]) =>
+    navigate({
+      search: (prev: VulnSearch) => ({
+        ...prev,
+        sev: values.length ? values : undefined,
+      }),
+    });
+
   // Sync input when URL changes externally (back/forward)
   useEffect(() => {
     if (q !== qInput && debouncedQ === qInput) {
@@ -137,7 +145,9 @@ function Vulnerabilidades() {
     data: rows = [],
     isLoading,
     isError,
-  } = useQuery(qidsQueryOptions({ sev, team, q: debouncedQ, tagFilter, categories, statuses }));
+  } = useQuery(
+    qidsQueryOptions({ sev: selectedSevs, team, q: debouncedQ, tagFilter, categories, statuses }),
+  );
 
   const { data: stats, isLoading: statsLoading } = useQuery(
     vulnerabilityStatsQueryOptions({ team, tagFilter, categories, statuses, q: debouncedQ }),
@@ -166,9 +176,9 @@ function Vulnerabilidades() {
 
   const activeFilters = useMemo(() => {
     const filters: { key: string; param: keyof VulnSearch; value: string; label: string }[] = [];
-    if (sev && sev !== "Todas") {
-      filters.push({ key: `sev-${sev}`, param: "sev", value: "", label: sev });
-    }
+    selectedSevs.forEach((s) =>
+      filters.push({ key: `sev-${s}`, param: "sev", value: s, label: s }),
+    );
     if (team && team !== "Todas") {
       filters.push({ key: `team-${team}`, param: "team", value: "", label: team });
     }
@@ -189,7 +199,7 @@ function Vulnerabilidades() {
       );
     }
     return filters;
-  }, [sev, team, categories, statuses]);
+  }, [selectedSevs, team, categories, statuses]);
 
   return (
     <Shell
@@ -245,7 +255,7 @@ function Vulnerabilidades() {
             <div className="flex flex-wrap gap-2">
               {severityOrder.map((s) => {
                 const count = stats?.bySeverity[s] ?? 0;
-                const active = sev === s;
+                const active = selectedSevs.includes(s);
                 return (
                   <FilterChip
                     key={s}
@@ -253,7 +263,12 @@ function Vulnerabilidades() {
                     count={count}
                     active={active}
                     color={severityToken[s]}
-                    onClick={() => setParam("sev", active ? "" : s)}
+                    onClick={() => {
+                      const next = active
+                        ? selectedSevs.filter((v) => v !== s)
+                        : [...selectedSevs, s];
+                      setSeverities(next);
+                    }}
                   />
                 );
               })}
@@ -336,7 +351,7 @@ function Vulnerabilidades() {
                     if (f.param === "categories")
                       setCategories(categories.filter((c) => c !== f.value));
                     if (f.param === "statuses") setStatuses(statuses.filter((s) => s !== f.value));
-                    if (f.param === "sev") setParam("sev", "");
+                    if (f.param === "sev") setSeverities(selectedSevs.filter((s) => s !== f.value));
                     if (f.param === "team") setParam("team", "");
                   }}
                   className="stencil inline-flex items-center gap-1 rounded-sm border border-border bg-secondary px-2 py-1 text-[10px] text-foreground hover:border-primary"

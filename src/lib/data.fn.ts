@@ -23,7 +23,7 @@ export const fetchAllTeamsData = createServerFn({ method: "GET" }).handler(async
 });
 
 const qidsFilterSchema = z.object({
-  sev: z.string().optional(),
+  sev: z.array(z.string()).optional(),
   team: z.string().optional(),
   q: z.string().optional(),
   tagFilter: tagFilterSchema,

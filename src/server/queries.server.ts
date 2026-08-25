@@ -436,7 +436,7 @@ export async function getQids({
   categories,
   statuses,
 }: {
-  sev?: string | undefined;
+  sev?: string[] | undefined;
   team?: string | undefined;
   q?: string | undefined;
   tagFilter?: TagFilter | undefined;
@@ -448,7 +448,7 @@ export async function getQids({
 
   if (
     (!team || team === "Todas") &&
-    (!sev || sev === "Todas") &&
+    (!sev || sev.length === 0) &&
     !q &&
     !categories &&
     !statuses &&
@@ -471,7 +471,7 @@ export async function getQids({
   }
 
   const cte = assetCteSql(team, tagFilter);
-  const sevFilter = sev && sev !== "Todas" ? sql`AND ${severityLabelExpr()} = ${sev}` : sql``;
+  const sevFilter = sev && sev.length > 0 ? sql`AND ${severityLabelExpr()} IN ${sql(sev)}` : sql``;
   const qFilter = q
     ? sql`AND (kb.title ILIKE ${`%${q}%`} OR kb.category ILIKE ${`%${q}%`} OR v."QID"::text ILIKE ${`%${q}%`})`
     : sql``;
