@@ -27,6 +27,8 @@ const qidsFilterSchema = z.object({
   team: z.string().optional(),
   q: z.string().optional(),
   tagFilter: tagFilterSchema,
+  categories: z.array(z.string()).optional(),
+  statuses: z.array(z.string()).optional(),
 });
 
 export const fetchQids = createServerFn({ method: "GET" })
@@ -66,3 +68,23 @@ export const fetchReports = createServerFn({ method: "GET" })
     const { getReports } = await import("../server/queries.server");
     return await getReports(data);
   });
+
+const statsFilterSchema = z.object({
+  team: z.string().optional(),
+  tagFilter: tagFilterSchema,
+  categories: z.array(z.string()).optional(),
+  statuses: z.array(z.string()).optional(),
+  q: z.string().optional(),
+});
+
+export const fetchVulnerabilityStats = createServerFn({ method: "GET" })
+  .validator(statsFilterSchema)
+  .handler(async ({ data }) => {
+    const { getVulnerabilityStats } = await import("../server/queries.server");
+    return await getVulnerabilityStats(data);
+  });
+
+export const fetchLastSync = createServerFn({ method: "GET" }).handler(async () => {
+  const { getLastSync } = await import("../server/queries.server");
+  return await getLastSync();
+});

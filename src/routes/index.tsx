@@ -14,6 +14,7 @@ import {
 } from "recharts";
 import { Shell } from "@/components/Shell";
 import { StatSlab, TrendTag } from "@/components/StatSlab";
+import { FilterChip } from "@/components/FilterChip";
 import { useQuery } from "@tanstack/react-query";
 import {
   fmt,
@@ -32,7 +33,15 @@ import {
   CommandItem,
   CommandList,
 } from "@/components/ui/command";
-import { Check, ChevronsUpDown } from "lucide-react";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from "@/components/ui/dialog";
+import { Check, ChevronsUpDown, SlidersHorizontal } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 const indexSearchSchema = z.object({
@@ -64,13 +73,14 @@ function Overview() {
   const search = Route.useSearch();
   const [team, setTeam] = useState("Todas");
   const [teamOpen, setTeamOpen] = useState(false);
+  const [filtersOpen, setFiltersOpen] = useState(false);
   const [openSev, setOpenSev] = useState<string | null>("Crítica");
   const tagFilter = search.tagFilter ?? "full";
   const queryOptions =
     team === "Todas" ? overviewAllQueryOptions(tagFilter) : overviewQueryOptions(team, tagFilter);
   const { data, isLoading, isError } = useQuery(queryOptions);
 
-  const goToVulns = (extra: { sev?: string; q?: string } = {}) =>
+  const goToVulns = (extra: { sev?: string; q?: string; categories?: string[] } = {}) =>
     navigate({
       to: "/vulnerabilidades",
       search: {
@@ -78,8 +88,59 @@ function Overview() {
         tagFilter: tagFilter === "full" ? undefined : tagFilter,
         sev: extra.sev,
         q: extra.q,
+        categories: extra.categories,
       },
     });
+
+  const categoryOptions = useMemo(() => {
+    const map = new Map<string, number>();
+    for (const block of Object.values(data?.raw ?? {})) {
+      for (const [name, action] of Object.entries(block.actions)) {
+        map.set(name, (map.get(name) ?? 0) + action.total);
+      }
+    }
+    return Array.from(map.entries())
+      .sort((a, b) => b[1] - a[1])
+      .slice(0, 8)
+      .map(([category, count]) => ({ category, count }));
+  }, [data?.raw]);
+
+  const topActions = useMemo(() => {
+    const map = new Map<
+      string,
+      { total: number; qids: number; weightedAge: number; sevTotals: Map<string, number> }
+    >();
+    for (const sev of severityOrder) {
+      const block = data?.raw[sev];
+      if (!block) continue;
+      for (const [name, action] of Object.entries(block.actions)) {
+        const existing = map.get(name) ?? {
+          total: 0,
+          qids: 0,
+          weightedAge: 0,
+          sevTotals: new Map<string, number>(),
+        };
+        existing.total += action.total;
+        existing.qids += action.qids;
+        existing.weightedAge += action.avg_age * action.total;
+        existing.sevTotals.set(sev, (existing.sevTotals.get(sev) ?? 0) + action.total);
+        map.set(name, existing);
+      }
+    }
+    return Array.from(map.entries())
+      .map(([name, a]) => {
+        const dominantSev = Array.from(a.sevTotals.entries()).sort((x, y) => y[1] - x[1])[0][0];
+        return {
+          name,
+          total: a.total,
+          qids: a.qids,
+          avgAge: a.total ? a.weightedAge / a.total : 0,
+          dominantSev,
+        };
+      })
+      .sort((a, b) => b.total - a.total)
+      .slice(0, 8);
+  }, [data?.raw]);
 
   const sevData = useMemo(
     () => severityOrder.map((s, i) => ({ name: s, total: data?.chartSev[i] ?? 0 })),
@@ -118,14 +179,13 @@ function Overview() {
       title="Visão geral"
       subtitle="Comparativo semanal — Semana 2 vs Semana 3 de Julho // base consolidada Qualys"
     >
-      <div className="mb-6 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-        {/* Squad selector + context panel */}
-        <div className="slab corner-cut flex flex-col p-4 sm:col-span-2 lg:col-span-1">
-          <p className="stencil text-[10px] text-muted-foreground">Squad ativo</p>
+      {/* Scope bar */}
+      <section className="mb-6 flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+        <div className="flex items-center gap-3">
           <Popover open={teamOpen} onOpenChange={setTeamOpen}>
             <PopoverTrigger asChild>
               <button
-                className="stencil mt-3 flex w-full items-center justify-between gap-2 border border-border bg-card px-4 py-2.5 text-[11px] text-muted-foreground transition-transform hover:-translate-y-0.5 hover:border-primary hover:text-foreground"
+                className="stencil flex items-center justify-between gap-2 border border-border bg-card px-3 py-2 text-[11px] text-muted-foreground transition-transform hover:-translate-y-0.5 hover:border-primary hover:text-foreground"
                 aria-label="Selecionar squad"
               >
                 <span className="flex items-center gap-2">
@@ -164,40 +224,120 @@ function Overview() {
               </Command>
             </PopoverContent>
           </Popover>
-          <div className="mt-auto flex items-center gap-3 border-t border-border pt-3">
-            <span className="font-display text-3xl leading-none font-bold text-primary">
-              {team === "Todas" ? "ALL" : String(teamNames.indexOf(team) + 1).padStart(2, "0")}
-            </span>
-            <div className="flex flex-col gap-0.5">
-              <span className="stencil text-[9px] text-muted-foreground">
-                {team === "Todas" ? "todos os squads" : `de ${teamNames.length} squads`}
-              </span>
-              <span className="stencil text-[9px] text-muted-foreground">base Qualys</span>
-            </div>
-          </div>
+          <span className="stencil text-[10px] text-muted-foreground">
+            {team === "Todas" ? "todos os squads" : `de ${teamNames.length} squads`}
+          </span>
         </div>
 
-        {/* QDS Score */}
-        <div className="slab-signal corner-cut flex flex-col p-4">
+        <Dialog open={filtersOpen} onOpenChange={setFiltersOpen}>
+          <DialogTrigger asChild>
+            <button className="stencil tappable inline-flex items-center gap-2 border border-border bg-card px-3 py-2 text-[10px] text-foreground transition-colors hover:border-primary hover:text-primary">
+              <SlidersHorizontal className="h-3 w-3" />
+              Filtros rápidos
+            </button>
+          </DialogTrigger>
+          <DialogContent className="max-w-xl">
+            <DialogHeader>
+              <DialogTitle className="stencil text-sm">Filtros rápidos</DialogTitle>
+              <DialogDescription className="text-xs text-muted-foreground">
+                Escolha uma severidade ou categoria para ir ao inventário de vulnerabilidades.
+              </DialogDescription>
+            </DialogHeader>
+            <div className="space-y-5 py-2">
+              <div>
+                <span className="stencil mb-2 block text-[10px] text-muted-foreground">
+                  Severidade
+                </span>
+                <div className="flex flex-wrap gap-2">
+                  {severityOrder.map((s, i) => (
+                    <FilterChip
+                      key={s}
+                      label={s}
+                      count={data.chartSev[i] ?? 0}
+                      active={false}
+                      color={severityToken[s]}
+                      onClick={() => {
+                        goToVulns({ sev: s });
+                        setFiltersOpen(false);
+                      }}
+                    />
+                  ))}
+                </div>
+              </div>
+              {categoryOptions.length > 0 && (
+                <div>
+                  <span className="stencil mb-2 block text-[10px] text-muted-foreground">
+                    Categoria
+                  </span>
+                  <div className="flex flex-wrap gap-2">
+                    {categoryOptions.map(({ category, count }) => (
+                      <FilterChip
+                        key={category}
+                        label={category}
+                        count={count}
+                        active={false}
+                        onClick={() => {
+                          goToVulns({ categories: [category] });
+                          setFiltersOpen(false);
+                        }}
+                      />
+                    ))}
+                  </div>
+                </div>
+              )}
+            </div>
+          </DialogContent>
+        </Dialog>
+      </section>
+
+      {/* Severity quick filters */}
+      <section className="mb-6">
+        <h2 className="stencil mb-2 text-xs text-primary">Vulnerabilidades por severidade</h2>
+        <div className="flex flex-wrap gap-2">
+          {severityOrder.map((s, i) => (
+            <FilterChip
+              key={s}
+              label={s}
+              count={data.chartSev[i] ?? 0}
+              active={false}
+              color={severityToken[s]}
+              onClick={() => goToVulns({ sev: s })}
+            />
+          ))}
+        </div>
+      </section>
+
+      {/* Health scores */}
+      <section className="mb-6 grid gap-4 lg:grid-cols-2">
+        <div className="slab-signal corner-cut flex flex-col p-5">
           <p className="stencil text-[10px] text-muted-foreground">Score QDS</p>
-          <p className="mt-2 font-display text-4xl leading-none font-bold text-primary">
+          <p className="mt-2 font-display text-5xl leading-none font-bold text-primary">
             {data.kpis.qds}
           </p>
-          <div className="mt-auto pt-2">
+          <div className="mt-auto flex items-center justify-between pt-4">
             <TrendTag trend={data.trends["qds"]} />
+            <button
+              onClick={() => navigate({ to: "/sla" })}
+              className="stencil text-[10px] text-primary hover:underline"
+            >
+              Ver SLA →
+            </button>
           </div>
         </div>
 
-        {/* QDS Corrigíveis */}
-        <div className="slab corner-cut flex flex-col p-4">
-          <p className="stencil text-[10px] text-muted-foreground">QDS corrigíveis</p>
-          <p className="mt-2 font-display text-4xl leading-none font-bold">{data.kpis.qds_corr}</p>
-          <div className="mt-auto pt-2">
-            <TrendTag trend={data.trends["qds_corr"]} />
+        <div className="slab corner-cut flex flex-col p-5">
+          <p className="stencil text-[10px] text-muted-foreground">Aderência a SLA</p>
+          <p className="mt-2 font-display text-5xl leading-none font-bold text-primary">
+            {aderencia}%
+          </p>
+          <div className="mt-auto flex items-center justify-between pt-4 text-[11px] text-muted-foreground">
+            <span>Dentro: {fmt(dentro)}</span>
+            <span className="text-critica">Fora: {fmt(totalSla - dentro)}</span>
           </div>
         </div>
-      </div>
+      </section>
 
+      {/* Volume metrics */}
       <section className="mb-6 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
         <StatSlab
           label="Vulnerabilidades"
@@ -232,10 +372,14 @@ function Overview() {
           value={data.kpis.workfronts}
           trend={data.trends["workfronts"]}
           action="ver frentes"
-          onClick={() => setOpenSev("Crítica")}
+          onClick={() => {
+            const el = document.getElementById("top-frentes");
+            el?.scrollIntoView({ behavior: "smooth" });
+          }}
         />
       </section>
 
+      {/* Charts */}
       <section className="mb-6 grid gap-4 lg:grid-cols-2">
         <div className="slab corner-cut p-5">
           <h2 className="stencil mb-4 text-xs text-primary">Distribuição por severidade</h2>
@@ -307,6 +451,71 @@ function Overview() {
         </div>
       </section>
 
+      {/* Top frentes */}
+      <section id="top-frentes" className="slab p-5">
+        <div className="mb-4 flex items-center justify-between">
+          <div>
+            <h2 className="stencil text-xs text-primary">Top frentes de ação</h2>
+            <p className="text-[10px] text-muted-foreground">
+              Maiores volumes de correção por categoria
+            </p>
+          </div>
+          <button
+            onClick={() => navigate({ to: "/vulnerabilidades" })}
+            className="stencil text-[10px] text-primary hover:underline"
+          >
+            Ver todas →
+          </button>
+        </div>
+        <div className="overflow-x-auto">
+          <table className="w-full text-xs">
+            <thead>
+              <tr className="border-b border-border">
+                <th className="stencil px-2 py-2 text-left text-[10px] text-muted-foreground">
+                  Frente
+                </th>
+                <th className="stencil px-2 py-2 text-right text-[10px] text-muted-foreground">
+                  Vulns
+                </th>
+                <th className="stencil px-2 py-2 text-right text-[10px] text-muted-foreground">
+                  QIDs
+                </th>
+                <th className="stencil px-2 py-2 text-right text-[10px] text-muted-foreground">
+                  Idade média
+                </th>
+                <th className="stencil px-2 py-2 text-right text-[10px] text-muted-foreground">
+                  Severidade
+                </th>
+              </tr>
+            </thead>
+            <tbody>
+              {topActions.map((a) => (
+                <tr
+                  key={a.name}
+                  onClick={() => goToVulns({ categories: [a.name] })}
+                  className="cursor-pointer border-b border-border/60 hover:bg-steel"
+                >
+                  <td className="px-2 py-2 font-medium">{a.name}</td>
+                  <td className="px-2 py-2 text-right font-bold">{fmt(a.total)}</td>
+                  <td className="px-2 py-2 text-right text-primary">{a.qids}</td>
+                  <td className="px-2 py-2 text-right text-muted-foreground">
+                    {Math.round(a.avgAge)}d
+                  </td>
+                  <td className="px-2 py-2 text-right">
+                    <span
+                      className="inline-block h-2 w-2 rounded-full"
+                      style={{ background: severityToken[a.dominantSev] }}
+                    />
+                    <span className="ml-2 text-[10px]">{a.dominantSev}</span>
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      </section>
+
+      {/* Detailed severity action fronts */}
       <section className="slab p-6">
         <h2 className="stencil mb-1 text-sm">Leitura facilitada // frentes de ação</h2>
         <p className="mb-5 text-xs text-muted-foreground">

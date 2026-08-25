@@ -1,15 +1,18 @@
 import { fmt, type Trend } from "@/lib/sla-data";
+import { cn } from "@/lib/utils";
 
-export function TrendTag({ trend, invert = false }: { trend?: Trend | undefined; invert?: boolean }) {
+export function TrendTag({
+  trend,
+  invert = false,
+}: {
+  trend?: Trend | undefined;
+  invert?: boolean;
+}) {
   if (!trend) return null;
   const up = trend.diff > 0;
   const flat = trend.diff === 0;
   const good = invert ? up : !up;
-  const color = flat
-    ? "text-muted-foreground"
-    : good
-      ? "text-baixa"
-      : "text-critica";
+  const color = flat ? "text-muted-foreground" : good ? "text-baixa" : "text-critica";
   return (
     <span className={`text-[11px] font-bold tracking-wider ${color}`}>
       {flat ? "—" : up ? "▲" : "▼"} {trend.diff > 0 ? "+" : ""}
@@ -28,6 +31,7 @@ export function StatSlab({
   invertTrend = false,
   onClick,
   action,
+  className,
 }: {
   label: string;
   value: number | string;
@@ -37,6 +41,7 @@ export function StatSlab({
   invertTrend?: boolean | undefined;
   onClick?: (() => void) | undefined;
   action?: string | undefined;
+  className?: string | undefined;
 }) {
   const body = (
     <>
@@ -54,7 +59,7 @@ export function StatSlab({
     </>
   );
 
-  const cls = `${accent ? "slab-signal" : "slab"} corner-cut p-4`;
+  const cls = cn(accent ? "slab-signal" : "slab", "corner-cut p-4", className);
 
   if (onClick) {
     return (
@@ -66,4 +71,3 @@ export function StatSlab({
 
   return <div className={cls}>{body}</div>;
 }
-

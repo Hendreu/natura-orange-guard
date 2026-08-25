@@ -17,6 +17,7 @@ O usuário quer consolidar a forma de filtrar por ambiente no seletor de **Squad
 ### 1. `src/lib/constants.ts`
 
 Remover:
+
 ```ts
 "SemTime-Cloud",
 ...
@@ -24,6 +25,7 @@ Remover:
 ```
 
 Resultado parcial:
+
 ```ts
 export const TEAM_NAMES = [
   "On-Prem",
@@ -93,12 +95,12 @@ export const overviewAllQueryOptions = (tagFilter?: TagFilter | undefined) =>
 
 ## Comportamento
 
-| Squad selecionado | Filtro SQL | Significado |
-| --- | --- | --- |
-| `Todas` | nenhum | Todos os ativos (respeita Ambiente) |
-| `All Cloud` | `a."Tags" ILIKE '%cloud%'` | Apenas ativos/vulns com tag cloud |
-| `All On-Prem` | `a."Tags" IS NULL OR NOT ILIKE '%cloud%'` | Apenas ativos/vulns sem tag cloud |
-| `Cloud-DBA` (ou qualquer time) | regex `Times:Cloud-DBA` | Apenas aquele time |
+| Squad selecionado              | Filtro SQL                                | Significado                         |
+| ------------------------------ | ----------------------------------------- | ----------------------------------- |
+| `Todas`                        | nenhum                                    | Todos os ativos (respeita Ambiente) |
+| `All Cloud`                    | `a."Tags" ILIKE '%cloud%'`                | Apenas ativos/vulns com tag cloud   |
+| `All On-Prem`                  | `a."Tags" IS NULL OR NOT ILIKE '%cloud%'` | Apenas ativos/vulns sem tag cloud   |
+| `Cloud-DBA` (ou qualquer time) | regex `Times:Cloud-DBA`                   | Apenas aquele time                  |
 
 ## Validação
 

@@ -9,6 +9,7 @@
 **Tech Stack:** TanStack Start + React Router v1, React Query, `postgres` SQL template literals, Bun, TypeScript, shadcn/ui Select.
 
 ## Global Constraints
+
 - Use existing shadcn/ui `Select` component for the dropdown.
 - Do not suppress type errors (`as any`, `@ts-ignore`).
 - Follow existing search-param patterns in each route (`validateSearch`, `useNavigate`, `Route.useSearch`).
@@ -20,10 +21,12 @@
 ### Task 1: Add tag-filter type and SQL helper
 
 **Files:**
+
 - Modify: `src/server/queries.server.ts`
 - Modify: `src/lib/constants.ts`
 
 **Interfaces:**
+
 - Consumes: nothing
 - Produces: `type TagFilter = "full" | "full-cloud" | "full-on-premise"` and `function tagFilterSql(tagFilter: TagFilter | undefined)`
 
@@ -33,9 +36,9 @@ Add to `src/lib/constants.ts` (append at the bottom):
 
 ```ts
 export const TAG_FILTER_OPTIONS = [
-{ value: "full", label: "Full" },
-{ value: "full-cloud", label: "Full Cloud" },
-{ value: "full-on-premise", label: "Full On-Premise" },
+  { value: "full", label: "Full" },
+  { value: "full-cloud", label: "Full Cloud" },
+  { value: "full-on-premise", label: "Full On-Premise" },
 ] as const;
 
 export type TagFilter = (typeof TAG_FILTER_OPTIONS)[number]["value"];
@@ -71,9 +74,11 @@ $env:GIT_MASTER='1'; git commit -m "feat(tag-filter): add TagFilter type and SQL
 ### Task 2: Apply tag filter to team and asset queries
 
 **Files:**
+
 - Modify: `src/server/queries.server.ts`
 
 **Interfaces:**
+
 - Consumes: `TagFilter` type and `tagFilterSql` helper from Task 1
 - Produces: updated function signatures that accept `tagFilter`
 
@@ -141,9 +146,11 @@ $env:GIT_MASTER='1'; git commit -m "feat(tag-filter): apply tagFilter to server 
 ### Task 3: Wire server functions to accept tagFilter
 
 **Files:**
+
 - Modify: `src/lib/data.fn.ts`
 
 **Interfaces:**
+
 - Consumes: updated `getTeamData`, `getQids`, `getAssets`, `getReports` signatures
 - Produces: updated server function validators and handlers
 
@@ -153,7 +160,12 @@ $env:GIT_MASTER='1'; git commit -m "feat(tag-filter): apply tagFilter to server 
 import type { TagFilter } from "@/lib/constants";
 
 export const fetchTeamData = createServerFn({ method: "GET" })
-  .validator(z.object({ team: z.string(), tagFilter: z.enum(["full", "full-cloud", "full-on-premise"]).optional() }))
+  .validator(
+    z.object({
+      team: z.string(),
+      tagFilter: z.enum(["full", "full-cloud", "full-on-premise"]).optional(),
+    }),
+  )
   .handler(async ({ data }) => {
     const { getTeamData } = await import("../server/queries.server");
     return await getTeamData(data);
@@ -191,9 +203,11 @@ $env:GIT_MASTER='1'; git commit -m "feat(tag-filter): pass tagFilter through ser
 ### Task 4: Update query options in sla-data.ts
 
 **Files:**
+
 - Modify: `src/lib/sla-data.ts`
 
 **Interfaces:**
+
 - Consumes: updated `fetchTeamData`, `fetchQids`, `fetchAssets`, `fetchReports` validators
 - Produces: updated `overviewQueryOptions`, `qidsQueryOptions`, `assetsQueryOptions`, `reportsQueryOptions`
 
@@ -206,7 +220,12 @@ export const overviewQueryOptions = (team: string, tagFilter?: TagFilter) =>
     queryFn: () => fetchTeamData({ data: { team, tagFilter } }),
   });
 
-export const qidsQueryOptions = (filters: { sev?: string; team?: string; q?: string; tagFilter?: TagFilter }) =>
+export const qidsQueryOptions = (filters: {
+  sev?: string;
+  team?: string;
+  q?: string;
+  tagFilter?: TagFilter;
+}) =>
   queryOptions({
     queryKey: ["qids", filters],
     queryFn: () => fetchQids({ data: filters }),
@@ -241,9 +260,11 @@ $env:GIT_MASTER='1'; git commit -m "feat(tag-filter): accept tagFilter in query 
 ### Task 5: Create the TagFilter UI component
 
 **Files:**
+
 - Create: `src/components/TagFilter.tsx`
 
 **Interfaces:**
+
 - Consumes: `TAG_FILTER_OPTIONS` and `TagFilter` from constants
 - Produces: `<TagFilter />` component that reads/writes `tagFilter` URL param
 
@@ -306,9 +327,11 @@ $env:GIT_MASTER='1'; git commit -m "feat(tag-filter): add TagFilter selector com
 ### Task 6: Render TagFilter inside Shell
 
 **Files:**
+
 - Modify: `src/components/Shell.tsx`
 
 **Interfaces:**
+
 - Consumes: `<TagFilter />` component
 - Produces: Shell renders the global filter next to the page title/subtitle
 
@@ -342,9 +365,11 @@ $env:GIT_MASTER='1'; git commit -m "feat(tag-filter): render TagFilter in Shell"
 ### Task 7: Update Dashboard route
 
 **Files:**
+
 - Modify: `src/routes/index.tsx`
 
 **Interfaces:**
+
 - Consumes: `overviewQueryOptions(team, tagFilter)`
 - Produces: dashboard reads `tagFilter` from URL and passes it to the query
 
@@ -371,7 +396,12 @@ Also update `goToVulns` so it carries the current `tagFilter` when navigating:
 const goToVulns = (extra: { sev?: string; q?: string } = {}) =>
   navigate({
     to: "/vulnerabilidades",
-    search: { team, tagFilter: tagFilter === "full" ? undefined : tagFilter, sev: extra.sev, q: extra.q },
+    search: {
+      team,
+      tagFilter: tagFilter === "full" ? undefined : tagFilter,
+      sev: extra.sev,
+      q: extra.q,
+    },
   });
 ```
 
@@ -387,9 +417,11 @@ $env:GIT_MASTER='1'; git commit -m "feat(tag-filter): wire tagFilter on dashboar
 ### Task 8: Update Ativos route
 
 **Files:**
+
 - Modify: `src/routes/ativos.tsx`
 
 **Interfaces:**
+
 - Consumes: `assetsQueryOptions({ team, q, tagFilter })`
 
 - [ ] **Step 8.1: Update search schema and component**
@@ -422,9 +454,11 @@ $env:GIT_MASTER='1'; git commit -m "feat(tag-filter): wire tagFilter on ativos" 
 ### Task 9: Update Vulnerabilidades route
 
 **Files:**
+
 - Modify: `src/routes/vulnerabilidades.tsx`
 
 **Interfaces:**
+
 - Consumes: `qidsQueryOptions({ sev, team, q, tagFilter })`
 
 - [ ] **Step 9.1: Update search schema and component**
@@ -452,9 +486,11 @@ $env:GIT_MASTER='1'; git commit -m "feat(tag-filter): wire tagFilter on vulnerab
 ### Task 10: Update Relatórios route
 
 **Files:**
+
 - Modify: `src/routes/relatorios.tsx`
 
 **Interfaces:**
+
 - Consumes: `reportsQueryOptions({ team, os, tagFilter })`
 
 - [ ] **Step 10.1: Update search schema, query call and filters object**
@@ -494,6 +530,7 @@ $env:GIT_MASTER='1'; git commit -m "feat(tag-filter): wire tagFilter on relatori
 ### Task 11: Verify and final commit
 
 **Files:**
+
 - All modified files
 
 - [ ] **Step 11.1: Run typecheck**

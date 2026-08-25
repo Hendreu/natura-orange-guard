@@ -1,4 +1,5 @@
 <!-- LOVABLE:BEGIN -->
+
 > [!IMPORTANT]
 > This project is connected to [Lovable](https://lovable.dev). Avoid rewriting
 > published git history — force pushing, or rebasing/amending/squashing commits
@@ -7,61 +8,113 @@
 >
 > Commits you push to the connected branch sync back to Lovable and show up in
 > the editor, so keep the branch in a working state.
+
 <!-- LOVABLE:END -->
 
 # Natura Security Hub — Agent Notes
 
-## Project type
+**Generated:** 2026-08-24 12:19:04 -03:00
+**Commit:** e20e8f6
+**Branch:** vulnerability-filters
 
-TanStack Start + React 19 + Vite app, bootstrapped through Lovable. Not a plain Vite SPA — it has server-side route loaders and a custom SSR entry.
+## OVERVIEW
 
-## Package manager
+TanStack Start + React 19 + Vite dashboard for Natura SecOps, bootstrapped through Lovable. Server-rendered, Postgres-backed via `postgres`, styled with Tailwind v4 and a brutalist orange theme. All data flows through TanStack `createServerFn` → `src/server/queries.server.ts`.
 
-Use **Bun**. The repo ships `bun.lock` and `bunfig.toml`. `package-lock.json` exists but the lock of record is `bun.lock`.
+## STRUCTURE
 
-- `bun install`
-- `bun dev` (alias for `vite dev`)
-- `bun run build`
-- `bun run lint`
-- `bun run format`
+```
+.
+├── src/
+│   ├── routes/           # file-based routes + generated routeTree.gen.ts
+│   ├── components/
+│   │   └── ui/           # shadcn/ui "new-york" primitives (46 files)
+│   ├── lib/              # query options, data helpers, constants, utils, db client
+│   ├── server/           # server-only SQL queries (single 1024-line module)
+│   ├── data/             # static JSON fixtures (assets, qids, teams)
+│   ├── hooks/            # shared React hooks
+│   ├── router.tsx        # router factory consumed by Start
+│   ├── start.ts          # Start plugin (CSRF + error middleware)
+│   ├── server.ts         # Nitro SSR fetch wrapper
+│   └── styles.css        # Tailwind v4 entry + custom theme/utilities
+├── scripts/              # ETL + materialized-view refresh (Bun-run)
+├── data/                 # ETL input staging dirs (incoming/, source/)
+├── docs/superpowers/     # agent plan/spec artifacts
+├── public/               # static assets
+└── AGENTS.md             # this file
+```
 
-## Vite config — do not duplicate plugins
+## WHERE TO LOOK
 
-`vite.config.ts` imports from `@lovable.dev/vite-tanstack-config`. That preset already includes TanStack Start, React, Tailwind CSS v4, `tsconfigPaths`, Nitro, env injection, and the `@/*` alias. Do **not** add those plugins manually or the build will fail from duplicates.
+| Task | Location | Notes |
+|---|---|---|
+| Add a page | `src/routes/*.tsx` | File-based; see `src/routes/README.md` conventions. |
+| Change data fetching | `src/lib/sla-data.ts`, `src/lib/data.fn.ts` | Route components call `*QueryOptions` helpers that call `createServerFn`. |
+| Edit SQL / DB schema reads | `src/server/queries.server.ts` | Server-only; dynamically imported by `data.fn.ts`. |
+| Change theme/colors | `src/styles.css`, `DESIGN.md` | Tailwind v4 `@theme` tokens + custom utilities. |
+| Add UI primitive | `src/components/ui/` | shadcn new-york style; use `npx shadcn add`. |
+| Add app component | `src/components/*.tsx` | PascalCase, e.g. `Shell.tsx`, `StatSlab.tsx`. |
+| Update static seed data | `src/data/*.json` | Used when loaders are not pulling from Postgres. |
+| Run ETL / refresh views | `scripts/etl.ts`, `scripts/refresh-views.ts` | `bun run etl`, `bun run refresh-views`. |
+| SSR error handling | `src/server.ts`, `src/lib/error-*.ts` | h3-swallowed 500 normaliser + Lovable reporting. |
 
-If you need extra Vite options, pass them inside `defineConfig({ vite: { ... } })`.
+## CODE MAP
 
-## Server entry
+| Symbol | Type | Location | Role |
+|---|---|---|---|
+| `Route` | constant | `src/routes/__root.tsx` | Root shell, QueryClientProvider, head meta, error/404 boundaries |
+| `startInstance` | constant | `src/start.ts` | Start plugin with CSRF + error middleware |
+| `getRouter` | function | `src/router.tsx` | Router factory with React Query context |
+| `sql` | constant | `src/lib/db.ts` | Server-only Postgres client |
+| `overviewQueryOptions` | function | `src/lib/sla-data.ts` | React Query options for overview KPIs |
+| `qidsQueryOptions` | function | `src/lib/sla-data.ts` | React Query options for QID table |
+| `assetsQueryOptions` | function | `src/lib/sla-data.ts` | React Query options for assets |
+| `fetchQids` | server fn | `src/lib/data.fn.ts` | `createServerFn` wrapper → `getQids` |
+| `fetchAssets` | server fn | `src/lib/data.fn.ts` | `createServerFn` wrapper → `getAssets` |
+| `getTeamData` | function | `src/server/queries.server.ts` | Postgres query for squad overview |
+| `getQids` | function | `src/server/queries.server.ts` | Postgres QID aggregation query |
 
-`src/server.ts` is the SSR fetch wrapper registered in `vite.config.ts` (`tanstackStart.server.entry: "server"`). It catches h3-swallowed catastrophic errors and renders a fallback error page. Route server code through TanStack Start conventions, not this file.
+## CONVENTIONS
 
-## Routing
+- **Bun** is the package manager and runtime (`bun.lock` is the lock of record; `package-lock.json` is dead weight).
+- **Vite** config uses `@lovable.dev/vite-tanstack-config`; never duplicate its bundled plugins.
+- **Imports** use `@/*` alias for everything under `src/`; no star imports, no aliased imports.
+- **Routes** use `useQuery` inside components — no `loader` / `beforeLoad` pattern is used.
+- **Server-only boundary**: forbid `server-only` import; use `*.server.ts` or `@tanstack/react-start/server-only`.
+- **DB client** throws at import if `DATABASE_URL` is missing.
+- **Strict TypeScript** is on; no standalone `typecheck` script — rely on editor + `bun run build`.
+- **No test runner** currently exists.
 
-Routes live in `src/routes/` and are file-based via TanStack Router. `src/routeTree.gen.ts` is generated — do not hand-edit it; it updates when the dev server is running or on `bun dev`.
+## ANTI-PATTERNS (THIS PROJECT)
 
-## Database
+- Do **not** force-push / rebase / amend / squash already-pushed commits (Lovable sync).
+- Do **not** hand-edit `src/routeTree.gen.ts` — generated by TanStack Router.
+- Do **not** add Vite plugins that the Lovable preset already includes.
+- Do **not** import `src/lib/db.ts` from client components.
+- Do **not** create `src/pages/`, `src/routes/_app/index.tsx`, or `app/layout.tsx` — use `src/routes/__root.tsx`.
 
-Server-only Postgres via the `postgres` package. `src/lib/db.ts` expects `DATABASE_URL` and throws at import time if it is missing. Copy `.env.example` to `.env` and set a real URL before running any server function or build that executes server code.
+## UNIQUE STYLES
 
-This client is server-only — import it only from route loaders, server functions, or `*.server.ts` modules.
+- Brutalist/sec-ops aesthetic: Natura orange (`--primary` #E89B72), dark steel background, corner-cut panels.
+- Custom utilities in `src/styles.css`: `slab`, `slab-signal`, `stencil` (uppercase tracking), `corner-cut`, `tappable`.
+- Display font: Chakra Petch; body: DM Sans; mono: JetBrains Mono.
+- Numeric data uses `tabular-nums`.
 
-## Styling
+## COMMANDS
 
-- Tailwind CSS v4 with the new `@theme` / `@import "tailwindcss"` syntax in `src/styles.css`.
-- Custom theme tokens (`--background`, `--primary`, `--critica`, etc.) and custom utilities (`slab`, `slab-signal`, `stencil`, `tappable`) are defined there.
-- shadcn/ui "new-york" style, non-RSC. Components are in `src/components/ui/`.
-- Design system reference: `DESIGN.md`.
+```bash
+bun install          # install deps
+bun dev              # vite dev
+bun run build        # production build (Docker sets NITRO_PRESET=node-server)
+bun run lint         # eslint .
+bun run format       # prettier --write .
+bun run etl          # CSV -> Postgres loader
+bun run refresh-views
+```
 
-## Path alias
+## NOTES
 
-`@/*` maps to `./src/*` in both `tsconfig.json` and Vite. Use it for all internal imports.
-
-## Lint / format
-
-- ESLint: `eslint .` — note the rule that forbids importing `server-only`; use `*.server.ts` or `@tanstack/react-start/server-only` instead.
-- Prettier: `prettier --write .` — config is in `.prettierrc`.
-- No separate typecheck script; rely on the TypeScript editor and build. `skipLibCheck` is enabled and unused-vars checks are off in ESLint.
-
-## Static data
-
-`src/data/` contains JSON fixtures (`assets.json`, `qids.json`, `teams.json`) and derived helpers (`src/lib/sla-data.ts`, `src/lib/data.fn.ts`). Treat these as the current source of truth for demo/seed data unless a loader explicitly pulls from Postgres.
+- `src/server.ts` is the Nitro SSR entry, not the Start plugin. `src/start.ts` is the Start plugin.
+- `src/lib/data.fn.ts` dynamically imports `../server/queries.server.ts` to keep Postgres out of the client bundle.
+- Root screenshot PNGs, log files (`dev.log`, `etl.log`, `preview.log`), and the `%NOTE%` file are repo-root artifacts that should probably be gitignored.
+- `.env` may be tracked; verify with `git ls-files .env` before pushing.

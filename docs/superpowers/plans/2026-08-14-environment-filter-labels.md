@@ -20,15 +20,18 @@
 ### Task 1: Atualizar rótulos do filtro de ambiente
 
 **Files:**
+
 - Modify: `src/lib/constants.ts:68-72`
 
 **Interfaces:**
+
 - Consumes: nenhum.
 - Produces: `TAG_FILTER_OPTIONS` com rótulos atualizados.
 
 - [ ] **Step 1: Abrir `src/lib/constants.ts` e localizar `TAG_FILTER_OPTIONS`**
 
   O array atual está nas linhas 68-72:
+
   ```ts
   export const TAG_FILTER_OPTIONS = [
     { value: "full", label: "Full" },

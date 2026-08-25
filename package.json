@@ -9,7 +9,9 @@
     "build:dev": "vite build --mode development",
     "preview": "vite preview",
     "lint": "eslint .",
-    "format": "prettier --write ."
+    "format": "prettier --write .",
+    "refresh-views": "bun scripts/refresh-views.ts",
+    "etl": "bun scripts/etl.ts"
   },
   "dependencies": {
     "@hookform/resolvers": "^5.2.2",
@@ -47,6 +49,7 @@
     "class-variance-authority": "^0.7.1",
     "clsx": "^2.1.1",
     "cmdk": "^1.1.1",
+    "csv-parse": "^7.0.2",
     "date-fns": "^4.1.0",
     "embla-carousel-react": "^8.6.0",
     "input-otp": "^1.4.2",

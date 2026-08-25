@@ -1,7 +1,9 @@
 import { Link, useRouterState } from "@tanstack/react-router";
+import { useQuery } from "@tanstack/react-query";
 import type { ReactNode } from "react";
 import { Activity, Boxes, Bug, Cloud, FileBarChart, Gauge, ShieldHalf, Timer } from "lucide-react";
 import { TagFilter } from "@/components/TagFilter";
+import { lastSyncQueryOptions } from "@/lib/sla-data";
 
 const nav = [
   { to: "/", label: "Visão geral", icon: Gauge },
@@ -13,6 +15,15 @@ const nav = [
   { to: "/relatorios", label: "Relatórios", icon: FileBarChart },
 ];
 
+function formatSyncLabel(lastRefresh: string | null | undefined, isPending: boolean) {
+  if (isPending) return "carregando...";
+  if (!lastRefresh) return "não sincronizado";
+  return new Date(lastRefresh).toLocaleString("pt-BR", {
+    dateStyle: "short",
+    timeStyle: "short",
+  });
+}
+
 export function Shell({
   title,
   subtitle,
@@ -23,6 +34,7 @@ export function Shell({
   children: ReactNode;
 }) {
   const path = useRouterState({ select: (s) => s.location.pathname });
+  const { data: sync, isPending } = useQuery(lastSyncQueryOptions());
 
   return (
     <div className="flex min-h-screen">
@@ -60,7 +72,9 @@ export function Shell({
           <p className="flex items-center gap-2 text-[10px] text-baixa">
             <Activity size={12} /> Base sincronizada
           </p>
-          <p className="mt-1 text-[10px] text-muted-foreground">Snapshot: Semana 3 / Julho</p>
+          <p className="mt-1 text-[10px] text-muted-foreground">
+            Snapshot: {formatSyncLabel(sync?.lastRefresh, isPending)}
+          </p>
         </div>
       </aside>
 

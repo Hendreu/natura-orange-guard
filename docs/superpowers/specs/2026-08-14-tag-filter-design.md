@@ -1,6 +1,7 @@
 # Design: Filtro Global de Tags (Cloud / On-Premises)
 
 ## Objetivo
+
 Adicionar um filtro global por tag nas páginas Dashboard, Ativos, Vulnerabilidades e Relatórios, permitindo alternar entre:
 
 - `full` — mostra todos os ativos.
@@ -17,6 +18,7 @@ Caso contrário                                         -> onpremises
 ```
 
 Exemplos:
+
 - `Times:Cloud AWS|...` -> cloud
 - `Times:OnPrem|...` -> onpremises
 - `Times:Azure Cloud|...` -> cloud
@@ -26,6 +28,7 @@ Exemplos:
 **Filtro global via URL (`?tagFilter=full|full-cloud|full-on-premise`).**
 
 Motivos:
+
 - Funciona em todas as páginas sem precisar de estado global complexo.
 - Persiste ao navegar entre páginas e ao recarregar.
 - Permite compartilhar URLs com filtro aplicado.
@@ -36,6 +39,7 @@ Motivos:
 Um seletor simples (dropdown ou grupo de tabs) será adicionado no layout superior, provavelmente em `src/routes/__root.tsx` ou em um componente de header compartilhado.
 
 Opções exibidas:
+
 - `Full`
 - `Full Cloud`
 - `Full On-Premise`
@@ -50,6 +54,7 @@ O valor selecionado sincroniza com o query param `tagFilter`.
 - `src/routes/relatorios.tsx`
 
 Cada página:
+
 1. Lê `tagFilter` da URL.
 2. Repassa o valor para sua query server-side.
 3. A query aplica a condição SQL correspondente na coluna `Tags`.

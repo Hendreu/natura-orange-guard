@@ -21,19 +21,24 @@
 ### Task 1: Remover SemTime-Cloud e SemTime-OnPrem de TEAM_NAMES
 
 **Files:**
+
 - Modify: `src/lib/constants.ts:22` e `src/lib/constants.ts:29`
 
 **Interfaces:**
+
 - Consumes: nenhum.
 - Produces: `TEAM_NAMES` sem os itens removidos.
 
 - [ ] **Step 1: Abrir `src/lib/constants.ts`**
 
   Localizar e remover as linhas:
+
   ```ts
   "SemTime-Cloud",
   ```
+
   e
+
   ```ts
   "SemTime-OnPrem",
   ```
@@ -41,6 +46,7 @@
 - [ ] **Step 2: Verificar o arquivo resultante**
 
   Resultado esperado (trecho):
+
   ```ts
   export const TEAM_NAMES = [
     "On-Prem",
@@ -92,9 +98,11 @@
 ### Task 2: Criar helper squadFilterSql e aplicar nas queries
 
 **Files:**
+
 - Modify: `src/server/queries.server.ts`
 
 **Interfaces:**
+
 - Consumes: `team` string dos parâmetros das funções.
 - Produces: SQL fragment usado em `getQids`, `getAssets`, `getReports`.
 
@@ -104,7 +112,8 @@
   function squadFilterSql(team: string | undefined) {
     if (!team || team === "Todas") return sql``;
     if (team === "All Cloud") return sql`AND a."Tags" ILIKE ${"%cloud%"}`;
-    if (team === "All On-Prem") return sql`AND (a."Tags" IS NULL OR a."Tags" NOT ILIKE ${"%cloud%"})`;
+    if (team === "All On-Prem")
+      return sql`AND (a."Tags" IS NULL OR a."Tags" NOT ILIKE ${"%cloud%"})`;
     return sql`AND a."Tags" ~* ${teamRegex(team)}`;
   }
   ```
@@ -112,10 +121,13 @@
 - [ ] **Step 2: Substituir `teamFilter` em `getQids`**
 
   De:
+
   ```ts
   const teamFilter = team && team !== "Todas" ? sql`AND a."Tags" ~* ${teamRegex(team)}` : sql``;
   ```
+
   Para:
+
   ```ts
   const teamFilter = squadFilterSql(team);
   ```
@@ -125,10 +137,13 @@
 - [ ] **Step 3: Substituir `teamFilter` em `getAssets`**
 
   De:
+
   ```ts
   const teamFilter = team && team !== "Todas" ? sql`AND a."Tags" ~* ${teamRegex(team)}` : sql``;
   ```
+
   Para:
+
   ```ts
   const teamFilter = squadFilterSql(team);
   ```
@@ -136,10 +151,13 @@
 - [ ] **Step 4: Substituir `teamFilter` em `getReports`**
 
   De:
+
   ```ts
   const teamFilter = team && team !== "Todas" ? sql`AND a."Tags" ~* ${teamRegex(team)}` : sql``;
   ```
+
   Para:
+
   ```ts
   const teamFilter = squadFilterSql(team);
   ```
@@ -156,9 +174,11 @@
 ### Task 3: Adicionar função de overview sem filtro de time
 
 **Files:**
+
 - Modify: `src/server/queries.server.ts`
 
 **Interfaces:**
+
 - Consumes: `tagFilter` opcional.
 - Produces: `getOverview({ tagFilter }): Promise<TeamData>`.
 
@@ -232,9 +252,11 @@
 ### Task 4: Adicionar fetchOverview em data.fn.ts
 
 **Files:**
+
 - Modify: `src/lib/data.fn.ts`
 
 **Interfaces:**
+
 - Consumes: `tagFilter` opcional.
 - Produz: server function `fetchOverview`.
 
@@ -259,9 +281,11 @@
 ### Task 5: Adicionar overviewAllQueryOptions em sla-data.ts
 
 **Files:**
+
 - Modify: `src/lib/sla-data.ts`
 
 **Interfaces:**
+
 - Consumes: `fetchOverview`.
 - Produces: `overviewAllQueryOptions`.
 
@@ -285,9 +309,11 @@
 ### Task 6: Atualizar Visão Geral (index.tsx)
 
 **Files:**
+
 - Modify: `src/routes/index.tsx`
 
 **Interfaces:**
+
 - Consumes: `overviewAllQueryOptions`, `overviewQueryOptions`.
 - Produces: seletor com `Todas`, `All Cloud`, `All On-Prem` e times.
 
@@ -298,6 +324,7 @@
     tagFilter: z.enum(["full", "full-cloud", "full-on-premise"]).optional(),
   });
   ```
+
   (permanece inalterado)
 
 - [ ] **Step 2: Alterar estado inicial do squad para `"Todas"`**
@@ -310,9 +337,8 @@
 
   ```ts
   const tagFilter = search.tagFilter ?? "full";
-  const queryOptions = team === "Todas"
-    ? overviewAllQueryOptions(tagFilter)
-    : overviewQueryOptions(team, tagFilter);
+  const queryOptions =
+    team === "Todas" ? overviewAllQueryOptions(tagFilter) : overviewQueryOptions(team, tagFilter);
   const { data, isLoading, isError } = useQuery(queryOptions);
   ```
 
@@ -337,6 +363,7 @@
 - [ ] **Step 5: Atualizar o contador "de X squads"**
 
   Quando `team === "Todas"`, mostrar texto adequado ou esconder o contador. Exemplo:
+
   ```tsx
   <span className="stencil text-[9px] text-muted-foreground">
     {team === "Todas" ? "todos os squads" : `de ${teamNames.length} squads`}
@@ -353,21 +380,26 @@
 ### Task 7: Adicionar All Cloud / All On-Prem nos filtros de squad das outras páginas
 
 **Files:**
+
 - Modify: `src/routes/vulnerabilidades.tsx`
 - Modify: `src/routes/ativos.tsx`
 - Modify: `src/routes/relatorios.tsx`
 
 **Interfaces:**
+
 - Consumes: `teamNames`.
 - Produces: dropdowns com as novas opções.
 
 - [ ] **Step 1: Atualizar `vulnerabilidades.tsx`**
 
   Alterar:
+
   ```ts
   options={["Todas", ...teamNames]}
   ```
+
   Para:
+
   ```ts
   options={["Todas", "All Cloud", "All On-Prem", ...teamNames]}
   ```
@@ -375,10 +407,13 @@
 - [ ] **Step 2: Atualizar `ativos.tsx`**
 
   Alterar o map de opções do Select de Squad:
+
   ```ts
   {["Todas", ...teamNames].map((t) => (...))}
   ```
+
   Para:
+
   ```ts
   {["Todas", "All Cloud", "All On-Prem", ...teamNames].map((t) => (...))}
   ```
@@ -386,10 +421,13 @@
 - [ ] **Step 3: Atualizar `relatorios.tsx`**
 
   Alterar o map de opções do Select de Time:
+
   ```ts
   {teamNames.map((t) => (...))}
   ```
+
   Para:
+
   ```ts
   {["All Cloud", "All On-Prem", ...teamNames].map((t) => (
     <SelectItem key={t} value={t} className="text-xs">
@@ -403,11 +441,13 @@
 - [ ] **Step 4: Verificar lint em cada arquivo**
 
   Run:
+
   ```bash
   cmd /c "bun eslint src/routes/vulnerabilidades.tsx"
   cmd /c "bun eslint src/routes/ativos.tsx"
   cmd /c "bun eslint src/routes/relatorios.tsx"
   ```
+
   Expected: no output.
 
 ---

@@ -8,6 +8,8 @@ import {
   fetchAssets,
   fetchHardening,
   fetchReports,
+  fetchVulnerabilityStats,
+  fetchLastSync,
 } from "./data.fn";
 
 export type Trend = { diff: number; pct: number };
@@ -63,6 +65,16 @@ export function fmt(n: number) {
   return n.toLocaleString("pt-BR");
 }
 
+export type VulnerabilityStats = {
+  total: number;
+  critical: number;
+  criticalPatchable: number;
+  cisaKev: number;
+  ransomware: number;
+  bySeverity: Record<string, number>;
+  byCategory: { category: string; count: number }[];
+};
+
 export type QidRow = {
   qid: number;
   title: string;
@@ -74,6 +86,7 @@ export type QidRow = {
   naoCorr: number;
   age: number;
   solution: string;
+  status: string;
 };
 
 export type AssetRow = {
@@ -115,6 +128,8 @@ export const qidsQueryOptions = (filters: {
   team?: string;
   q?: string;
   tagFilter?: TagFilter | undefined;
+  categories?: string[];
+  statuses?: string[];
 }) =>
   queryOptions({
     queryKey: ["qids", filters],
@@ -223,4 +238,27 @@ export const reportsQueryOptions = (filters: {
   queryOptions({
     queryKey: ["reports", filters],
     queryFn: () => fetchReports({ data: filters }),
+  });
+
+export const vulnerabilityStatsQueryOptions = (filters: {
+  team?: string;
+  tagFilter?: TagFilter | undefined;
+  categories?: string[];
+  statuses?: string[];
+  q?: string;
+}) =>
+  queryOptions({
+    queryKey: ["vulnerability-stats", filters],
+    queryFn: () => fetchVulnerabilityStats({ data: filters }),
+  });
+
+export type LastSync = {
+  lastRefresh: string | null;
+  viewsCount: number;
+};
+
+export const lastSyncQueryOptions = () =>
+  queryOptions({
+    queryKey: ["last-sync"],
+    queryFn: () => fetchLastSync({}),
   });

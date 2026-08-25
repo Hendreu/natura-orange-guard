@@ -5,6 +5,7 @@
 A aplicação Natura SecOps possui um filtro global de ambiente (`Ambiente`), renderizado no header via `<TagFilter />`, que afeta as consultas das páginas Visão geral, Vulnerabilidades, Ativos e Relatórios.
 
 As opções atuais são:
+
 - `Full`
 - `Full Cloud`
 - `Full On-Premise`
@@ -31,11 +32,11 @@ export const TAG_FILTER_OPTIONS = [
 
 ## Comportamento
 
-| Rótulo selecionado | Filtro SQL aplicado (já existente) | Significado |
-| --- | --- | --- |
-| `Full` | nenhum | Todos os ativos |
-| `All Clouds` | `a."Tags" ILIKE '%cloud%'` | Qualquer tag que contenha "cloud" |
-| `On-Prem` | `a."Tags" IS NULL OR a."Tags" NOT ILIKE '%cloud%'` | Qualquer tag que não contenha "cloud", incluindo nulas |
+| Rótulo selecionado | Filtro SQL aplicado (já existente)                 | Significado                                            |
+| ------------------ | -------------------------------------------------- | ------------------------------------------------------ |
+| `Full`             | nenhum                                             | Todos os ativos                                        |
+| `All Clouds`       | `a."Tags" ILIKE '%cloud%'`                         | Qualquer tag que contenha "cloud"                      |
+| `On-Prem`          | `a."Tags" IS NULL OR a."Tags" NOT ILIKE '%cloud%'` | Qualquer tag que não contenha "cloud", incluindo nulas |
 
 ## Escopo
 
