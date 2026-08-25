@@ -693,9 +693,65 @@ export type HardeningData = {
 };
 
 export async function getHardening(): Promise<HardeningData> {
-  const [summary] = await sql`SELECT * FROM mv_hardening_summary`;
-  const categories = await sql`SELECT * FROM mv_hardening_categories`;
-  const topQids = await sql`SELECT * FROM mv_hardening_topqids`;
+  const activeStatuses = ["Active", "New", "Re-Opened"];
+  const statusFilter = statusesFilterSql(activeStatuses);
+
+  const [summary] = await sql`
+    WITH cloud_assets AS MATERIALIZED (
+      SELECT DISTINCT ON ("QG_HostID") "QG_HostID"
+      FROM "All_Assets"
+      WHERE is_cloud = true
+    )
+    SELECT
+      (SELECT COUNT(*)::int FROM cloud_assets) as "cloudAssets",
+      COUNT(DISTINCT a."QG_HostID") FILTER (WHERE v."Severity"::int = 5)::int as "cloudAssetsWithCritical",
+      COUNT(*)::int as "cloudVulns"
+    FROM cloud_assets a
+    JOIN vulnerabilities v ON v."QG_HostID" = a."QG_HostID"
+    WHERE ${statusFilterSql()}
+      ${statusFilter}
+  `;
+
+  const categories = await sql`
+    WITH cloud_assets AS MATERIALIZED (
+      SELECT DISTINCT ON ("QG_HostID") "QG_HostID"
+      FROM "All_Assets"
+      WHERE is_cloud = true
+    )
+    SELECT
+      COALESCE(kb.category, 'Unknown') as "name",
+      ${severityLabelExpr()} as "sev",
+      COUNT(*)::int as "count"
+    FROM cloud_assets a
+    JOIN vulnerabilities v ON v."QG_HostID" = a."QG_HostID"
+    LEFT JOIN kb_summary kb ON v."QID" = kb.qid
+    WHERE ${statusFilterSql()}
+      ${statusFilter}
+    GROUP BY COALESCE(kb.category, 'Unknown'), ${severityLabelExpr()}
+    ORDER BY count DESC
+    LIMIT 10
+  `;
+
+  const topQids = await sql`
+    WITH cloud_assets AS MATERIALIZED (
+      SELECT DISTINCT ON ("QG_HostID") "QG_HostID"
+      FROM "All_Assets"
+      WHERE is_cloud = true
+    )
+    SELECT
+      v."QID"::int as "qid",
+      MAX(kb.title) as "title",
+      ${severityLabelExpr()} as "sev",
+      COUNT(*)::int as "count"
+    FROM cloud_assets a
+    JOIN vulnerabilities v ON v."QG_HostID" = a."QG_HostID"
+    LEFT JOIN kb_summary kb ON v."QID" = kb.qid
+    WHERE ${statusFilterSql()}
+      ${statusFilter}
+    GROUP BY v."QID", ${severityLabelExpr()}
+    ORDER BY count DESC
+    LIMIT 10
+  `;
 
   const cloudAssets = (summary?.["cloudAssets"] as number) ?? 0;
   const cloudAssetsWithCritical = (summary?.["cloudAssetsWithCritical"] as number) ?? 0;
