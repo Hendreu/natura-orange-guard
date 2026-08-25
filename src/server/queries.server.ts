@@ -1,5 +1,3 @@
-import { statSync } from "node:fs";
-import path from "node:path";
 import sql from "@/lib/db";
 import { TEAM_NAMES, SEVERITY_ORDER, ACTIVE_STATUSES } from "@/lib/constants";
 import type { TagFilter } from "@/lib/constants";
@@ -1025,10 +1023,16 @@ export async function getReports({
   };
 }
 
-function etlLogMtime(): string | null {
+async function pgStatMtime(): Promise<string | null> {
   try {
-    const stats = statSync(path.resolve("etl.log"));
-    return stats.mtime.toISOString();
+    const [row] = await sql`
+      SELECT max(last_analyze) as last_refresh
+      FROM pg_stat_user_tables
+      WHERE relname LIKE ${"mv_%"}
+    `;
+    const value = row?.last_refresh as Date | string | null;
+    if (value instanceof Date) return value.toISOString();
+    return value ?? null;
   } catch {
     return null;
   }
@@ -1042,7 +1046,7 @@ export async function getLastSync(): Promise<{ lastRefresh: string | null; views
       WHERE id = 1
     `;
     if (!row) {
-      return { lastRefresh: etlLogMtime(), viewsCount: 0 };
+      return { lastRefresh: await pgStatMtime(), viewsCount: 0 };
     }
     const lastRefresh = row.last_refresh as Date | string | null;
     return {
@@ -1050,6 +1054,6 @@ export async function getLastSync(): Promise<{ lastRefresh: string | null; views
       viewsCount: (row.views_count as number) ?? 0,
     };
   } catch {
-    return { lastRefresh: etlLogMtime(), viewsCount: 0 };
+    return { lastRefresh: await pgStatMtime(), viewsCount: 0 };
   }
 }

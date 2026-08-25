@@ -31,6 +31,7 @@ export async function recordSync() {
       views_count integer NOT NULL
     )
   `;
+  await sql`GRANT SELECT ON sync_status TO PUBLIC`;
   await sql`
     INSERT INTO sync_status (id, last_refresh, views_count)
     VALUES (1, NOW(), ${viewsCount})
