@@ -69,7 +69,7 @@ function assetCteSql(
 }
 
 function severityLabelExpr() {
-  return sql`CASE v."Severity"::int WHEN 5 THEN 'Crítica' WHEN 4 THEN 'Alta' WHEN 3 THEN 'Média' ELSE 'Baixa' END`;
+  return sql`CASE v."Severity"::int WHEN 5 THEN 'Crítica' WHEN 4 THEN 'Alta' WHEN 3 THEN 'Média' WHEN 2 THEN 'Média' ELSE 'Baixa' END`;
 }
 
 function ageExpr() {
@@ -77,7 +77,7 @@ function ageExpr() {
 }
 
 function thresholdExpr() {
-  return sql`CASE v."Severity"::int WHEN 5 THEN 15 WHEN 4 THEN 30 WHEN 3 THEN 90 ELSE 180 END`;
+  return sql`CASE v."Severity"::int WHEN 5 THEN 15 WHEN 4 THEN 30 WHEN 3 THEN 90 WHEN 2 THEN 90 ELSE 180 END`;
 }
 
 function statusFilterSql() {
@@ -199,7 +199,8 @@ export async function getTeamChartSev({
 }) {
   if ((!team || team === "Todas") && (!tagFilter || tagFilter === "full")) {
     const rows = await sql`SELECT sev, total FROM mv_chart_sev`;
-    const map = new Map(rows.map((r) => [r["sev"], r["total"]]));
+    const map = new Map<string, number>();
+    for (const r of rows) map.set(r["sev"], (map.get(r["sev"]) ?? 0) + r["total"]);
     return SEVERITY_ORDER.map((s) => map.get(s) ?? 0);
   }
 
@@ -207,7 +208,8 @@ export async function getTeamChartSev({
   if (viewKey) {
     const rows =
       await sql`SELECT sev, total FROM mv_team_chart_sev WHERE team = ${viewKey.team} AND scope = ${viewKey.scope}`;
-    const map = new Map(rows.map((r) => [r["sev"], r["total"]]));
+    const map = new Map<string, number>();
+    for (const r of rows) map.set(r["sev"], (map.get(r["sev"]) ?? 0) + r["total"]);
     return SEVERITY_ORDER.map((s) => map.get(s) ?? 0);
   }
 
@@ -221,7 +223,8 @@ export async function getTeamChartSev({
       AND v."Severity"::int IN (1,2,3,4,5)
     GROUP BY ${severityLabelExpr()}
   `;
-  const map = new Map(rows.map((r) => [r["sev"], r["total"]]));
+  const map = new Map<string, number>();
+  for (const r of rows) map.set(r["sev"], (map.get(r["sev"]) ?? 0) + r["total"]);
   return SEVERITY_ORDER.map((s) => map.get(s) ?? 0);
 }
 
@@ -579,6 +582,7 @@ export async function getVulnerabilityStats({
               WHEN 5 THEN 'Crítica'
               WHEN 4 THEN 'Alta'
               WHEN 3 THEN 'Média'
+              WHEN 2 THEN 'Média'
               ELSE 'Baixa'
             END as sev_label,
             COUNT(*)::int as c
