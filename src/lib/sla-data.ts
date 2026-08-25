@@ -72,6 +72,7 @@ export type VulnerabilityStats = {
   cisaKev: number;
   ransomware: number;
   bySeverity: Record<string, number>;
+  bySeverityNumber: Record<string, number>;
   byCategory: { category: string; count: number }[];
 };
 

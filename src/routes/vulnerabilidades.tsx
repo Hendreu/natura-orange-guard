@@ -17,7 +17,6 @@ import {
   fmt,
   qidsQueryOptions,
   vulnerabilityStatsQueryOptions,
-  severityOrder,
   severityToken,
   teamNames,
 } from "@/lib/sla-data";
@@ -153,10 +152,17 @@ function Vulnerabilidades() {
     vulnerabilityStatsQueryOptions({ team, tagFilter, categories, statuses, q: debouncedQ }),
   );
 
+  const severityOptions = useMemo(() => {
+    if (!stats) return [];
+    return Object.entries(stats.bySeverityNumber)
+      .map(([level, count]) => ({ level, count }))
+      .sort((a, b) => b.count - a.count);
+  }, [stats]);
+
   const filteredTotal = useMemo(() => {
     if (!stats) return 0;
     if (selectedSevs.length === 0) return stats.total;
-    return selectedSevs.reduce((sum, s) => sum + (stats.bySeverity[s] ?? 0), 0);
+    return selectedSevs.reduce((sum, s) => sum + (stats.bySeverityNumber[s] ?? 0), 0);
   }, [stats, selectedSevs]);
 
   const categoryOptions = useMemo(() => {
@@ -214,10 +220,10 @@ function Vulnerabilidades() {
     >
       <section className="mb-4 grid gap-4 sm:grid-cols-2 lg:grid-cols-6">
         <StatSlab label="Total Detections" value={filteredTotal} accent className="lg:col-span-2" />
-        <StatSlab label="Critical Vulns" value={stats?.critical ?? 0} />
-        <StatSlab label="Critical Patchable" value={stats?.criticalPatchable ?? 0} />
         <StatSlab label="CISA KEV" value={stats?.cisaKev ?? 0} />
-        <StatSlab label="Ransomware" value={stats?.ransomware ?? 0} />
+        <StatSlab label="Ransomware Vulns" value={stats?.ransomware ?? 0} />
+        <StatSlab label="Critical Patchable Vulns" value={stats?.criticalPatchable ?? 0} />
+        <StatSlab label="Critical Vulns (QID)" value={stats?.critical ?? 0} />
       </section>
 
       <div className="grid gap-4 lg:grid-cols-[260px_1fr]">
@@ -253,24 +259,27 @@ function Vulnerabilidades() {
 
           <div>
             <span className="stencil mb-2 block text-[10px] text-muted-foreground">Severidade</span>
-            <div className="flex flex-wrap gap-2">
-              {severityOrder.map((s) => {
-                const count = stats?.bySeverity[s] ?? 0;
-                const active = selectedSevs.includes(s);
+            <div className="space-y-1">
+              {severityOptions.map(({ level, count }) => {
+                const active = selectedSevs.includes(level);
                 return (
-                  <FilterChip
-                    key={s}
-                    label={s}
-                    count={count}
-                    active={active}
-                    color={severityToken[s]}
+                  <button
+                    key={level}
                     onClick={() => {
                       const next = active
-                        ? selectedSevs.filter((v) => v !== s)
-                        : [...selectedSevs, s];
+                        ? selectedSevs.filter((v) => v !== level)
+                        : [...selectedSevs, level];
                       setSeverities(next);
                     }}
-                  />
+                    className={`flex w-full items-center justify-between rounded-sm border px-2 py-1.5 text-xs transition-colors ${
+                      active
+                        ? "border-primary bg-primary/10 text-foreground"
+                        : "border-border bg-secondary text-muted-foreground hover:border-primary hover:text-foreground"
+                    }`}
+                  >
+                    <span className="font-bold">Nível {level}</span>
+                    <span className="stencil">{fmt(count)}</span>
+                  </button>
                 );
               })}
             </div>

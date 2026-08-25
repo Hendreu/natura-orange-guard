@@ -474,7 +474,9 @@ export async function getQids({
   }
 
   const cte = assetCteSql(team, tagFilter);
-  const sevFilter = sev && sev.length > 0 ? sql`AND ${severityLabelExpr()} IN ${sql(sev)}` : sql``;
+  const sevNums = sev?.map((s) => Number(s)).filter((n) => !Number.isNaN(n));
+  const sevFilter =
+    sevNums && sevNums.length > 0 ? sql`AND v."Severity"::int IN ${sql(sevNums)}` : sql``;
   const qFilter = q
     ? sql`AND (kb.title ILIKE ${`%${q}%`} OR kb.category ILIKE ${`%${q}%`} OR v."QID"::text ILIKE ${`%${q}%`})`
     : sql``;
@@ -591,6 +593,14 @@ export async function getVulnerabilityStats({
         ) sev_counts
       ), '{}') as "bySeverity",
       COALESCE((
+        SELECT jsonb_object_agg(sev::text, c)
+        FROM (
+          SELECT sev, COUNT(*)::int as c
+          FROM base
+          GROUP BY sev
+        ) num_counts
+      ), '{}') as "bySeverityNumber",
+      COALESCE((
         SELECT jsonb_agg(jsonb_build_object('category', category, 'count', count) ORDER BY count DESC)
         FROM (
           SELECT category, COUNT(*)::int as count
@@ -609,6 +619,7 @@ export async function getVulnerabilityStats({
     cisaKev: row?.cisaKev ?? 0,
     ransomware: row?.ransomware ?? 0,
     bySeverity: (row?.bySeverity as Record<string, number>) ?? {},
+    bySeverityNumber: (row?.bySeverityNumber as Record<string, number>) ?? {},
     byCategory: (row?.byCategory as { category: string; count: number }[]) ?? [],
   };
 }
