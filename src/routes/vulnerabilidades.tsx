@@ -153,6 +153,12 @@ function Vulnerabilidades() {
     vulnerabilityStatsQueryOptions({ team, tagFilter, categories, statuses, q: debouncedQ }),
   );
 
+  const filteredTotal = useMemo(() => {
+    if (!stats) return 0;
+    if (selectedSevs.length === 0) return stats.total;
+    return selectedSevs.reduce((sum, s) => sum + (stats.bySeverity[s] ?? 0), 0);
+  }, [stats, selectedSevs]);
+
   const categoryOptions = useMemo(() => {
     const map = new Map<string, number>();
     rows.forEach((r) => {
@@ -207,12 +213,7 @@ function Vulnerabilidades() {
       subtitle="Visão operacional de vulnerabilidades — filtros por severidade, categoria e status."
     >
       <section className="mb-4 grid gap-4 sm:grid-cols-2 lg:grid-cols-6">
-        <StatSlab
-          label="Total Detections"
-          value={stats?.total ?? 0}
-          accent
-          className="lg:col-span-2"
-        />
+        <StatSlab label="Total Detections" value={filteredTotal} accent className="lg:col-span-2" />
         <StatSlab label="Critical Vulns" value={stats?.critical ?? 0} />
         <StatSlab label="Critical Patchable" value={stats?.criticalPatchable ?? 0} />
         <StatSlab label="CISA KEV" value={stats?.cisaKev ?? 0} />
