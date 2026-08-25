@@ -583,7 +583,7 @@ export async function getVulnerabilityStats({
             END as sev_label,
             COUNT(*)::int as c
           FROM base
-          GROUP BY sev
+          GROUP BY sev_label
         ) sev_counts
       ), '{}') as "bySeverity",
       COALESCE((
