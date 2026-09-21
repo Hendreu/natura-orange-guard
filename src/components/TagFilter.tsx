@@ -94,8 +94,10 @@ export function TagFilter() {
               {tag.name}
               <button
                 type="button"
+                aria-label={`Remover ${tag.name}`}
+                title={`Remover ${tag.name}`}
                 onClick={() => toggle(tag.id)}
-                className="ml-1 inline-flex"
+                className="ml-1 inline-flex min-h-[20px] min-w-[20px] items-center justify-center"
               >
                 <X className="h-3 w-3" />
               </button>

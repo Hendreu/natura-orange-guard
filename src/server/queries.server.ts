@@ -414,7 +414,7 @@ export async function getAllTeamsData(): Promise<Record<string, TeamData>> {
 }
 
 export async function getTags() {
-  return sql<{ id: string; name: string }[]>`
+  return sql<{ id: number; name: string }[]>`
     SELECT id, name
     FROM tags
     ORDER BY name
