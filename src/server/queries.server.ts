@@ -1,6 +1,5 @@
 import sql from "@/lib/db";
 import { TEAM_NAMES, SEVERITY_ORDER, ACTIVE_STATUSES } from "@/lib/constants";
-import type { TagFilter } from "@/lib/constants";
 import type {
   Trend,
   ActionGroup,
@@ -19,20 +18,8 @@ function extractTeamExpr() {
   return sql`COALESCE(a.team, 'Unknown')`;
 }
 
-function tagFilterSql(tagFilter: TagFilter | undefined) {
-  if (tagFilter === "full-cloud") {
-    return sql`AND a."Tags" ILIKE ${"%cloud%"}`;
-  }
-  if (tagFilter === "full-on-premise") {
-    return sql`AND (a."Tags" IS NULL OR a."Tags" NOT ILIKE ${"%cloud%"})`;
-  }
-  return sql``;
-}
-
 function squadFilterSql(team: string | undefined) {
   if (!team || team === "Todas") return sql``;
-  if (team === "All Cloud") return sql`AND a."Tags" ILIKE ${"%cloud%"}`;
-  if (team === "All On-Prem") return sql`AND (a."Tags" IS NULL OR a."Tags" NOT ILIKE ${"%cloud%"})`;
   return sql`AND a.team = ${team}`;
 }
 
@@ -46,9 +33,21 @@ function statusesFilterSql(statuses?: string[]) {
   return sql`AND v."Status" IN ${sql(statuses)}`;
 }
 
+function assetTagFilterSql(tags: number[]) {
+  if (tags.length === 0) return sql``;
+  return sql`AND EXISTS (
+    SELECT 1
+    FROM asset_tags at
+    WHERE at.asset_id = a."ID"
+      AND at.tag_id = ANY(${tags})
+    GROUP BY at.asset_id
+    HAVING COUNT(DISTINCT at.tag_id) = ${tags.length}
+  )`;
+}
+
 function assetCteSql(
   team: string | undefined,
-  tagFilter: TagFilter | undefined,
+  tags: number[],
   extraCols = sql``,
 ) {
   const teamFilter =
@@ -59,13 +58,8 @@ function assetCteSql(
         : team === "All On-Prem"
           ? sql`AND a.is_cloud = false`
           : sql`AND a.team = ${team}`;
-  const tagFilterSql =
-    tagFilter === "full-cloud"
-      ? sql`AND a.is_cloud = true`
-      : tagFilter === "full-on-premise"
-        ? sql`AND a.is_cloud = false`
-        : sql``;
-  return sql`WITH filtered_assets AS MATERIALIZED (SELECT DISTINCT ON (a."QG_HostID") a."QG_HostID", a.team, a.is_cloud ${extraCols} FROM "All_Assets" a WHERE TRUE ${teamFilter} ${tagFilterSql})`;
+  const tagFilter = assetTagFilterSql(tags);
+  return sql`WITH filtered_assets AS MATERIALIZED (SELECT DISTINCT ON (a."QG_HostID") a."QG_HostID", a.team, a.is_cloud ${extraCols} FROM "All_Assets" a WHERE TRUE ${teamFilter} ${tagFilter})`;
 }
 
 function severityLabelExpr() {
@@ -84,22 +78,10 @@ function statusFilterSql() {
   return sql`TRUE`;
 }
 
-function teamViewKey(
-  team: string | undefined,
-  tagFilter: TagFilter | undefined,
-): { team: string; scope: string } | undefined {
+function teamViewKey(team: string | undefined): { team: string; scope: string } | undefined {
   if (!team || team === "Todas") return undefined;
-  if (team === "All Cloud") {
-    return tagFilter === "full" || tagFilter === "full-cloud"
-      ? { team: "All Cloud", scope: "full-cloud" }
-      : undefined;
-  }
-  if (team === "All On-Prem") {
-    return tagFilter === "full" || tagFilter === "full-on-premise"
-      ? { team: "All On-Prem", scope: "full-on-premise" }
-      : undefined;
-  }
-  if (tagFilter && tagFilter !== "full") return undefined;
+  if (team === "All Cloud") return { team: "All Cloud", scope: "full-cloud" };
+  if (team === "All On-Prem") return { team: "All On-Prem", scope: "full-on-premise" };
   return { team, scope: "full" };
 }
 
@@ -116,12 +98,12 @@ function makeTrends(): Record<string, Trend> {
 
 export async function getTeamKpis({
   team,
-  tagFilter,
+  tags = [],
 }: {
   team?: string;
-  tagFilter?: TagFilter | undefined;
+  tags?: number[];
 }) {
-  if ((!team || team === "Todas") && (!tagFilter || tagFilter === "full")) {
+  if (tags.length === 0 && (!team || team === "Todas")) {
     const [row] = await sql`SELECT * FROM mv_overview`;
     return row as {
       vulns: number;
@@ -135,7 +117,7 @@ export async function getTeamKpis({
     };
   }
 
-  const viewKey = teamViewKey(team, tagFilter);
+  const viewKey = tags.length === 0 ? teamViewKey(team) : undefined;
   if (viewKey) {
     const [row] =
       await sql`SELECT * FROM mv_team_overview WHERE team = ${viewKey.team} AND scope = ${viewKey.scope}`;
@@ -160,7 +142,7 @@ export async function getTeamKpis({
     };
   }
 
-  const cte = assetCteSql(team, tagFilter);
+  const cte = assetCteSql(team, tags);
   const [row] = await sql`
     ${cte}
     SELECT
@@ -192,19 +174,19 @@ export async function getTeamKpis({
 
 export async function getTeamChartSev({
   team,
-  tagFilter,
+  tags = [],
 }: {
   team?: string;
-  tagFilter?: TagFilter | undefined;
+  tags?: number[];
 }) {
-  if ((!team || team === "Todas") && (!tagFilter || tagFilter === "full")) {
+  if (tags.length === 0 && (!team || team === "Todas")) {
     const rows = await sql`SELECT sev, total FROM mv_chart_sev`;
     const map = new Map<string, number>();
     for (const r of rows) map.set(r["sev"], (map.get(r["sev"]) ?? 0) + r["total"]);
     return SEVERITY_ORDER.map((s) => map.get(s) ?? 0);
   }
 
-  const viewKey = teamViewKey(team, tagFilter);
+  const viewKey = tags.length === 0 ? teamViewKey(team) : undefined;
   if (viewKey) {
     const rows =
       await sql`SELECT sev, total FROM mv_team_chart_sev WHERE team = ${viewKey.team} AND scope = ${viewKey.scope}`;
@@ -213,7 +195,7 @@ export async function getTeamChartSev({
     return SEVERITY_ORDER.map((s) => map.get(s) ?? 0);
   }
 
-  const cte = assetCteSql(team, tagFilter);
+  const cte = assetCteSql(team, tags);
   const rows = await sql`
     ${cte}
     SELECT ${severityLabelExpr()} as "sev", COUNT(*)::int as "total"
@@ -230,12 +212,12 @@ export async function getTeamChartSev({
 
 export async function getTeamSla({
   team,
-  tagFilter,
+  tags = [],
 }: {
   team?: string;
-  tagFilter?: TagFilter | undefined;
+  tags?: number[];
 }) {
-  if ((!team || team === "Todas") && (!tagFilter || tagFilter === "full")) {
+  if (tags.length === 0 && (!team || team === "Todas")) {
     const rows =
       await sql`SELECT sev, "DentroSLA_Corr", "DentroSLA_NaoCorr", "ForaSLA_Corr", "ForaSLA_NaoCorr" FROM mv_sla`;
     const result: Record<string, SlaBucket> = {};
@@ -253,7 +235,7 @@ export async function getTeamSla({
     return result;
   }
 
-  const viewKey = teamViewKey(team, tagFilter);
+  const viewKey = tags.length === 0 ? teamViewKey(team) : undefined;
   if (viewKey) {
     const rows =
       await sql`SELECT sev, "DentroSLA_Corr", "DentroSLA_NaoCorr", "ForaSLA_Corr", "ForaSLA_NaoCorr" FROM mv_team_sla WHERE team = ${viewKey.team} AND scope = ${viewKey.scope}`;
@@ -272,7 +254,7 @@ export async function getTeamSla({
     return result;
   }
 
-  const cte = assetCteSql(team, tagFilter);
+  const cte = assetCteSql(team, tags);
   const rows = await sql`
     ${cte}
     , base AS (
@@ -309,12 +291,12 @@ export async function getTeamSla({
 
 export async function getTeamRaw({
   team,
-  tagFilter,
+  tags = [],
 }: {
   team?: string;
-  tagFilter?: TagFilter | undefined;
+  tags?: number[];
 }) {
-  if ((!team || team === "Todas") && (!tagFilter || tagFilter === "full")) {
+  if (tags.length === 0 && (!team || team === "Todas")) {
     const rows = await sql`SELECT sev, action, total, avg_age, qids FROM mv_raw`;
     const result: Record<string, SeverityBlock> = {};
     for (const s of SEVERITY_ORDER) {
@@ -333,7 +315,7 @@ export async function getTeamRaw({
     return result;
   }
 
-  const viewKey = teamViewKey(team, tagFilter);
+  const viewKey = tags.length === 0 ? teamViewKey(team) : undefined;
   if (viewKey) {
     const rows =
       await sql`SELECT sev, action, total, avg_age, qids FROM mv_team_raw WHERE team = ${viewKey.team} AND scope = ${viewKey.scope}`;
@@ -354,7 +336,7 @@ export async function getTeamRaw({
     return result;
   }
 
-  const cte = assetCteSql(team, tagFilter);
+  const cte = assetCteSql(team, tags);
   const rows = await sql`
     ${cte}
     , base AS (
@@ -393,30 +375,30 @@ export async function getTeamRaw({
 
 export async function getTeamData({
   team,
-  tagFilter,
+  tags = [],
 }: {
   team: string;
-  tagFilter?: TagFilter | undefined;
+  tags?: number[];
 }): Promise<TeamData> {
   const [kpis, chartSev, slaData, raw] = await Promise.all([
-    getTeamKpis({ team, tagFilter }),
-    getTeamChartSev({ team, tagFilter }),
-    getTeamSla({ team, tagFilter }),
-    getTeamRaw({ team, tagFilter }),
+    getTeamKpis({ team, tags }),
+    getTeamChartSev({ team, tags }),
+    getTeamSla({ team, tags }),
+    getTeamRaw({ team, tags }),
   ]);
   return { kpis, trends: makeTrends(), chartSev, slaData, raw };
 }
 
 export async function getOverview({
-  tagFilter,
+  tags = [],
 }: {
-  tagFilter?: TagFilter | undefined;
+  tags?: number[];
 }): Promise<TeamData> {
   const [kpis, chartSev, slaData, raw] = await Promise.all([
-    getTeamKpis({ tagFilter }),
-    getTeamChartSev({ tagFilter }),
-    getTeamSla({ tagFilter }),
-    getTeamRaw({ tagFilter }),
+    getTeamKpis({ tags }),
+    getTeamChartSev({ tags }),
+    getTeamSla({ tags }),
+    getTeamRaw({ tags }),
   ]);
   return { kpis, trends: makeTrends(), chartSev, slaData, raw };
 }
@@ -431,18 +413,26 @@ export async function getAllTeamsData(): Promise<Record<string, TeamData>> {
   return result;
 }
 
+export async function getTags() {
+  return sql<{ id: string; name: string }[]>`
+    SELECT id, name
+    FROM tags
+    ORDER BY name
+  `;
+}
+
 export async function getQids({
   sev,
   team,
   q,
-  tagFilter,
+  tags = [],
   categories,
   statuses,
 }: {
   sev?: string[] | undefined;
   team?: string | undefined;
   q?: string | undefined;
-  tagFilter?: TagFilter | undefined;
+  tags?: number[];
   categories?: string[] | undefined;
   statuses?: string[] | undefined;
 }): Promise<QidRow[]> {
@@ -455,7 +445,7 @@ export async function getQids({
     !q &&
     !categories &&
     !statuses &&
-    (!tagFilter || tagFilter === "full")
+    tags.length === 0
   ) {
     const rows = await sql`SELECT * FROM mv_top_qids`;
     return rows.map((r) => ({
@@ -473,7 +463,7 @@ export async function getQids({
     }));
   }
 
-  const cte = assetCteSql(team, tagFilter);
+  const cte = assetCteSql(team, tags);
   const sevNums = sev?.map((s) => Number(s)).filter((n) => !Number.isNaN(n));
   const sevFilter =
     sevNums && sevNums.length > 0 ? sql`AND v."Severity"::int IN ${sql(sevNums)}` : sql``;
@@ -534,18 +524,18 @@ export type VulnerabilityStats = {
 
 export async function getVulnerabilityStats({
   team,
-  tagFilter,
+  tags = [],
   categories,
   statuses,
   q,
 }: {
   team?: string | undefined;
-  tagFilter?: TagFilter | undefined;
+  tags?: number[];
   categories?: string[] | undefined;
   statuses?: string[] | undefined;
   q?: string | undefined;
 }): Promise<VulnerabilityStats> {
-  const cte = assetCteSql(team, tagFilter);
+  const cte = assetCteSql(team, tags);
   const qFilter = q
     ? sql`AND (kb.title ILIKE ${`%${q}%`} OR kb.category ILIKE ${`%${q}%`} OR v."QID"::text ILIKE ${`%${q}%`})`
     : sql``;
@@ -627,13 +617,13 @@ export async function getVulnerabilityStats({
 export async function getAssets({
   team,
   q,
-  tagFilter,
+  tags = [],
 }: {
   team?: string | undefined;
   q?: string | undefined;
-  tagFilter?: TagFilter | undefined;
+  tags?: number[];
 }): Promise<AssetRow[]> {
-  if ((!team || team === "Todas") && !q && (!tagFilter || tagFilter === "full")) {
+  if (tags.length === 0 && (!team || team === "Todas") && !q) {
     const rows = await sql`SELECT * FROM mv_top_assets`;
     return rows.map((r) => ({
       ip: r["ip"],
@@ -649,7 +639,7 @@ export async function getAssets({
   const qFilter = q
     ? sql`AND (a."IP" ILIKE ${`%${q}%`} OR a."DNS" ILIKE ${`%${q}%`} OR a."OS" ILIKE ${`%${q}%`})`
     : sql``;
-  const cte = assetCteSql(team, tagFilter, sql`, a."IP", a."DNS", a."OS"`);
+  const cte = assetCteSql(team, tags, sql`, a."IP", a."DNS", a."OS"`);
 
   const rows = await sql`
     ${cte}
@@ -847,13 +837,13 @@ export type ReportData = {
 export async function getReports({
   team,
   os,
-  tagFilter,
+  tags = [],
 }: {
   team?: string | undefined;
   os?: string | undefined;
-  tagFilter?: TagFilter | undefined;
+  tags?: number[];
 }): Promise<ReportData> {
-  if (!team && !os && (!tagFilter || tagFilter === "full")) {
+  if (tags.length === 0 && !team && !os) {
     const [kpis] = await sql`SELECT * FROM mv_report_summary`;
     const osRows = await sql`SELECT * FROM mv_report_os`;
     const topQids = await sql`SELECT * FROM mv_report_topqids`;
@@ -927,7 +917,7 @@ export async function getReports({
   }
 
   const osFilter = os ? sql`AND a."OS" ILIKE ${`%${os}%`}` : sql``;
-  const cte = assetCteSql(team, tagFilter, sql`, a."IP", a."DNS", a."OS"`);
+  const cte = assetCteSql(team, tags, sql`, a."IP", a."DNS", a."OS"`);
 
   const [kpis] = await sql`
     ${cte}
