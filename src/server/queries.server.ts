@@ -58,8 +58,8 @@ function assetCteSql(
         : team === "All On-Prem"
           ? sql`AND a.is_cloud = false`
           : sql`AND a.team = ${team}`;
-  const tagFilter = assetTagFilterSql(tags);
-  return sql`WITH filtered_assets AS MATERIALIZED (SELECT DISTINCT ON (a."QG_HostID") a."QG_HostID", a.team, a.is_cloud ${extraCols} FROM "All_Assets" a WHERE TRUE ${teamFilter} ${tagFilter})`;
+  const tagClause = assetTagFilterSql(tags);
+  return sql`WITH filtered_assets AS MATERIALIZED (SELECT DISTINCT ON (a."QG_HostID") a."QG_HostID", a.team, a.is_cloud ${extraCols} FROM "All_Assets" a WHERE TRUE ${teamFilter} ${tagClause})`;
 }
 
 function severityLabelExpr() {
