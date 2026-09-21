@@ -263,7 +263,7 @@ async function loadTable(cfg: TableConfig) {
 async function rebuildAssetTags() {
   console.log("[REBUILD] asset_tags");
   await sql`TRUNCATE asset_tags`;
-  const [{ count }] = await sql`
+  const inserted = await sql`
     INSERT INTO asset_tags (asset_id, tag_id)
     SELECT DISTINCT a."ID", t.id
     FROM "All_Assets" a
@@ -274,7 +274,7 @@ async function rebuildAssetTags() {
     ON CONFLICT DO NOTHING
     RETURNING asset_id
   `;
-  console.log(`[REBUILT] ${count ?? 0} asset_tag rows`);
+  console.log(`[REBUILT] ${inserted.length} asset_tag rows`);
   await sql`ANALYZE asset_tags`;
 }
 
