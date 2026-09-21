@@ -1,17 +1,17 @@
 import { createServerFn } from "@tanstack/react-start";
 import { z } from "zod";
 
-const tagFilterSchema = z.enum(["full", "full-cloud", "full-on-premise"]).optional();
+const tagsSchema = z.array(z.coerce.number()).default([]);
 
 export const fetchTeamData = createServerFn({ method: "GET" })
-  .validator(z.object({ team: z.string(), tagFilter: tagFilterSchema }))
+  .validator(z.object({ team: z.string(), tags: tagsSchema }))
   .handler(async ({ data }) => {
     const { getTeamData } = await import("../server/queries.server");
     return await getTeamData(data);
   });
 
 export const fetchOverview = createServerFn({ method: "GET" })
-  .validator(z.object({ tagFilter: tagFilterSchema }))
+  .validator(z.object({ tags: tagsSchema }))
   .handler(async ({ data }) => {
     const { getOverview } = await import("../server/queries.server");
     return await getOverview(data);
@@ -26,7 +26,7 @@ const qidsFilterSchema = z.object({
   sev: z.array(z.string()).optional(),
   team: z.string().optional(),
   q: z.string().optional(),
-  tagFilter: tagFilterSchema,
+  tags: tagsSchema,
   categories: z.array(z.string()).optional(),
   statuses: z.array(z.string()).optional(),
 });
@@ -41,7 +41,7 @@ export const fetchQids = createServerFn({ method: "GET" })
 const assetsFilterSchema = z.object({
   team: z.string().optional(),
   q: z.string().optional(),
-  tagFilter: tagFilterSchema,
+  tags: tagsSchema,
 });
 
 export const fetchAssets = createServerFn({ method: "GET" })
@@ -51,15 +51,17 @@ export const fetchAssets = createServerFn({ method: "GET" })
     return await getAssets(data);
   });
 
-export const fetchHardening = createServerFn({ method: "GET" }).handler(async () => {
-  const { getHardening } = await import("../server/queries.server");
-  return await getHardening();
-});
+export const fetchHardening = createServerFn({ method: "GET" })
+  .validator(z.object({ tags: tagsSchema }))
+  .handler(async ({ data }) => {
+    const { getHardening } = await import("../server/queries.server");
+    return await getHardening(data);
+  });
 
 const reportsFilterSchema = z.object({
   team: z.string().optional(),
   os: z.string().optional(),
-  tagFilter: tagFilterSchema,
+  tags: tagsSchema,
 });
 
 export const fetchReports = createServerFn({ method: "GET" })
@@ -71,7 +73,7 @@ export const fetchReports = createServerFn({ method: "GET" })
 
 const statsFilterSchema = z.object({
   team: z.string().optional(),
-  tagFilter: tagFilterSchema,
+  tags: tagsSchema,
   categories: z.array(z.string()).optional(),
   statuses: z.array(z.string()).optional(),
   q: z.string().optional(),
@@ -87,4 +89,9 @@ export const fetchVulnerabilityStats = createServerFn({ method: "GET" })
 export const fetchLastSync = createServerFn({ method: "GET" }).handler(async () => {
   const { getLastSync } = await import("../server/queries.server");
   return await getLastSync();
+});
+
+export const fetchTags = createServerFn({ method: "GET" }).handler(async () => {
+  const { getTags } = await import("../server/queries.server");
+  return await getTags();
 });
