@@ -1,5 +1,5 @@
 import { queryOptions } from "@tanstack/react-query";
-import { TEAM_NAMES, SEVERITY_ORDER, type TagFilter } from "./constants";
+import { TEAM_NAMES, SEVERITY_ORDER } from "./constants";
 import {
   fetchTeamData,
   fetchOverview,
@@ -10,6 +10,7 @@ import {
   fetchReports,
   fetchVulnerabilityStats,
   fetchLastSync,
+  fetchTags,
 } from "./data.fn";
 
 export type Trend = { diff: number; pct: number };
@@ -100,16 +101,27 @@ export type AssetRow = {
   crit: number;
 };
 
-export const overviewQueryOptions = (team: string, tagFilter?: TagFilter | undefined) =>
+export type Tag = {
+  id: number;
+  name: string;
+};
+
+export const tagsQueryOptions = () =>
   queryOptions({
-    queryKey: ["overview", team, tagFilter],
-    queryFn: () => fetchTeamData({ data: { team, tagFilter } }),
+    queryKey: ["tags"],
+    queryFn: () => fetchTags({}),
   });
 
-export const overviewAllQueryOptions = (tagFilter?: TagFilter | undefined) =>
+export const overviewQueryOptions = (team: string, tags: number[] = []) =>
   queryOptions({
-    queryKey: ["overview-all", tagFilter],
-    queryFn: () => fetchOverview({ data: { tagFilter } }),
+    queryKey: ["overview", team, tags],
+    queryFn: () => fetchTeamData({ data: { team, tags } }),
+  });
+
+export const overviewAllQueryOptions = (tags: number[] = []) =>
+  queryOptions({
+    queryKey: ["overview-all", tags],
+    queryFn: () => fetchOverview({ data: { tags } }),
   });
 
 export const squadsQueryOptions = () =>
@@ -128,7 +140,7 @@ export const qidsQueryOptions = (filters: {
   sev?: string[];
   team?: string;
   q?: string;
-  tagFilter?: TagFilter | undefined;
+  tags?: number[];
   categories?: string[];
   statuses?: string[];
 }) =>
@@ -140,7 +152,7 @@ export const qidsQueryOptions = (filters: {
 export const assetsQueryOptions = (filters: {
   team?: string;
   q?: string;
-  tagFilter?: TagFilter | undefined;
+  tags?: number[];
 }) =>
   queryOptions({
     queryKey: ["assets", filters],
@@ -169,10 +181,10 @@ export type HardeningData = {
   topQids: HardeningQid[];
 };
 
-export const hardeningQueryOptions = () =>
+export const hardeningQueryOptions = (tags: number[] = []) =>
   queryOptions({
-    queryKey: ["hardening"],
-    queryFn: () => fetchHardening({}),
+    queryKey: ["hardening", tags],
+    queryFn: () => fetchHardening({ data: { tags } }),
   });
 
 export type ReportCategory = {
@@ -234,7 +246,7 @@ export type ReportData = {
 export const reportsQueryOptions = (filters: {
   team?: string | undefined;
   os?: string | undefined;
-  tagFilter?: TagFilter | undefined;
+  tags?: number[];
 }) =>
   queryOptions({
     queryKey: ["reports", filters],
@@ -243,7 +255,7 @@ export const reportsQueryOptions = (filters: {
 
 export const vulnerabilityStatsQueryOptions = (filters: {
   team?: string;
-  tagFilter?: TagFilter | undefined;
+  tags?: number[];
   categories?: string[];
   statuses?: string[];
   q?: string;
