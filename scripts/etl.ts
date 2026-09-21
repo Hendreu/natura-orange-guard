@@ -260,6 +260,24 @@ async function loadTable(cfg: TableConfig) {
   console.log(`[DELTA] applied`);
 }
 
+async function rebuildAssetTags() {
+  console.log("[REBUILD] asset_tags");
+  await sql`TRUNCATE asset_tags`;
+  const [{ count }] = await sql`
+    INSERT INTO asset_tags (asset_id, tag_id)
+    SELECT DISTINCT a."ID", t.id
+    FROM "All_Assets" a
+    CROSS JOIN LATERAL UNNEST(string_to_array(TRIM(a."Tags"), ',')) AS tag_name
+    JOIN tags t ON LOWER(t.name) = LOWER(tag_name)
+    WHERE a."Tags" IS NOT NULL
+      AND TRIM(a."Tags") <> ''
+    ON CONFLICT DO NOTHING
+    RETURNING asset_id
+  `;
+  console.log(`[REBUILT] ${count ?? 0} asset_tag rows`);
+  await sql`ANALYZE asset_tags`;
+}
+
 async function main() {
   console.log(
     `ETL starting — source: ${SOURCE_DIR}, incoming: ${INCOMING_DIR}, days_back: ${DAYS_BACK}`,
@@ -268,6 +286,7 @@ async function main() {
   for (const cfg of CONFIG) {
     await loadTable(cfg);
   }
+  await rebuildAssetTags();
   console.log("Refreshing materialized views...");
   await refreshViews();
   await recordSync();
