@@ -264,13 +264,18 @@ async function rebuildAssetTags() {
   console.log("[REBUILD] asset_tags");
   await sql`TRUNCATE asset_tags`;
   const inserted = await sql`
+    WITH parsed_tags AS (
+      SELECT a."ID", LOWER(TRIM(tag_name)) AS tag_name
+      FROM "All_Assets" a
+      CROSS JOIN LATERAL UNNEST(string_to_array(TRIM(a."Tags"), ',')) AS tag_name
+      WHERE a."Tags" IS NOT NULL
+        AND TRIM(a."Tags") <> ''
+    )
     INSERT INTO asset_tags (asset_id, tag_id)
-    SELECT DISTINCT a."ID", t.id
-    FROM "All_Assets" a
-    CROSS JOIN LATERAL UNNEST(string_to_array(TRIM(a."Tags"), ',')) AS tag_name
-    JOIN tags t ON LOWER(t.name) = LOWER(tag_name)
-    WHERE a."Tags" IS NOT NULL
-      AND TRIM(a."Tags") <> ''
+    SELECT DISTINCT p."ID", t.id
+    FROM parsed_tags p
+    JOIN tags t ON LOWER(t.name) = p.tag_name
+    WHERE p.tag_name <> ''
     ON CONFLICT DO NOTHING
     RETURNING asset_id
   `;
