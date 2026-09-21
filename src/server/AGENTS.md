@@ -6,8 +6,8 @@ Single server-only module: `queries.server.ts`. All Postgres reads for the dashb
 
 ## WHERE TO LOOK
 
-| File | Role |
-|---|---|
+| File                | Role                                                               |
+| ------------------- | ------------------------------------------------------------------ |
 | `queries.server.ts` | SQL queries against `mv_*` materialized views (with fallback CTEs) |
 
 ## CONVENTIONS

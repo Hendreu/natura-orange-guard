@@ -9,6 +9,7 @@
 **Tech Stack:** React 19, TanStack Router, TanStack Query, Tailwind CSS v4, shadcn/ui Select.
 
 ## Global Constraints
+
 - Keep styling aligned with `DESIGN.md`: `slab`, `stencil`, `corner-cut`, severity tokens.
 - No new dependencies.
 - Mobile drawer is out of scope per user.
@@ -19,9 +20,11 @@
 ### Task 1: KPI layout and remove top chip rows
 
 **Files:**
+
 - Modify: `src/routes/vulnerabilidades.tsx:171-223`
 
 **Interfaces:**
+
 - Consumes: existing `stats` object and `StatSlab` component.
 - Produces: updated KPI grid and removal of top severity/category chip sections.
 
@@ -50,9 +53,11 @@ Run: `npx eslint src/routes/vulnerabilidades.tsx --fix`
 ### Task 2: Make StatSlab accept className
 
 **Files:**
+
 - Modify: `src/components/StatSlab.tsx`
 
 **Interfaces:**
+
 - Consumes: existing `StatSlab` props.
 - Produces: `StatSlab` accepts an optional `className` string merged with its card classes.
 
@@ -83,11 +88,7 @@ export function StatSlab({
 ```
 
 ```tsx
-  const cls = cn(
-    accent ? "slab-signal" : "slab",
-    "corner-cut p-4",
-    className,
-  );
+const cls = cn(accent ? "slab-signal" : "slab", "corner-cut p-4", className);
 ```
 
 - [ ] **Step 2: Run lint and build to confirm no regression.**
@@ -99,9 +100,11 @@ Run: `npx eslint src/components/StatSlab.tsx --fix && cmd /c "bun run build"`
 ### Task 3: Restructure sidebar filter groups
 
 **Files:**
+
 - Modify: `src/routes/vulnerabilidades.tsx:225-294`
 
 **Interfaces:**
+
 - Consumes: `sev`, `team`, `categories`, `statuses`, `qInput`, helpers `setParam`, `setCategories`, `setStatuses`, `setQInput`, `severityOrder`, `severityToken`, `teamNames`, `stats`, `categoryOptions`, `statusOptions`.
 - Produces: a single `<aside>` with grouped filters.
 
@@ -231,9 +234,11 @@ Run: `npx eslint src/routes/vulnerabilidades.tsx --fix`
 ### Task 4: Active filter tags above the table
 
 **Files:**
+
 - Modify: `src/routes/vulnerabilidades.tsx` between sidebar grid and table card.
 
 **Interfaces:**
+
 - Consumes: `sev`, `team`, `categories`, `statuses`, `tagFilter`, helpers `setParam`, `setCategories`, `setStatuses`, `statusLabel`, `severityToken`.
 - Produces: a row of removable tags inside the table card header area.
 
@@ -242,10 +247,16 @@ Run: `npx eslint src/routes/vulnerabilidades.tsx --fix`
 ```tsx
 const activeFilters = useMemo(() => {
   const filters: { key: string; param: keyof VulnSearch; value: string; label: string }[] = [];
-  if (sev && sev !== "Todas") filters.push({ key: `sev-${sev}`, param: "sev", value: "", label: sev });
-  if (team && team !== "Todas") filters.push({ key: `team-${team}`, param: "team", value: "", label: team });
-  categories.forEach((c) => filters.push({ key: `cat-${c}`, param: "categories", value: c, label: c }));
-  statuses.forEach((s) => filters.push({ key: `status-${s}`, param: "statuses", value: s, label: statusLabel[s] ?? s }));
+  if (sev && sev !== "Todas")
+    filters.push({ key: `sev-${sev}`, param: "sev", value: "", label: sev });
+  if (team && team !== "Todas")
+    filters.push({ key: `team-${team}`, param: "team", value: "", label: team });
+  categories.forEach((c) =>
+    filters.push({ key: `cat-${c}`, param: "categories", value: c, label: c }),
+  );
+  statuses.forEach((s) =>
+    filters.push({ key: `status-${s}`, param: "statuses", value: s, label: statusLabel[s] ?? s }),
+  );
   return filters;
 }, [sev, team, categories, statuses]);
 ```
@@ -255,26 +266,28 @@ const activeFilters = useMemo(() => {
 Insert after `<div className="slab overflow-x-auto">` opening and before `<table>`:
 
 ```tsx
-{activeFilters.length > 0 && (
-  <div className="flex flex-wrap items-center gap-2 border-b border-border px-4 py-3">
-    <span className="stencil text-[10px] text-muted-foreground">Filtros:</span>
-    {activeFilters.map((f) => (
-      <button
-        key={f.key}
-        onClick={() => {
-          if (f.param === "categories") setCategories(categories.filter((c) => c !== f.value));
-          if (f.param === "statuses") setStatuses(statuses.filter((s) => s !== f.value));
-          if (f.param === "sev") setParam("sev", "");
-          if (f.param === "team") setParam("team", "");
-        }}
-        className="stencil inline-flex items-center gap-1 rounded-sm border border-border bg-secondary px-2 py-1 text-[10px] text-foreground hover:border-primary"
-      >
-        {f.label}
-        <span className="text-muted-foreground">×</span>
-      </button>
-    ))}
-  </div>
-)}
+{
+  activeFilters.length > 0 && (
+    <div className="flex flex-wrap items-center gap-2 border-b border-border px-4 py-3">
+      <span className="stencil text-[10px] text-muted-foreground">Filtros:</span>
+      {activeFilters.map((f) => (
+        <button
+          key={f.key}
+          onClick={() => {
+            if (f.param === "categories") setCategories(categories.filter((c) => c !== f.value));
+            if (f.param === "statuses") setStatuses(statuses.filter((s) => s !== f.value));
+            if (f.param === "sev") setParam("sev", "");
+            if (f.param === "team") setParam("team", "");
+          }}
+          className="stencil inline-flex items-center gap-1 rounded-sm border border-border bg-secondary px-2 py-1 text-[10px] text-foreground hover:border-primary"
+        >
+          {f.label}
+          <span className="text-muted-foreground">×</span>
+        </button>
+      ))}
+    </div>
+  );
+}
 ```
 
 - [ ] **Step 3: Run lint and fix formatting.**
@@ -286,6 +299,7 @@ Run: `npx eslint src/routes/vulnerabilidades.tsx --fix`
 ### Task 5: Verify and capture screenshot
 
 **Files:**
+
 - None (verification only).
 
 - [ ] **Step 1: Run production build**

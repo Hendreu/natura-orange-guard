@@ -6,16 +6,16 @@ File-based TanStack Router pages under `src/routes/`. `src/routeTree.gen.ts` is 
 
 ## WHERE TO LOOK
 
-| URL | File | Purpose |
-|---|---|---|
-| `/` | `index.tsx` | Home overview |
-| `/ativos` | `ativos.tsx` | Assets inventory |
-| `/hardening` | `hardening.tsx` | Cloud hardening posture |
-| `/relatorios` | `relatorios.tsx` | Compliance reports |
-| `/sla` | `sla.tsx` | SLA adherence by squad |
-| `/squads` | `squads.tsx` | Squad ranking |
-| `/vulnerabilidades` | `vulnerabilidades.tsx` | Vulnerability backlog |
-| (root shell) | `__root.tsx` | HTML shell, QueryClientProvider, meta, 404/error boundaries |
+| URL                 | File                   | Purpose                                                     |
+| ------------------- | ---------------------- | ----------------------------------------------------------- |
+| `/`                 | `index.tsx`            | Home overview                                               |
+| `/ativos`           | `ativos.tsx`           | Assets inventory                                            |
+| `/hardening`        | `hardening.tsx`        | Cloud hardening posture                                     |
+| `/relatorios`       | `relatorios.tsx`       | Compliance reports                                          |
+| `/sla`              | `sla.tsx`              | SLA adherence by squad                                      |
+| `/squads`           | `squads.tsx`           | Squad ranking                                               |
+| `/vulnerabilidades` | `vulnerabilidades.tsx` | Vulnerability backlog                                       |
+| (root shell)        | `__root.tsx`           | HTML shell, QueryClientProvider, meta, 404/error boundaries |
 
 ## CONVENTIONS
 

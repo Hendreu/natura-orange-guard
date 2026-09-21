@@ -6,14 +6,14 @@ Client-side data layer and shared utilities. `sla-data.ts` defines React Query o
 
 ## WHERE TO LOOK
 
-| File | Role |
-|---|---|
-| `sla-data.ts` | React Query `queryOptions`, result types, `fmt()` formatter, severity tokens |
-| `data.fn.ts` | `createServerFn({ method: "GET" })` wrappers; each dynamically imports `../server/queries.server.ts` |
-| `constants.ts` | `TEAM_NAMES`, `SEVERITY_ORDER`, `TAG_FILTER_OPTIONS`, SLA thresholds |
-| `db.ts` | `postgres` client; throws if `DATABASE_URL` is missing |
-| `utils.ts` | `cn()` — `clsx` + `tailwind-merge` |
-| `error-capture.ts`, `error-page.ts`, `lovable-error-reporting.ts` | SSR error handling + Lovable telemetry |
+| File                                                              | Role                                                                                                 |
+| ----------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------- |
+| `sla-data.ts`                                                     | React Query `queryOptions`, result types, `fmt()` formatter, severity tokens                         |
+| `data.fn.ts`                                                      | `createServerFn({ method: "GET" })` wrappers; each dynamically imports `../server/queries.server.ts` |
+| `constants.ts`                                                    | `TEAM_NAMES`, `SEVERITY_ORDER`, `TAG_FILTER_OPTIONS`, SLA thresholds                                 |
+| `db.ts`                                                           | `postgres` client; throws if `DATABASE_URL` is missing                                               |
+| `utils.ts`                                                        | `cn()` — `clsx` + `tailwind-merge`                                                                   |
+| `error-capture.ts`, `error-page.ts`, `lovable-error-reporting.ts` | SSR error handling + Lovable telemetry                                                               |
 
 ## CONVENTIONS
 

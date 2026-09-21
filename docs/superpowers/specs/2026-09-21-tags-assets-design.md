@@ -37,15 +37,15 @@ A correlação entre as duas tabelas deve ser feita pelo **nome da tag** (`tags.
 
 ## Decisões tomadas
 
-| Pergunta | Resposta |
-|---|---|
-| Objetivo | Substituir parse da coluna `Tags` por relação real com `tags`. |
-| Correlação no DB | Tabela de junção `asset_tags`. |
-| Filtro | Expandir para tags reais. |
-| Tags disponíveis | Todas as ~337 tags da tabela `tags`. |
-| Modo de seleção | Multi-select com AND. |
-| Compatibilidade com `tagFilter` legado | Substituir completamente. |
-| Abordagem geral | **A — Minimal** (tabela de junção + joins em runtime; materialized views inalteradas no primeiro passo). |
+| Pergunta                               | Resposta                                                                                                 |
+| -------------------------------------- | -------------------------------------------------------------------------------------------------------- |
+| Objetivo                               | Substituir parse da coluna `Tags` por relação real com `tags`.                                           |
+| Correlação no DB                       | Tabela de junção `asset_tags`.                                                                           |
+| Filtro                                 | Expandir para tags reais.                                                                                |
+| Tags disponíveis                       | Todas as ~337 tags da tabela `tags`.                                                                     |
+| Modo de seleção                        | Multi-select com AND.                                                                                    |
+| Compatibilidade com `tagFilter` legado | Substituir completamente.                                                                                |
+| Abordagem geral                        | **A — Minimal** (tabela de junção + joins em runtime; materialized views inalteradas no primeiro passo). |
 
 ## Schema
 
@@ -222,11 +222,11 @@ Componente sugerido: usar `Command` + `Popover` + `Badge` dos shadcn/ui já pres
 
 ## Riscos e mitigações
 
-| Risco | Mitigação |
-|---|---|
-| `asset_tags` fique vazio se `tags.name` não bater com `All_Assets."Tags"` por causa de casing/espaços. | Match case-insensitive + trim; logar tags não encontradas para análise. |
-| Performance do join em runtime com muitas tags selecionadas. | Adicionar índice; monitorar com `EXPLAIN ANALYZE`; evoluir para views materializadas se necessário. |
-| Quebra de URLs antigas com `?tagFilter=full-cloud`. | Aceitável pois o filtro legado será removido; usuário precisará selecionar as tags novamente. |
+| Risco                                                                                                  | Mitigação                                                                                           |
+| ------------------------------------------------------------------------------------------------------ | --------------------------------------------------------------------------------------------------- |
+| `asset_tags` fique vazio se `tags.name` não bater com `All_Assets."Tags"` por causa de casing/espaços. | Match case-insensitive + trim; logar tags não encontradas para análise.                             |
+| Performance do join em runtime com muitas tags selecionadas.                                           | Adicionar índice; monitorar com `EXPLAIN ANALYZE`; evoluir para views materializadas se necessário. |
+| Quebra de URLs antigas com `?tagFilter=full-cloud`.                                                    | Aceitável pois o filtro legado será removido; usuário precisará selecionar as tags novamente.       |
 
 ## Perguntas em aberto
 

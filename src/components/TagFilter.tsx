@@ -23,9 +23,7 @@ export function TagFilter() {
   const { data: tags = [] } = useQuery(tagsQueryOptions());
 
   const toggle = (id: number) => {
-    const next = selected.includes(id)
-      ? selected.filter((x) => x !== id)
-      : [...selected, id];
+    const next = selected.includes(id) ? selected.filter((x) => x !== id) : [...selected, id];
     navigate({
       search: (prev) => ({
         ...prev,
@@ -67,17 +65,8 @@ export function TagFilter() {
                 {tags.map((tag) => {
                   const active = selected.includes(tag.id);
                   return (
-                    <CommandItem
-                      key={tag.id}
-                      value={tag.name}
-                      onSelect={() => toggle(tag.id)}
-                    >
-                      <Check
-                        className={cn(
-                          "mr-2 h-4 w-4",
-                          active ? "opacity-100" : "opacity-0",
-                        )}
-                      />
+                    <CommandItem key={tag.id} value={tag.name} onSelect={() => toggle(tag.id)}>
+                      <Check className={cn("mr-2 h-4 w-4", active ? "opacity-100" : "opacity-0")} />
                       <span className="truncate text-xs">{tag.name}</span>
                     </CommandItem>
                   );

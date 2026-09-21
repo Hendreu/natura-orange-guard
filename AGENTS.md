@@ -46,33 +46,33 @@ TanStack Start + React 19 + Vite dashboard for Natura SecOps, bootstrapped throu
 
 ## WHERE TO LOOK
 
-| Task | Location | Notes |
-|---|---|---|
-| Add a page | `src/routes/*.tsx` | File-based; see `src/routes/README.md` conventions. |
-| Change data fetching | `src/lib/sla-data.ts`, `src/lib/data.fn.ts` | Route components call `*QueryOptions` helpers that call `createServerFn`. |
-| Edit SQL / DB schema reads | `src/server/queries.server.ts` | Server-only; dynamically imported by `data.fn.ts`. |
-| Change theme/colors | `src/styles.css`, `DESIGN.md` | Tailwind v4 `@theme` tokens + custom utilities. |
-| Add UI primitive | `src/components/ui/` | shadcn new-york style; use `npx shadcn add`. |
-| Add app component | `src/components/*.tsx` | PascalCase, e.g. `Shell.tsx`, `StatSlab.tsx`. |
-| Update static seed data | `src/data/*.json` | Used when loaders are not pulling from Postgres. |
-| Run ETL / refresh views | `scripts/etl.ts`, `scripts/refresh-views.ts` | `bun run etl`, `bun run refresh-views`. |
-| SSR error handling | `src/server.ts`, `src/lib/error-*.ts` | h3-swallowed 500 normaliser + Lovable reporting. |
+| Task                       | Location                                     | Notes                                                                     |
+| -------------------------- | -------------------------------------------- | ------------------------------------------------------------------------- |
+| Add a page                 | `src/routes/*.tsx`                           | File-based; see `src/routes/README.md` conventions.                       |
+| Change data fetching       | `src/lib/sla-data.ts`, `src/lib/data.fn.ts`  | Route components call `*QueryOptions` helpers that call `createServerFn`. |
+| Edit SQL / DB schema reads | `src/server/queries.server.ts`               | Server-only; dynamically imported by `data.fn.ts`.                        |
+| Change theme/colors        | `src/styles.css`, `DESIGN.md`                | Tailwind v4 `@theme` tokens + custom utilities.                           |
+| Add UI primitive           | `src/components/ui/`                         | shadcn new-york style; use `npx shadcn add`.                              |
+| Add app component          | `src/components/*.tsx`                       | PascalCase, e.g. `Shell.tsx`, `StatSlab.tsx`.                             |
+| Update static seed data    | `src/data/*.json`                            | Used when loaders are not pulling from Postgres.                          |
+| Run ETL / refresh views    | `scripts/etl.ts`, `scripts/refresh-views.ts` | `bun run etl`, `bun run refresh-views`.                                   |
+| SSR error handling         | `src/server.ts`, `src/lib/error-*.ts`        | h3-swallowed 500 normaliser + Lovable reporting.                          |
 
 ## CODE MAP
 
-| Symbol | Type | Location | Role |
-|---|---|---|---|
-| `Route` | constant | `src/routes/__root.tsx` | Root shell, QueryClientProvider, head meta, error/404 boundaries |
-| `startInstance` | constant | `src/start.ts` | Start plugin with CSRF + error middleware |
-| `getRouter` | function | `src/router.tsx` | Router factory with React Query context |
-| `sql` | constant | `src/lib/db.ts` | Server-only Postgres client |
-| `overviewQueryOptions` | function | `src/lib/sla-data.ts` | React Query options for overview KPIs |
-| `qidsQueryOptions` | function | `src/lib/sla-data.ts` | React Query options for QID table |
-| `assetsQueryOptions` | function | `src/lib/sla-data.ts` | React Query options for assets |
-| `fetchQids` | server fn | `src/lib/data.fn.ts` | `createServerFn` wrapper → `getQids` |
-| `fetchAssets` | server fn | `src/lib/data.fn.ts` | `createServerFn` wrapper → `getAssets` |
-| `getTeamData` | function | `src/server/queries.server.ts` | Postgres query for squad overview |
-| `getQids` | function | `src/server/queries.server.ts` | Postgres QID aggregation query |
+| Symbol                 | Type      | Location                       | Role                                                             |
+| ---------------------- | --------- | ------------------------------ | ---------------------------------------------------------------- |
+| `Route`                | constant  | `src/routes/__root.tsx`        | Root shell, QueryClientProvider, head meta, error/404 boundaries |
+| `startInstance`        | constant  | `src/start.ts`                 | Start plugin with CSRF + error middleware                        |
+| `getRouter`            | function  | `src/router.tsx`               | Router factory with React Query context                          |
+| `sql`                  | constant  | `src/lib/db.ts`                | Server-only Postgres client                                      |
+| `overviewQueryOptions` | function  | `src/lib/sla-data.ts`          | React Query options for overview KPIs                            |
+| `qidsQueryOptions`     | function  | `src/lib/sla-data.ts`          | React Query options for QID table                                |
+| `assetsQueryOptions`   | function  | `src/lib/sla-data.ts`          | React Query options for assets                                   |
+| `fetchQids`            | server fn | `src/lib/data.fn.ts`           | `createServerFn` wrapper → `getQids`                             |
+| `fetchAssets`          | server fn | `src/lib/data.fn.ts`           | `createServerFn` wrapper → `getAssets`                           |
+| `getTeamData`          | function  | `src/server/queries.server.ts` | Postgres query for squad overview                                |
+| `getQids`              | function  | `src/server/queries.server.ts` | Postgres QID aggregation query                                   |
 
 ## CONVENTIONS
 

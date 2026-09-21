@@ -23,29 +23,31 @@
 
 ## File map
 
-| File | Responsibility |
-|---|---|
-| `scripts/migrations/0001_asset_tags.sql` | Cria tabela `asset_tags` e índice. |
-| `scripts/etl.ts` | Adiciona `rebuildAssetTags()` após carga de `All_Assets`. |
-| `src/server/queries.server.ts` | Novos helpers `assetTagFilterSql`/`assetCteSql`; novo `getTags`; remove `tagFilter`/`TagFilter`. |
-| `src/lib/data.fn.ts` | Schemas Zod com `tags: number[]`; novos `fetchTags`. |
-| `src/lib/sla-data.ts` | Tipos e `queryOptions` com `tags` em vez de `tagFilter`; `tagsQueryOptions`. |
-| `src/lib/constants.ts` | Remove `TAG_FILTER_OPTIONS` e `TagFilter`. |
-| `src/components/TagFilter.tsx` | Multi-select de tags reais usando Command+Popover. |
-| `src/routes/index.tsx` | Search schema com `tags`; passa `tags` para queries. |
-| `src/routes/ativos.tsx` | Search schema com `tags`; passa `tags` para query. |
-| `src/routes/vulnerabilidades.tsx` | Search schema com `tags`; passa `tags` para queries. |
-| `src/routes/relatorios.tsx` | Search schema com `tags`; passa `tags` para query. |
-| `src/routes/hardening.tsx` | Search schema com `tags`; passa `tags` para query (se aplicável). |
+| File                                     | Responsibility                                                                                   |
+| ---------------------------------------- | ------------------------------------------------------------------------------------------------ |
+| `scripts/migrations/0001_asset_tags.sql` | Cria tabela `asset_tags` e índice.                                                               |
+| `scripts/etl.ts`                         | Adiciona `rebuildAssetTags()` após carga de `All_Assets`.                                        |
+| `src/server/queries.server.ts`           | Novos helpers `assetTagFilterSql`/`assetCteSql`; novo `getTags`; remove `tagFilter`/`TagFilter`. |
+| `src/lib/data.fn.ts`                     | Schemas Zod com `tags: number[]`; novos `fetchTags`.                                             |
+| `src/lib/sla-data.ts`                    | Tipos e `queryOptions` com `tags` em vez de `tagFilter`; `tagsQueryOptions`.                     |
+| `src/lib/constants.ts`                   | Remove `TAG_FILTER_OPTIONS` e `TagFilter`.                                                       |
+| `src/components/TagFilter.tsx`           | Multi-select de tags reais usando Command+Popover.                                               |
+| `src/routes/index.tsx`                   | Search schema com `tags`; passa `tags` para queries.                                             |
+| `src/routes/ativos.tsx`                  | Search schema com `tags`; passa `tags` para query.                                               |
+| `src/routes/vulnerabilidades.tsx`        | Search schema com `tags`; passa `tags` para queries.                                             |
+| `src/routes/relatorios.tsx`              | Search schema com `tags`; passa `tags` para query.                                               |
+| `src/routes/hardening.tsx`               | Search schema com `tags`; passa `tags` para query (se aplicável).                                |
 
 ---
 
 ### Task 1: Migration SQL para `asset_tags`
 
 **Files:**
+
 - Create: `scripts/migrations/0001_asset_tags.sql`
 
 **Interfaces:**
+
 - Produces: tabela `asset_tags(asset_id bigint, tag_id bigint)` com PK e FKs.
 
 - [ ] **Step 1: Criar migration**
@@ -67,6 +69,7 @@ ALTER TABLE asset_tags
 - [ ] **Step 2: Aplicar migration no banco**
 
 Run:
+
 ```bash
 $env:DATABASE_URL = 'postgresql://qualys_natura_gv:...'; psql "$env:DATABASE_URL" -f scripts/migrations/0001_asset_tags.sql
 ```
@@ -85,9 +88,11 @@ git commit -m "chore(db): create asset_tags junction table"
 ### Task 2: Atualizar ETL para popular `asset_tags`
 
 **Files:**
+
 - Modify: `scripts/etl.ts:263-275`
 
 **Interfaces:**
+
 - Consumes: tabela `All_Assets` recém-carregada.
 - Produces: `asset_tags` preenchida com base em `All_Assets."Tags"` ↔ `tags.name`.
 
@@ -140,6 +145,7 @@ async function main() {
 - [ ] **Step 3: Testar ETL localmente (dry-run manual)**
 
 Run:
+
 ```bash
 bun run etl
 ```
@@ -158,20 +164,24 @@ git commit -m "chore(etl): rebuild asset_tags after All_Assets load"
 ### Task 3: Atualizar queries do servidor
 
 **Files:**
+
 - Modify: `src/server/queries.server.ts:1-1130`
 
 **Interfaces:**
+
 - Consumes: `tags: number[]` de `src/lib/data.fn.ts`.
 - Produces: `getTags()`; novas assinaturas com `tags` em vez de `tagFilter`.
 
 - [ ] **Step 1: Remover import e helpers legados**
 
 No topo, remova:
+
 ```ts
 import type { TagFilter } from "@/lib/constants";
 ```
 
 Remova as funções:
+
 ```ts
 function tagFilterSql(...) {}
 function teamViewKey(...) {}
@@ -198,11 +208,7 @@ function assetTagFilterSql(tags: number[]) {
 - [ ] **Step 3: Atualizar `assetCteSql`**
 
 ```ts
-function assetCteSql(
-  team: string | undefined,
-  tags: number[],
-  extraCols = sql``,
-) {
+function assetCteSql(team: string | undefined, tags: number[], extraCols = sql``) {
   const teamFilter =
     !team || team === "Todas"
       ? sql``
@@ -248,13 +254,7 @@ Em cada função, substituir `assetCteSql(team, tagFilter, ...)` por `assetCteSq
 Para `getTeamKpis`, `getTeamChartSev`, `getTeamSla`, `getTeamRaw`, simplifique o caminho de materialized view: se `tags.length === 0`, use as views existentes; senão, caia no CTE. Exemplo para `getTeamKpis`:
 
 ```ts
-export async function getTeamKpis({
-  team,
-  tags = [],
-}: {
-  team?: string;
-  tags?: number[];
-}) {
+export async function getTeamKpis({ team, tags = [] }: { team?: string; tags?: number[] }) {
   if (tags.length === 0) {
     // manter lógica atual de mv_overview / mv_team_overview
   }
@@ -275,9 +275,11 @@ git commit -m "feat(server): replace tagFilter with real tag IDs via asset_tags"
 ### Task 4: Atualizar server functions
 
 **Files:**
+
 - Modify: `src/lib/data.fn.ts`
 
 **Interfaces:**
+
 - Consumes: novas assinaturas de `src/server/queries.server.ts`.
 - Produces: `fetchTags`; schemas com `tags: number[]`.
 
@@ -395,10 +397,12 @@ git commit -m "feat(fn): add fetchTags and replace tagFilter with tags array"
 ### Task 5: Atualizar React Query options e tipos
 
 **Files:**
+
 - Modify: `src/lib/sla-data.ts`
 - Modify: `src/lib/constants.ts`
 
 **Interfaces:**
+
 - Consumes: `fetch*` e `fetchTags` de `src/lib/data.fn.ts`.
 - Produces: `tagsQueryOptions`; queryOptions atualizadas sem `TagFilter`.
 
@@ -439,6 +443,7 @@ Atualizar `queryKey` e `queryFn` correspondentes.
 - [ ] **Step 4: Remover `TAG_FILTER_OPTIONS` de `constants.ts`**
 
 Remova:
+
 ```ts
 export const TAG_FILTER_OPTIONS = [...] as const;
 export type TagFilter = (typeof TAG_FILTER_OPTIONS)[number]["value"];
@@ -456,9 +461,11 @@ git commit -m "feat(data): replace TagFilter with tags number array and add tags
 ### Task 6: Refatorar componente `TagFilter` para multi-select real
 
 **Files:**
+
 - Modify: `src/components/TagFilter.tsx`
 
 **Interfaces:**
+
 - Consumes: `tagsQueryOptions`, `useQuery`, router search `tags`.
 - Produces: UI multi-select que navega com `search.tags: number[]`.
 
@@ -490,9 +497,7 @@ export function TagFilter() {
   const { data: tags = [] } = useQuery(tagsQueryOptions());
 
   const toggle = (id: number) => {
-    const next = selected.includes(id)
-      ? selected.filter((x) => x !== id)
-      : [...selected, id];
+    const next = selected.includes(id) ? selected.filter((x) => x !== id) : [...selected, id];
     navigate({
       search: (prev) => ({
         ...prev,
@@ -534,17 +539,8 @@ export function TagFilter() {
                 {tags.map((tag) => {
                   const active = selected.includes(tag.id);
                   return (
-                    <CommandItem
-                      key={tag.id}
-                      value={tag.name}
-                      onSelect={() => toggle(tag.id)}
-                    >
-                      <Check
-                        className={cn(
-                          "mr-2 h-4 w-4",
-                          active ? "opacity-100" : "opacity-0",
-                        )}
-                      />
+                    <CommandItem key={tag.id} value={tag.name} onSelect={() => toggle(tag.id)}>
+                      <Check className={cn("mr-2 h-4 w-4", active ? "opacity-100" : "opacity-0")} />
                       <span className="truncate text-xs">{tag.name}</span>
                     </CommandItem>
                   );
@@ -597,6 +593,7 @@ git commit -m "feat(ui): replace tagFilter dropdown with real tag multi-select"
 ### Task 7: Atualizar rotas
 
 **Files:**
+
 - Modify: `src/routes/index.tsx`
 - Modify: `src/routes/ativos.tsx`
 - Modify: `src/routes/vulnerabilidades.tsx`
@@ -604,6 +601,7 @@ git commit -m "feat(ui): replace tagFilter dropdown with real tag multi-select"
 - Modify: `src/routes/hardening.tsx`
 
 **Interfaces:**
+
 - Consumes: queryOptions e `search.tags`.
 - Produces: search schemas com `tags?: number[]`.
 
@@ -613,7 +611,11 @@ Se preferir, adicione em `src/lib/search.ts`:
 
 ```ts
 export function parseNumberArray(value: unknown): number[] | undefined {
-  if (typeof value === "string" && value) return value.split(",").map(Number).filter((n) => !Number.isNaN(n));
+  if (typeof value === "string" && value)
+    return value
+      .split(",")
+      .map(Number)
+      .filter((n) => !Number.isNaN(n));
   if (Array.isArray(value)) return value.map(Number).filter((n) => !Number.isNaN(n));
   return undefined;
 }
@@ -622,6 +624,7 @@ export function parseNumberArray(value: unknown): number[] | undefined {
 - [ ] **Step 2: Atualizar `src/routes/index.tsx`**
 
 Search schema:
+
 ```ts
 const indexSearchSchema = z.object({
   tags: z.array(z.coerce.number()).default([]),
@@ -629,6 +632,7 @@ const indexSearchSchema = z.object({
 ```
 
 Uso:
+
 ```ts
 const tags = search.tags ?? [];
 const queryOptions =
@@ -640,6 +644,7 @@ Atualize `goToVulns` para passar `tags` em vez de `tagFilter`.
 - [ ] **Step 3: Atualizar `src/routes/ativos.tsx`**
 
 Search schema:
+
 ```ts
 type AtivosSearch = {
   q?: string | undefined;
@@ -658,6 +663,7 @@ export const Route = createFileRoute("/ativos")({
 ```
 
 Uso:
+
 ```ts
 const tags = search.tags ?? [];
 const { data: rows = [] } = useQuery(assetsQueryOptions({ team, q: debouncedQ, tags }));
@@ -666,6 +672,7 @@ const { data: rows = [] } = useQuery(assetsQueryOptions({ team, q: debouncedQ, t
 - [ ] **Step 4: Atualizar `src/routes/vulnerabilidades.tsx`**
 
 Search schema:
+
 ```ts
 type VulnSearch = {
   q?: string | undefined;
@@ -689,6 +696,7 @@ validateSearch: (search: Record<string, unknown>): VulnSearch => ({
 ```
 
 Uso:
+
 ```ts
 const tags = search.tags ?? [];
 useQuery(qidsQueryOptions({ sev: selectedSevs, team, q: debouncedQ, tags, categories, statuses }));
@@ -698,6 +706,7 @@ useQuery(vulnerabilityStatsQueryOptions({ team, tags, categories, statuses, q: d
 - [ ] **Step 5: Atualizar `src/routes/relatorios.tsx`**
 
 Search schema:
+
 ```ts
 type RelatoriosSearch = {
   team?: string | undefined;
@@ -708,6 +717,7 @@ type RelatoriosSearch = {
 ```
 
 Uso:
+
 ```ts
 const tags = search.tags ?? [];
 const { data } = useQuery(reportsQueryOptions({ team, os: debouncedOs, q: debouncedQ, tags }));
@@ -729,16 +739,19 @@ git commit -m "feat(routes): replace tagFilter search param with tags number arr
 ### Task 8: Build e verificação
 
 **Files:**
+
 - All modified files.
 
 - [ ] **Step 1: Rodar typecheck/build**
 
 Run:
+
 ```bash
 cd packages/opencode && bun typecheck
 ```
 
 Ou, se não houver `packages/opencode` neste projeto:
+
 ```bash
 bun run build
 ```
@@ -748,6 +761,7 @@ Expected: build completo sem erros de TypeScript relacionados a `tagFilter`/`Tag
 - [ ] **Step 2: Rodar lint**
 
 Run:
+
 ```bash
 bun run lint
 ```
@@ -757,6 +771,7 @@ Expected: sem erros.
 - [ ] **Step 3: Verificar queries no banco**
 
 Run:
+
 ```bash
 $env:DATABASE_URL = 'postgresql://...'; bun run etl
 ```
@@ -775,6 +790,7 @@ git commit -m "feat(tags): wire real tag filter across routes"
 ## Self-review
 
 **Spec coverage:**
+
 - Tabela de junção `asset_tags` → Task 1.
 - ETL repopula `asset_tags` → Task 2.
 - Queries usam `tags: number[]` com AND → Task 3.
@@ -784,9 +800,11 @@ git commit -m "feat(tags): wire real tag filter across routes"
 - Build/verificação → Task 8.
 
 **Placeholder scan:**
+
 - Nenhum TBD/TODO no plano.
 
 **Type consistency:**
+
 - `tags` é `number[]` em todos os schemas, queryOptions e server functions.
 - `TagFilter` e `TAG_FILTER_OPTIONS` são removidos em Task 5.
 

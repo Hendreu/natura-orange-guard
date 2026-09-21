@@ -45,11 +45,7 @@ function assetTagFilterSql(tags: number[]) {
   )`;
 }
 
-function assetCteSql(
-  team: string | undefined,
-  tags: number[],
-  extraCols = sql``,
-) {
+function assetCteSql(team: string | undefined, tags: number[], extraCols = sql``) {
   const teamFilter =
     !team || team === "Todas"
       ? sql``
@@ -96,13 +92,7 @@ function makeTrends(): Record<string, Trend> {
   };
 }
 
-export async function getTeamKpis({
-  team,
-  tags = [],
-}: {
-  team?: string;
-  tags?: number[];
-}) {
+export async function getTeamKpis({ team, tags = [] }: { team?: string; tags?: number[] }) {
   if (tags.length === 0 && (!team || team === "Todas")) {
     const [row] = await sql`SELECT * FROM mv_overview`;
     return row as {
@@ -172,13 +162,7 @@ export async function getTeamKpis({
   };
 }
 
-export async function getTeamChartSev({
-  team,
-  tags = [],
-}: {
-  team?: string;
-  tags?: number[];
-}) {
+export async function getTeamChartSev({ team, tags = [] }: { team?: string; tags?: number[] }) {
   if (tags.length === 0 && (!team || team === "Todas")) {
     const rows = await sql`SELECT sev, total FROM mv_chart_sev`;
     const map = new Map<string, number>();
@@ -210,13 +194,7 @@ export async function getTeamChartSev({
   return SEVERITY_ORDER.map((s) => map.get(s) ?? 0);
 }
 
-export async function getTeamSla({
-  team,
-  tags = [],
-}: {
-  team?: string;
-  tags?: number[];
-}) {
+export async function getTeamSla({ team, tags = [] }: { team?: string; tags?: number[] }) {
   if (tags.length === 0 && (!team || team === "Todas")) {
     const rows =
       await sql`SELECT sev, "DentroSLA_Corr", "DentroSLA_NaoCorr", "ForaSLA_Corr", "ForaSLA_NaoCorr" FROM mv_sla`;
@@ -289,13 +267,7 @@ export async function getTeamSla({
   return result;
 }
 
-export async function getTeamRaw({
-  team,
-  tags = [],
-}: {
-  team?: string;
-  tags?: number[];
-}) {
+export async function getTeamRaw({ team, tags = [] }: { team?: string; tags?: number[] }) {
   if (tags.length === 0 && (!team || team === "Todas")) {
     const rows = await sql`SELECT sev, action, total, avg_age, qids FROM mv_raw`;
     const result: Record<string, SeverityBlock> = {};
@@ -389,11 +361,7 @@ export async function getTeamData({
   return { kpis, trends: makeTrends(), chartSev, slaData, raw };
 }
 
-export async function getOverview({
-  tags = [],
-}: {
-  tags?: number[];
-}): Promise<TeamData> {
+export async function getOverview({ tags = [] }: { tags?: number[] }): Promise<TeamData> {
   const [kpis, chartSev, slaData, raw] = await Promise.all([
     getTeamKpis({ tags }),
     getTeamChartSev({ tags }),

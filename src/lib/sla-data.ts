@@ -149,11 +149,7 @@ export const qidsQueryOptions = (filters: {
     queryFn: () => fetchQids({ data: filters }),
   });
 
-export const assetsQueryOptions = (filters: {
-  team?: string;
-  q?: string;
-  tags?: number[];
-}) =>
+export const assetsQueryOptions = (filters: { team?: string; q?: string; tags?: number[] }) =>
   queryOptions({
     queryKey: ["assets", filters],
     queryFn: () => fetchAssets({ data: filters }),

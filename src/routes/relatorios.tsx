@@ -139,9 +139,9 @@ function Relatorios() {
     () => ({
       team: team === "Todas" ? undefined : team,
       os: os || undefined,
-      tags,
+      tags: search.tags ?? [],
     }),
-    [team, os, tags],
+    [team, os, search.tags],
   );
   const { data, isLoading, isError } = useQuery(reportsQueryOptions(filters));
 
