@@ -45,7 +45,7 @@ import { Check, ChevronsUpDown, SlidersHorizontal } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 const indexSearchSchema = z.object({
-  tagFilter: z.enum(["full", "full-cloud", "full-on-premise"]).optional(),
+  tags: z.array(z.coerce.number()).default([]),
 });
 
 export const Route = createFileRoute("/")({
@@ -75,9 +75,9 @@ function Overview() {
   const [teamOpen, setTeamOpen] = useState(false);
   const [filtersOpen, setFiltersOpen] = useState(false);
   const [openSev, setOpenSev] = useState<string | null>("Crítica");
-  const tagFilter = search.tagFilter ?? "full";
+  const tags = search.tags ?? [];
   const queryOptions =
-    team === "Todas" ? overviewAllQueryOptions(tagFilter) : overviewQueryOptions(team, tagFilter);
+    team === "Todas" ? overviewAllQueryOptions(tags) : overviewQueryOptions(team, tags);
   const { data, isLoading, isError } = useQuery(queryOptions);
 
   const goToVulns = (extra: { sev?: string; q?: string; categories?: string[] } = {}) =>
@@ -85,8 +85,8 @@ function Overview() {
       to: "/vulnerabilidades",
       search: {
         team: team === "Todas" ? undefined : team,
-        tagFilter: tagFilter === "full" ? undefined : tagFilter,
-        sev: extra.sev,
+        tags: tags.length ? tags : undefined,
+        sev: extra.sev ? [extra.sev] : undefined,
         q: extra.q,
         categories: extra.categories,
       },

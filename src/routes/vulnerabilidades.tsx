@@ -20,12 +20,13 @@ import {
   severityToken,
   teamNames,
 } from "@/lib/sla-data";
+import { parseNumberArray } from "@/lib/search";
 
 type VulnSearch = {
   q?: string | undefined;
   sev?: string[] | undefined;
   team?: string | undefined;
-  tagFilter?: ("full" | "full-cloud" | "full-on-premise") | undefined;
+  tags?: number[] | undefined;
   categories?: string[] | undefined;
   statuses?: string[] | undefined;
 };
@@ -50,12 +51,7 @@ export const Route = createFileRoute("/vulnerabilidades")({
     q: typeof search["q"] === "string" ? search["q"] : undefined,
     sev: parseArray(search["sev"]),
     team: typeof search["team"] === "string" ? search["team"] : undefined,
-    tagFilter:
-      search["tagFilter"] === "full" ||
-      search["tagFilter"] === "full-cloud" ||
-      search["tagFilter"] === "full-on-premise"
-        ? search["tagFilter"]
-        : undefined,
+    tags: parseNumberArray(search["tags"]),
     categories: parseArray(search["categories"]),
     statuses: parseArray(search["statuses"]),
   }),
@@ -82,7 +78,7 @@ function Vulnerabilidades() {
   const navigate = useNavigate({ from: "/vulnerabilidades" });
   const q = search.q ?? "";
   const team = search.team ?? "Todas";
-  const tagFilter = search.tagFilter ?? "full";
+  const tags = search.tags ?? [];
   const selectedSevs = useMemo(() => search.sev ?? [], [search.sev]);
   const categories = useMemo(() => search.categories ?? [], [search.categories]);
   const statuses = useMemo(() => search.statuses ?? defaultStatuses, [search.statuses]);
@@ -145,11 +141,11 @@ function Vulnerabilidades() {
     isLoading,
     isError,
   } = useQuery(
-    qidsQueryOptions({ sev: selectedSevs, team, q: debouncedQ, tagFilter, categories, statuses }),
+    qidsQueryOptions({ sev: selectedSevs, team, q: debouncedQ, tags, categories, statuses }),
   );
 
   const { data: stats, isLoading: statsLoading } = useQuery(
-    vulnerabilityStatsQueryOptions({ team, tagFilter, categories, statuses, q: debouncedQ }),
+    vulnerabilityStatsQueryOptions({ team, tags, categories, statuses, q: debouncedQ }),
   );
 
   const severityOptions = useMemo(() => {
@@ -338,7 +334,7 @@ function Vulnerabilidades() {
                   q: undefined,
                   sev: undefined,
                   team: undefined,
-                  tagFilter: undefined,
+                  tags: undefined,
                   categories: undefined,
                   statuses: undefined,
                 }),

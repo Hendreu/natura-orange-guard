@@ -41,12 +41,13 @@ import {
   teamNames,
   type ReportData,
 } from "@/lib/sla-data";
+import { parseNumberArray } from "@/lib/search";
 
 type RelatoriosSearch = {
   team?: string | undefined;
   os?: string | undefined;
   q?: string | undefined;
-  tagFilter?: ("full" | "full-cloud" | "full-on-premise") | undefined;
+  tags?: number[] | undefined;
 };
 
 export const Route = createFileRoute("/relatorios")({
@@ -54,12 +55,7 @@ export const Route = createFileRoute("/relatorios")({
     team: typeof search["team"] === "string" ? search["team"] : undefined,
     os: typeof search["os"] === "string" ? search["os"] : undefined,
     q: typeof search["q"] === "string" ? search["q"] : undefined,
-    tagFilter:
-      search["tagFilter"] === "full" ||
-      search["tagFilter"] === "full-cloud" ||
-      search["tagFilter"] === "full-on-premise"
-        ? search["tagFilter"]
-        : undefined,
+    tags: parseNumberArray(search["tags"]),
   }),
   head: () => ({
     meta: [
@@ -87,7 +83,7 @@ function Relatorios() {
   const team = search.team ?? "Todas";
   const os = search.os ?? "";
   const q = search.q ?? "";
-  const tagFilter = search.tagFilter ?? "full";
+  const tags = search.tags ?? [];
   const [qInput, setQInput] = useState(q);
   const [osInput, setOsInput] = useState(os);
   const debouncedQ = useDebouncedValue(qInput, 300);
@@ -143,9 +139,9 @@ function Relatorios() {
     () => ({
       team: team === "Todas" ? undefined : team,
       os: os || undefined,
-      tagFilter: tagFilter === "full" ? undefined : tagFilter,
+      tags,
     }),
-    [team, os, tagFilter],
+    [team, os, tags],
   );
   const { data, isLoading, isError } = useQuery(reportsQueryOptions(filters));
 
@@ -378,7 +374,7 @@ function FilterBar({
                   team: undefined,
                   os: undefined,
                   q: undefined,
-                  tagFilter: undefined,
+                  tags: undefined,
                 }),
               })
             }
@@ -568,7 +564,7 @@ function AssetsTab({ assets, q }: { assets: ReportData["assets"]; q: string }) {
                   team: undefined,
                   os: undefined,
                   q: undefined,
-                  tagFilter: undefined,
+                  tags: undefined,
                 }),
               })
             }

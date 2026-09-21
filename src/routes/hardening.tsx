@@ -3,8 +3,16 @@ import { createFileRoute } from "@tanstack/react-router";
 import { Cloud, Shield, AlertTriangle, List } from "lucide-react";
 import { Shell } from "@/components/Shell";
 import { fmt, hardeningQueryOptions, severityToken } from "@/lib/sla-data";
+import { parseNumberArray } from "@/lib/search";
+
+type HardeningSearch = {
+  tags?: number[] | undefined;
+};
 
 export const Route = createFileRoute("/hardening")({
+  validateSearch: (search: Record<string, unknown>): HardeningSearch => ({
+    tags: parseNumberArray(search["tags"]),
+  }),
   head: () => ({
     meta: [
       { title: "Hardening & Cloud Posture — Natura SecOps" },
@@ -25,7 +33,9 @@ export const Route = createFileRoute("/hardening")({
 });
 
 function Hardening() {
-  const { data, isLoading, isError } = useQuery(hardeningQueryOptions());
+  const search = Route.useSearch();
+  const tags = search.tags ?? [];
+  const { data, isLoading, isError } = useQuery(hardeningQueryOptions(tags));
 
   if (isLoading || !data) {
     return (

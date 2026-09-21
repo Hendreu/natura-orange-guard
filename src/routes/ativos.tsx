@@ -12,23 +12,19 @@ import {
 import { Shell } from "@/components/Shell";
 import { useDebouncedValue } from "@/hooks/use-debounced-value";
 import { assetsQueryOptions, fmt, teamNames } from "@/lib/sla-data";
+import { parseNumberArray } from "@/lib/search";
 
 type AtivosSearch = {
   q?: string | undefined;
   team?: string | undefined;
-  tagFilter?: ("full" | "full-cloud" | "full-on-premise") | undefined;
+  tags?: number[] | undefined;
 };
 
 export const Route = createFileRoute("/ativos")({
   validateSearch: (search: Record<string, unknown>): AtivosSearch => ({
     q: typeof search["q"] === "string" ? search["q"] : undefined,
     team: typeof search["team"] === "string" ? search["team"] : undefined,
-    tagFilter:
-      search["tagFilter"] === "full" ||
-      search["tagFilter"] === "full-cloud" ||
-      search["tagFilter"] === "full-on-premise"
-        ? search["tagFilter"]
-        : undefined,
+    tags: parseNumberArray(search["tags"]),
   }),
   head: () => ({
     meta: [
@@ -53,7 +49,7 @@ function Ativos() {
   const navigate = useNavigate({ from: "/ativos" });
   const q = search.q ?? "";
   const team = search.team ?? "Todas";
-  const tagFilter = search.tagFilter ?? "full";
+  const tags = search.tags ?? [];
   const [qInput, setQInput] = useState(q);
   const debouncedQ = useDebouncedValue(qInput, 300);
 
@@ -76,7 +72,7 @@ function Ativos() {
     data: rows = [],
     isLoading,
     isError,
-  } = useQuery(assetsQueryOptions({ team, q: debouncedQ, tagFilter }));
+  } = useQuery(assetsQueryOptions({ team, q: debouncedQ, tags }));
 
   const max = rows[0]?.vulns ?? 1;
 
@@ -143,7 +139,7 @@ function Ativos() {
             <button
               onClick={() =>
                 navigate({
-                  search: () => ({ q: undefined, team: undefined, tagFilter: undefined }),
+                  search: () => ({ q: undefined, team: undefined, tags: undefined }),
                 })
               }
               className="stencil border border-border px-3 py-1 text-[10px] text-muted-foreground transition-colors hover:border-primary hover:text-foreground"
@@ -188,7 +184,7 @@ function Ativos() {
               <button
                 onClick={() =>
                   navigate({
-                    search: () => ({ q: undefined, team: undefined, tagFilter: undefined }),
+                    search: () => ({ q: undefined, team: undefined, tags: undefined }),
                   })
                 }
                 className="stencil mt-3 border border-border px-4 py-1.5 text-[10px] text-muted-foreground transition-colors hover:border-primary hover:text-foreground"

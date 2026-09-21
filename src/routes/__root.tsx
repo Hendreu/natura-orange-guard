@@ -74,7 +74,7 @@ function ErrorComponent({ error, reset }: { error: Error; reset: () => void }) {
 }
 
 const rootSearchSchema = z.object({
-  tagFilter: z.enum(["full", "full-cloud", "full-on-premise"]).optional(),
+  tags: z.array(z.coerce.number()).optional(),
 });
 
 export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()({
