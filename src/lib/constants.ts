@@ -62,3 +62,10 @@ export const SLA_THRESHOLDS: Record<string, number> = {
 };
 
 export const ACTIVE_STATUSES = ["Active", "New", "Re-Opened"] as const;
+
+export const TEAM_OPTIONS: { value: string; label: string }[] = [
+  { value: "Todas", label: "Todas" },
+  { value: "All Cloud", label: "All Clouds" },
+  { value: "All On-Prem", label: "On-Prem" },
+  ...TEAM_NAMES.map((t) => ({ value: t, label: t })),
+];

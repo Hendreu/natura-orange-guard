@@ -24,6 +24,7 @@ import {
   overviewQueryOptions,
   overviewAllQueryOptions,
 } from "@/lib/sla-data";
+import { TEAM_OPTIONS } from "@/lib/constants";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import {
   Command,
@@ -203,20 +204,23 @@ function Overview() {
                     Nenhum squad encontrado
                   </CommandEmpty>
                   <CommandGroup>
-                    {["Todas", "All Cloud", "All On-Prem", ...teamNames].map((t) => (
+                    {TEAM_OPTIONS.map((opt) => (
                       <CommandItem
-                        key={t}
-                        value={t}
+                        key={opt.value}
+                        value={opt.value}
                         onSelect={() => {
-                          setTeam(t);
+                          setTeam(opt.value);
                           setTeamOpen(false);
                         }}
                         className="stencil gap-2 text-[11px] data-[selected=true]:bg-primary data-[selected=true]:text-primary-foreground"
                       >
                         <Check
-                          className={cn("h-3.5 w-3.5", team === t ? "opacity-100" : "opacity-0")}
+                          className={cn(
+                            "h-3.5 w-3.5",
+                            team === opt.value ? "opacity-100" : "opacity-0",
+                          )}
                         />
-                        {t}
+                        {opt.label}
                       </CommandItem>
                     ))}
                   </CommandGroup>

@@ -41,6 +41,7 @@ import {
   teamNames,
   type ReportData,
 } from "@/lib/sla-data";
+import { TEAM_OPTIONS } from "@/lib/constants";
 import { parseNumberArray } from "@/lib/search";
 
 type RelatoriosSearch = {
@@ -306,15 +307,9 @@ function FilterBar({
               <SelectItem value="Todas" className="text-xs">
                 Todas
               </SelectItem>
-              <SelectItem value="All Cloud" className="text-xs">
-                All Cloud
-              </SelectItem>
-              <SelectItem value="All On-Prem" className="text-xs">
-                All On-Prem
-              </SelectItem>
-              {teamNames.map((t) => (
-                <SelectItem key={t} value={t} className="text-xs">
-                  {t}
+              {TEAM_OPTIONS.map((opt) => (
+                <SelectItem key={opt.value} value={opt.value} className="text-xs">
+                  {opt.label}
                 </SelectItem>
               ))}
             </SelectContent>

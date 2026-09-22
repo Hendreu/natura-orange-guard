@@ -12,6 +12,7 @@ import {
 import { Shell } from "@/components/Shell";
 import { useDebouncedValue } from "@/hooks/use-debounced-value";
 import { assetsQueryOptions, fmt, teamNames } from "@/lib/sla-data";
+import { TEAM_OPTIONS } from "@/lib/constants";
 import { parseNumberArray } from "@/lib/search";
 
 type AtivosSearch = {
@@ -107,9 +108,9 @@ function Ativos() {
                 <SelectValue />
               </SelectTrigger>
               <SelectContent>
-                {["Todas", "All Cloud", "All On-Prem", ...teamNames].map((t) => (
-                  <SelectItem key={t} value={t} className="text-xs">
-                    {t}
+                {TEAM_OPTIONS.map((opt) => (
+                  <SelectItem key={opt.value} value={opt.value} className="text-xs">
+                    {opt.label}
                   </SelectItem>
                 ))}
               </SelectContent>
