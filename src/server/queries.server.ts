@@ -46,13 +46,19 @@ function assetTagFilterSql(tags: number[]) {
 }
 
 function assetCteSql(team: string | undefined, tags: number[], extraCols = sql``) {
+  const cloudFilter = sql`EXISTS (
+    SELECT 1 FROM tags t
+    WHERE LOWER(t.name) LIKE 'type: cloud%'
+      AND CONCAT(',', REPLACE(a."Tags", '\n', ''), ',')
+          ILIKE CONCAT('%,', REPLACE(t.name, '\n', ''), ',%')
+  )`;
   const teamFilter =
     !team || team === "Todas"
       ? sql``
       : team === "All Cloud"
-        ? sql`AND a.is_cloud = true`
+        ? sql`AND ${cloudFilter}`
         : team === "All On-Prem"
-          ? sql`AND a.is_cloud = false`
+          ? sql`AND NOT ${cloudFilter}`
           : sql`AND a.team = ${team}`;
   const tagClause = assetTagFilterSql(tags);
   return sql`WITH filtered_assets AS MATERIALIZED (SELECT DISTINCT ON (a."QG_HostID") a."QG_HostID", a.team, a.is_cloud ${extraCols} FROM "All_Assets" a WHERE TRUE ${teamFilter} ${tagClause})`;
