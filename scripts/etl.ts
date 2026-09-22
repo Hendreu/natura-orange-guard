@@ -260,6 +260,21 @@ async function loadTable(cfg: TableConfig) {
   console.log(`[DELTA] applied`);
 }
 
+async function updateAssetCloudFlag() {
+  console.log("[UPDATE] is_cloud from tags");
+  const updated = await sql`
+    UPDATE "All_Assets" a
+    SET is_cloud = EXISTS (
+      SELECT 1 FROM tags t
+      WHERE LOWER(t.name) LIKE 'type: cloud%'
+        AND CONCAT(',', REPLACE(a."Tags", '\n', ''), ',')
+            ILIKE CONCAT('%,', REPLACE(t.name, '\n', ''), ',%')
+    )
+    WHERE a."Tags" IS NOT NULL AND TRIM(a."Tags") <> ''
+  `;
+  console.log(`[UPDATED] ${updated.count} assets`);
+}
+
 async function rebuildAssetTags() {
   console.log("[REBUILD] asset_tags");
   await sql`TRUNCATE asset_tags`;
@@ -287,6 +302,7 @@ async function main() {
   for (const cfg of CONFIG) {
     await loadTable(cfg);
   }
+  await updateAssetCloudFlag();
   await rebuildAssetTags();
   console.log("Refreshing materialized views...");
   await refreshViews();
