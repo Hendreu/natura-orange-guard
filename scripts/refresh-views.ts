@@ -1,4 +1,4 @@
-﻿import sql from "../src/lib/db";
+import sql from "../src/lib/db";
 
 const views = [
   "mv_overview",
@@ -17,6 +17,7 @@ const views = [
   "mv_report_categories",
   "mv_report_assets",
   "mv_report_teamrows",
+  "mv_asset_cloud",
 ];
 
 export async function recordSync() {
@@ -42,7 +43,7 @@ export async function refreshViews() {
   for (const view of views) {
     const start = Date.now();
     await sql.unsafe(`REFRESH MATERIALIZED VIEW ${view}`);
-    console.log(`[OK] ${view} — ${Date.now() - start}ms`);
+    console.log(`[OK] ${view} � ${Date.now() - start}ms`);
   }
 }
 

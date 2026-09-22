@@ -46,12 +46,7 @@ function assetTagFilterSql(tags: number[]) {
 }
 
 function assetCteSql(team: string | undefined, tags: number[], extraCols = sql``) {
-  const cloudFilter = sql`EXISTS (
-    SELECT 1 FROM tags t
-    WHERE LOWER(t.name) LIKE 'type: cloud%'
-      AND CONCAT(',', REPLACE(a."Tags", '\n', ''), ',')
-          ILIKE CONCAT('%,', REPLACE(t.name, '\n', ''), ',%')
-  )`;
+  const cloudFilter = sql`EXISTS (SELECT 1 FROM mv_asset_cloud mac WHERE mac.asset_id = a."ID" AND mac.is_cloud = true)`;
   const teamFilter =
     !team || team === "Todas"
       ? sql``
