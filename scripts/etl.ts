@@ -260,21 +260,6 @@ async function loadTable(cfg: TableConfig) {
   console.log(`[DELTA] applied`);
 }
 
-async function updateAssetCloudFlag() {
-  console.log("[UPDATE] is_cloud from tags");
-  const updated = await sql`
-    UPDATE "All_Assets" a
-    SET is_cloud = EXISTS (
-      SELECT 1 FROM tags t
-      WHERE LOWER(t.name) LIKE 'type: cloud%'
-        AND CONCAT(',', REPLACE(a."Tags", '\n', ''), ',')
-            ILIKE CONCAT('%,', REPLACE(t.name, '\n', ''), ',%')
-    )
-    WHERE a."Tags" IS NOT NULL AND TRIM(a."Tags") <> ''
-  `;
-  console.log(`[UPDATED] ${updated.count} assets`);
-}
-
 async function rebuildAssetTags() {
   console.log("[REBUILD] asset_tags");
   await sql`TRUNCATE asset_tags`;
@@ -294,6 +279,44 @@ async function rebuildAssetTags() {
   await sql`ANALYZE asset_tags`;
 }
 
+async function updateAssetCloudFlag() {
+  console.log("[UPDATE] is_cloud from Times + EASM tags");
+  await sql`
+    UPDATE "All_Assets" a
+    SET is_cloud = CASE
+      WHEN EXISTS (
+        WITH RECURSIVE tree AS (
+          SELECT id FROM tags WHERE LOWER(name) = 'times:cloud'
+          UNION ALL
+          SELECT t.id FROM tags t JOIN tree ON t.parent_tag_id = tree.id
+        )
+        SELECT 1 FROM asset_tags at
+        JOIN tree ON tree.id = at.tag_id
+        WHERE at.asset_id = a."ID"
+      ) THEN true
+      WHEN EXISTS (
+        SELECT 1 FROM asset_tags at
+        JOIN tags t ON t.id = at.tag_id
+        WHERE at.asset_id = a."ID"
+          AND LOWER(t.name) IN ('times:easm', 'type: easm', 'easm', 'internet facing assets')
+      ) THEN true
+      WHEN EXISTS (
+        WITH RECURSIVE tree AS (
+          SELECT id FROM tags WHERE LOWER(name) = 'times:on-prem'
+          UNION ALL
+          SELECT t.id FROM tags t JOIN tree ON t.parent_tag_id = tree.id
+        )
+        SELECT 1 FROM asset_tags at
+        JOIN tree ON tree.id = at.tag_id
+        WHERE at.asset_id = a."ID"
+      ) THEN false
+    END
+    WHERE EXISTS (SELECT 1 FROM asset_tags at WHERE at.asset_id = a."ID")
+  `;
+  const count = await sql`SELECT COUNT(*) FROM "All_Assets" WHERE is_cloud IS NOT NULL`;
+  console.log(`[UPDATED] ${count[0].count} classified assets`);
+}
+
 async function main() {
   console.log(
     `ETL starting — source: ${SOURCE_DIR}, incoming: ${INCOMING_DIR}, days_back: ${DAYS_BACK}`,
@@ -302,8 +325,8 @@ async function main() {
   for (const cfg of CONFIG) {
     await loadTable(cfg);
   }
-  await updateAssetCloudFlag();
   await rebuildAssetTags();
+  await updateAssetCloudFlag();
   console.log("Refreshing materialized views...");
   await refreshViews();
   await recordSync();
