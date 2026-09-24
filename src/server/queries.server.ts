@@ -46,15 +46,13 @@ function assetTagFilterSql(tags: number[]) {
 }
 
 function assetCteSql(team: string | undefined, tags: number[], extraCols = sql``) {
-  const cloudFilter = sql`EXISTS (SELECT 1 FROM mv_asset_cloud mac WHERE mac.asset_id = a."ID" AND mac.is_cloud = true)`;
-  const onPremFilter = sql`EXISTS (SELECT 1 FROM mv_asset_cloud mac WHERE mac.asset_id = a."ID" AND mac.is_cloud = false)`;
   const teamFilter =
     !team || team === "Todas"
       ? sql``
       : team === "All Cloud"
-        ? sql`AND ${cloudFilter}`
+        ? sql`AND EXISTS (SELECT 1 FROM mv_asset_cloud mac JOIN "All_Assets" a2 ON a2."ID" = mac.asset_id WHERE a2."QG_HostID" = a."QG_HostID" AND mac.is_cloud = true)`
         : team === "All On-Prem"
-          ? sql`AND ${onPremFilter}`
+          ? sql`AND NOT EXISTS (SELECT 1 FROM mv_asset_cloud mac JOIN "All_Assets" a2 ON a2."ID" = mac.asset_id WHERE a2."QG_HostID" = a."QG_HostID" AND mac.is_cloud = true)`
           : sql`AND a.team = ${team}`;
   const tagClause = assetTagFilterSql(tags);
   return sql`WITH filtered_assets AS MATERIALIZED (SELECT DISTINCT ON (a."QG_HostID") a."QG_HostID", a.team, a.is_cloud ${extraCols} FROM "All_Assets" a WHERE TRUE ${teamFilter} ${tagClause})`;
