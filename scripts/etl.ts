@@ -280,23 +280,30 @@ async function rebuildAssetTags() {
 }
 
 async function updateAssetCloudFlag() {
-  console.log("[UPDATE] is_cloud from Times:Cloud + EASM tags");
+  console.log("[UPDATE] is_cloud from cloud_tag_rules");
   await sql`
     UPDATE "All_Assets" a
     SET is_cloud = EXISTS (
-      WITH RECURSIVE tree AS (
-        SELECT id FROM tags WHERE LOWER(name) = 'times:cloud'
+      WITH RECURSIVE rule_tree AS (
+        SELECT r.tag_id AS root_tag_id, t.id AS tag_id
+        FROM cloud_tag_rules r
+        JOIN tags t ON t.id = r.tag_id
+        WHERE r.include_children = true
+
         UNION ALL
-        SELECT t.id FROM tags t JOIN tree ON t.parent_tag_id = tree.id
+
+        SELECT rt.root_tag_id, t.id
+        FROM rule_tree rt
+        JOIN tags t ON t.parent_tag_id = rt.tag_id
+      ),
+      cloud_tags AS (
+        SELECT DISTINCT tag_id FROM rule_tree
+        UNION
+        SELECT tag_id FROM cloud_tag_rules WHERE include_children = false
       )
       SELECT 1 FROM asset_tags at
-      JOIN tree ON tree.id = at.tag_id
       WHERE at.asset_id = a."ID"
-    ) OR EXISTS (
-      SELECT 1 FROM asset_tags at
-      JOIN tags t ON t.id = at.tag_id
-      WHERE at.asset_id = a."ID"
-        AND LOWER(t.name) IN ('times:easm', 'type: easm', 'easm', 'internet facing assets')
+        AND at.tag_id IN (SELECT tag_id FROM cloud_tags)
     )
   `;
   const count = await sql`SELECT COUNT(*) FROM "All_Assets" WHERE is_cloud IS NOT NULL`;
