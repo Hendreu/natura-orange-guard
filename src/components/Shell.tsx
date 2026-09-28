@@ -2,7 +2,6 @@ import { Link, useRouterState } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
 import type { ReactNode } from "react";
 import { Activity, Boxes, Bug, Cloud, FileBarChart, Gauge, ShieldHalf, Timer } from "lucide-react";
-import { TagFilter } from "@/components/TagFilter";
 import { lastSyncQueryOptions } from "@/lib/sla-data";
 
 const nav = [
@@ -88,7 +87,6 @@ export function Shell({
           </h1>
           <div className="mt-2 flex flex-col gap-2 sm:flex-row sm:items-end sm:justify-between">
             <p className="text-sm text-muted-foreground">{subtitle}</p>
-            <TagFilter />
           </div>
           <nav className="mt-4 flex flex-wrap gap-2 lg:hidden">
             {nav.map((n) => (

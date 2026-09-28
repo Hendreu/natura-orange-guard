@@ -280,7 +280,7 @@ async function rebuildAssetTags() {
 }
 
 async function updateAssetCloudFlag() {
-  console.log("[UPDATE] is_cloud from cloud_tag_rules");
+  console.log("[UPDATE] is_cloud from cloud_tag_rules by QG_HostID");
   await sql`
     UPDATE "All_Assets" a
     SET is_cloud = EXISTS (
@@ -288,7 +288,7 @@ async function updateAssetCloudFlag() {
         SELECT r.tag_id AS root_tag_id, t.id AS tag_id
         FROM cloud_tag_rules r
         JOIN tags t ON t.id = r.tag_id
-        WHERE r.include_children = true
+        WHERE r.include_children = TRUE
 
         UNION ALL
 
@@ -299,10 +299,12 @@ async function updateAssetCloudFlag() {
       cloud_tags AS (
         SELECT DISTINCT tag_id FROM rule_tree
         UNION
-        SELECT tag_id FROM cloud_tag_rules WHERE include_children = false
+        SELECT tag_id FROM cloud_tag_rules WHERE include_children = FALSE
       )
-      SELECT 1 FROM asset_tags at
-      WHERE at.asset_id = a."ID"
+      SELECT 1
+      FROM "All_Assets" a2
+      JOIN asset_tags at ON at.asset_id = a2."ID"
+      WHERE a2."QG_HostID" = a."QG_HostID"
         AND at.tag_id IN (SELECT tag_id FROM cloud_tags)
     )
   `;
