@@ -143,7 +143,7 @@ CREATE MATERIALIZED VIEW "mv_sla" AS WITH base AS (
             ELSE 'Baixa'::text
                 END AS sev_label,
             kb.solution,
-            round(EXTRACT(epoch FROM now() - v."First_Found_Datetime"::timestamp without time zone::timestamp with time zone) / 86400::numeric)::integer AS age,
+            round(EXTRACT(epoch FROM now() - v."Last_Found_Datetime"::timestamp without time zone::timestamp with time zone) / 86400::numeric)::integer AS age,
                 CASE v."Severity"::integer
                     WHEN 5 THEN 15
                     WHEN 4 THEN 30
@@ -335,7 +335,7 @@ CREATE MATERIALIZED VIEW "mv_team_sla" AS WITH assets AS (
             ELSE 'Baixa'::text
                 END AS sev_label,
             kb.solution,
-            round(EXTRACT(epoch FROM now() - v."First_Found_Datetime"::timestamp without time zone::timestamp with time zone) / 86400::numeric)::integer AS age,
+            round(EXTRACT(epoch FROM now() - v."Last_Found_Datetime"::timestamp without time zone::timestamp with time zone) / 86400::numeric)::integer AS age,
                 CASE v."Severity"::integer
                     WHEN 5 THEN 15
                     WHEN 4 THEN 30
@@ -357,7 +357,7 @@ CREATE MATERIALIZED VIEW "mv_team_sla" AS WITH assets AS (
             ELSE 'Baixa'::text
                 END AS sev_label,
             kb.solution,
-            round(EXTRACT(epoch FROM now() - v."First_Found_Datetime"::timestamp without time zone::timestamp with time zone) / 86400::numeric)::integer AS age,
+            round(EXTRACT(epoch FROM now() - v."Last_Found_Datetime"::timestamp without time zone::timestamp with time zone) / 86400::numeric)::integer AS age,
                 CASE v."Severity"::integer
                     WHEN 5 THEN 15
                     WHEN 4 THEN 30
@@ -380,7 +380,7 @@ CREATE MATERIALIZED VIEW "mv_team_sla" AS WITH assets AS (
             ELSE 'Baixa'::text
                 END AS sev_label,
             kb.solution,
-            round(EXTRACT(epoch FROM now() - v."First_Found_Datetime"::timestamp without time zone::timestamp with time zone) / 86400::numeric)::integer AS age,
+            round(EXTRACT(epoch FROM now() - v."Last_Found_Datetime"::timestamp without time zone::timestamp with time zone) / 86400::numeric)::integer AS age,
                 CASE v."Severity"::integer
                     WHEN 5 THEN 15
                     WHEN 4 THEN 30
