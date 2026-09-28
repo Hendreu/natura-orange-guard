@@ -83,49 +83,32 @@ function Vulnerabilidades() {
   const selectedSevs = useMemo(() => search.sev ?? [], [search.sev]);
   const categories = useMemo(() => search.categories ?? [], [search.categories]);
   const statuses = useMemo(() => search.statuses ?? defaultStatuses, [search.statuses]);
+
+  // Draft state: edits happen locally until user clicks "Aplicar"
+  const [draftTeam, setDraftTeam] = useState(team);
+  const [draftSevs, setDraftSevs] = useState<string[]>(selectedSevs);
+  const [draftCategories, setDraftCategories] = useState<string[]>(categories);
+  const [draftStatuses, setDraftStatuses] = useState<string[]>(statuses);
   const [open, setOpen] = useState<number | null>(null);
   const [qInput, setQInput] = useState(q);
   const debouncedQ = useDebouncedValue(qInput, 300);
 
-  const setParam = (key: keyof VulnSearch, value: string) =>
-    navigate({
-      search: (prev: VulnSearch) => ({
-        ...prev,
-        [key]: value && value !== "Todas" ? value : undefined,
-      }),
-    });
+  // Sync draft when URL changes externally (back/forward, global filter, etc.)
+  useEffect(() => {
+    setDraftTeam(team);
+    setDraftSevs(selectedSevs);
+    setDraftCategories(categories);
+    setDraftStatuses(statuses);
+  }, [team, selectedSevs, categories, statuses]);
 
-  const setCategories = (values: string[]) =>
-    navigate({
-      search: (prev: VulnSearch) => ({
-        ...prev,
-        categories: values.length ? values : undefined,
-      }),
-    });
-
-  const setStatuses = (values: string[]) =>
-    navigate({
-      search: (prev: VulnSearch) => ({
-        ...prev,
-        statuses: values.length ? values : undefined,
-      }),
-    });
-
-  const setSeverities = (values: string[]) =>
-    navigate({
-      search: (prev: VulnSearch) => ({
-        ...prev,
-        sev: values.length ? values : undefined,
-      }),
-    });
-
-  // Sync input when URL changes externally (back/forward)
+  // Sync input when URL changes externally
   useEffect(() => {
     if (q !== qInput && debouncedQ === qInput) {
       setQInput(q);
     }
   }, [q, qInput, debouncedQ]);
 
+  // Search still debounces to URL
   useEffect(() => {
     if (debouncedQ !== q) {
       navigate({
@@ -136,6 +119,41 @@ function Vulnerabilidades() {
       });
     }
   }, [debouncedQ, q, navigate]);
+
+  const applyFilters = () => {
+    navigate({
+      search: (prev: VulnSearch) => ({
+        ...prev,
+        team: draftTeam === "Todas" ? undefined : draftTeam,
+        sev: draftSevs.length ? draftSevs : undefined,
+        categories: draftCategories.length ? draftCategories : undefined,
+        statuses: draftStatuses.length ? draftStatuses : undefined,
+      }),
+    });
+  };
+
+  const clearFilters = () => {
+    setDraftTeam("Todas");
+    setDraftSevs([]);
+    setDraftCategories([]);
+    setDraftStatuses(defaultStatuses);
+    navigate({
+      search: () => ({
+        q: undefined,
+        sev: undefined,
+        team: undefined,
+        tags: undefined,
+        categories: undefined,
+        statuses: undefined,
+      }),
+    });
+  };
+
+  const hasChanges =
+    draftTeam !== team ||
+    !arraysEqual(draftSevs, selectedSevs) ||
+    !arraysEqual(draftCategories, categories) ||
+    !arraysEqual(draftStatuses, statuses);
 
   const {
     data: rows = [],
@@ -234,7 +252,7 @@ function Vulnerabilidades() {
 
           <div>
             <span className="stencil mb-2 block text-[10px] text-muted-foreground">Squad</span>
-            <Select value={team} onValueChange={(v) => setParam("team", v)}>
+            <Select value={draftTeam} onValueChange={(v) => setDraftTeam(v)}>
               <SelectTrigger className="h-9 w-full border-border bg-input text-xs">
                 <SelectValue />
               </SelectTrigger>
@@ -252,15 +270,15 @@ function Vulnerabilidades() {
             <span className="stencil mb-2 block text-[10px] text-muted-foreground">Severidade</span>
             <div className="space-y-1">
               {severityOptions.map(({ level, count }) => {
-                const active = selectedSevs.includes(level);
+                const active = draftSevs.includes(level);
                 return (
                   <button
                     key={level}
                     onClick={() => {
                       const next = active
-                        ? selectedSevs.filter((v) => v !== level)
-                        : [...selectedSevs, level];
-                      setSeverities(next);
+                        ? draftSevs.filter((v) => v !== level)
+                        : [...draftSevs, level];
+                      setDraftSevs(next);
                     }}
                     className={`flex w-full items-center justify-between rounded-sm border px-2 py-1.5 text-xs transition-colors ${
                       active
@@ -280,7 +298,7 @@ function Vulnerabilidades() {
             <span className="stencil mb-2 block text-[10px] text-muted-foreground">Categoria</span>
             <div className="flex flex-wrap gap-2">
               {categoryOptions.map(({ value, count }) => {
-                const active = categories.includes(value);
+                const active = draftCategories.includes(value);
                 return (
                   <FilterChip
                     key={value}
@@ -289,9 +307,9 @@ function Vulnerabilidades() {
                     active={active}
                     onClick={() => {
                       const next = active
-                        ? categories.filter((c) => c !== value)
-                        : [...categories, value];
-                      setCategories(next);
+                        ? draftCategories.filter((c) => c !== value)
+                        : [...draftCategories, value];
+                      setDraftCategories(next);
                     }}
                   />
                 );
@@ -303,7 +321,7 @@ function Vulnerabilidades() {
             <span className="stencil mb-2 block text-[10px] text-muted-foreground">Status</span>
             <div className="flex flex-wrap gap-2">
               {statusOptions.map(({ value, label, count }) => {
-                const active = statuses.includes(value);
+                const active = draftStatuses.includes(value);
                 return (
                   <FilterChip
                     key={value}
@@ -312,9 +330,9 @@ function Vulnerabilidades() {
                     active={active}
                     onClick={() => {
                       const next = active
-                        ? statuses.filter((s) => s !== value)
-                        : [...statuses, value];
-                      setStatuses(next);
+                        ? draftStatuses.filter((s) => s !== value)
+                        : [...draftStatuses, value];
+                      setDraftStatuses(next);
                     }}
                   />
                 );
@@ -323,18 +341,15 @@ function Vulnerabilidades() {
           </div>
 
           <button
-            onClick={() =>
-              navigate({
-                search: () => ({
-                  q: undefined,
-                  sev: undefined,
-                  team: undefined,
-                  tags: undefined,
-                  categories: undefined,
-                  statuses: undefined,
-                }),
-              })
-            }
+            onClick={applyFilters}
+            disabled={!hasChanges}
+            className="stencil w-full border border-primary bg-primary px-3 py-2 text-[10px] text-primary-foreground transition-colors disabled:cursor-not-allowed disabled:border-border disabled:bg-secondary disabled:text-muted-foreground"
+          >
+            Aplicar filtros
+          </button>
+
+          <button
+            onClick={clearFilters}
             className="stencil w-full border border-border px-3 py-2 text-[10px] text-muted-foreground transition-colors hover:border-primary hover:text-foreground"
           >
             Limpar tudo
@@ -350,10 +365,30 @@ function Vulnerabilidades() {
                   key={f.key}
                   onClick={() => {
                     if (f.param === "categories")
-                      setCategories(categories.filter((c) => c !== f.value));
-                    if (f.param === "statuses") setStatuses(statuses.filter((s) => s !== f.value));
-                    if (f.param === "sev") setSeverities(selectedSevs.filter((s) => s !== f.value));
-                    if (f.param === "team") setParam("team", "");
+                      navigate({
+                        search: (prev: VulnSearch) => ({
+                          ...prev,
+                          categories: categories.filter((c) => c !== f.value) || undefined,
+                        }),
+                      });
+                    if (f.param === "statuses")
+                      navigate({
+                        search: (prev: VulnSearch) => ({
+                          ...prev,
+                          statuses: statuses.filter((s) => s !== f.value) || undefined,
+                        }),
+                      });
+                    if (f.param === "sev")
+                      navigate({
+                        search: (prev: VulnSearch) => ({
+                          ...prev,
+                          sev: selectedSevs.filter((s) => s !== f.value) || undefined,
+                        }),
+                      });
+                    if (f.param === "team")
+                      navigate({
+                        search: (prev: VulnSearch) => ({ ...prev, team: undefined }),
+                      });
                   }}
                   className="stencil inline-flex items-center gap-1 rounded-sm border border-border bg-secondary px-2 py-1 text-[10px] text-foreground hover:border-primary"
                 >
@@ -449,4 +484,11 @@ function Vulnerabilidades() {
       </div>
     </Shell>
   );
+}
+
+function arraysEqual(a: string[], b: string[]) {
+  if (a.length !== b.length) return false;
+  const sortedA = [...a].sort();
+  const sortedB = [...b].sort();
+  return sortedA.every((v, i) => v === sortedB[i]);
 }
