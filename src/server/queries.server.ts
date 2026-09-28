@@ -63,7 +63,7 @@ function severityLabelExpr() {
 }
 
 function ageExpr() {
-  return sql`ROUND(EXTRACT(EPOCH FROM (now() - v."First_Found_Datetime"::timestamp)) / 86400)::int`;
+  return sql`ROUND(EXTRACT(EPOCH FROM (now() - v."Last_Found_Datetime"::timestamp)) / 86400)::int`;
 }
 
 function thresholdExpr() {
