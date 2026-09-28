@@ -47,6 +47,7 @@ import { cn } from "@/lib/utils";
 
 const indexSearchSchema = z.object({
   tags: z.array(z.coerce.number()).default([]),
+  team: z.string().default("Todas"),
 });
 
 export const Route = createFileRoute("/")({
@@ -72,7 +73,7 @@ export const Route = createFileRoute("/")({
 function Overview() {
   const navigate = useNavigate();
   const search = Route.useSearch();
-  const [team, setTeam] = useState("Todas");
+  const team = search.team ?? "Todas";
   const [teamOpen, setTeamOpen] = useState(false);
   const [filtersOpen, setFiltersOpen] = useState(false);
   const [openSev, setOpenSev] = useState<string | null>("Crítica");
@@ -209,7 +210,12 @@ function Overview() {
                         key={opt.value}
                         value={opt.value}
                         onSelect={() => {
-                          setTeam(opt.value);
+                          navigate({
+                            search: (prev) => ({
+                              ...prev,
+                              team: opt.value === "Todas" ? undefined : opt.value,
+                            }),
+                          });
                           setTeamOpen(false);
                         }}
                         className="stencil gap-2 text-[11px] data-[selected=true]:bg-primary data-[selected=true]:text-primary-foreground"
