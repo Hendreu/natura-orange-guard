@@ -75,6 +75,7 @@ function ErrorComponent({ error, reset }: { error: Error; reset: () => void }) {
 
 const rootSearchSchema = z.object({
   tags: z.array(z.coerce.number()).optional(),
+  team: z.string().optional(),
 });
 
 export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()({
