@@ -163,15 +163,9 @@ function Vulnerabilidades() {
   }, [stats, selectedSevs]);
 
   const categoryOptions = useMemo(() => {
-    const map = new Map<string, number>();
-    rows.forEach((r) => {
-      map.set(r.action, (map.get(r.action) ?? 0) + r.count);
-    });
-    return Array.from(map.entries())
-      .sort((a, b) => b[1] - a[1])
-      .slice(0, 12)
-      .map(([value, count]) => ({ value, label: value, count }));
-  }, [rows]);
+    return (stats?.byCategory ?? [])
+      .map(({ category, count }) => ({ value: category, label: category, count }));
+  }, [stats]);
 
   const statusOptions = useMemo(
     () =>

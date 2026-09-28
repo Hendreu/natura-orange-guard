@@ -527,6 +527,16 @@ export async function getVulnerabilityStats({
         ${qFilter}
         ${catFilter}
         ${statusFilter}
+    ),
+    base_for_categories AS (
+      SELECT COALESCE(kb.category, 'Unknown') as category
+      FROM vulnerabilities v
+      JOIN filtered_assets a ON v."QG_HostID" = a."QG_HostID"
+      LEFT JOIN kb_summary kb ON v."QID" = kb.qid
+      WHERE ${statusFilterSql()}
+        AND v."Severity"::int IN (1,2,3,4,5)
+        ${qFilter}
+        ${statusFilter}
     )
     SELECT
       (SELECT COUNT(*)::int FROM base) as "total",
@@ -562,7 +572,7 @@ export async function getVulnerabilityStats({
         SELECT jsonb_agg(jsonb_build_object('category', category, 'count', count) ORDER BY count DESC)
         FROM (
           SELECT category, COUNT(*)::int as count
-          FROM base
+          FROM base_for_categories
           GROUP BY category
           ORDER BY count DESC
           LIMIT 12
