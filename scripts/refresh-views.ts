@@ -18,6 +18,16 @@ const views = [
   "mv_report_assets",
   "mv_report_teamrows",
   "mv_asset_cloud",
+  "mv_sla_current_year",
+  "mv_team_sla_current_year",
+  "mv_report_summary_current_year",
+  "mv_report_os_current_year",
+  "mv_report_topqids_current_year",
+  "mv_report_categories_current_year",
+  "mv_report_assets_current_year",
+  "mv_report_teamrows_current_year",
+  "mv_top_qids_current_year",
+  "mv_top_assets_current_year",
 ];
 
 export async function recordSync() {
@@ -43,7 +53,7 @@ export async function refreshViews() {
   for (const view of views) {
     const start = Date.now();
     await sql.unsafe(`REFRESH MATERIALIZED VIEW ${view}`);
-    console.log(`[OK] ${view} — ${Date.now() - start}ms`);
+    console.log(`[OK] ${view} ï¿½ ${Date.now() - start}ms`);
   }
 }
 
