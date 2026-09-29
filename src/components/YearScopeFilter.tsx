@@ -21,20 +21,23 @@ export function YearScopeFilter() {
   };
 
   return (
-    <div className="flex items-center gap-1 rounded-md border border-border bg-input p-1">
-      {OPTIONS.map((o) => (
-        <button
-          key={o.value}
-          onClick={() => setYearScope(o.value)}
-          className={`stencil rounded px-2.5 py-1.5 text-[10px] transition-colors ${
-            value === o.value
-              ? "bg-primary text-primary-foreground"
-              : "text-muted-foreground hover:text-foreground"
-          }`}
-        >
-          {o.label}
-        </button>
-      ))}
+    <div className="min-w-[140px]">
+      <span className="stencil mb-2 block text-[10px] text-muted-foreground">Período</span>
+      <div className="flex h-9 items-center gap-1 rounded-md border border-border bg-input p-1">
+        {OPTIONS.map((o) => (
+          <button
+            key={o.value}
+            onClick={() => setYearScope(o.value)}
+            className={`stencil h-full flex-1 whitespace-nowrap rounded px-2 text-[10px] transition-colors ${
+              value === o.value
+                ? "bg-primary text-primary-foreground"
+                : "text-muted-foreground hover:text-foreground"
+            }`}
+          >
+            {o.label}
+          </button>
+        ))}
+      </div>
     </div>
   );
 }
