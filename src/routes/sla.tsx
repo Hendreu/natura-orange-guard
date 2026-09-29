@@ -1,4 +1,4 @@
-import { createFileRoute, Link } from "@tanstack/react-router";
+import { createFileRoute, Link, useRouterState } from "@tanstack/react-router";
 import {
   Bar,
   BarChart,
@@ -33,7 +33,9 @@ export const Route = createFileRoute("/sla")({
 });
 
 function Sla() {
-  const { data: teams = {}, isLoading, isError } = useQuery(slaQueryOptions());
+  const search = useRouterState({ select: (s) => s.location.search });
+  const yearScope = (search.yearScope as string | undefined) ?? "current";
+  const { data: teams = {}, isLoading, isError } = useQuery(slaQueryOptions(yearScope));
 
   const rows = teamNames.map((t) => {
     const d = teams[t];

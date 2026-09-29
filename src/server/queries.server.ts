@@ -33,6 +33,16 @@ function statusesFilterSql(statuses?: string[]) {
   return sql`AND v."Status" IN ${sql(statuses)}`;
 }
 
+function yearFilterSql(yearScope?: string) {
+  if (yearScope === "slipped") {
+    return sql`AND v."Last_Found_Datetime"::timestamp < date_trunc('year', now())`;
+  }
+  if (yearScope === "current" || yearScope === undefined) {
+    return sql`AND v."Last_Found_Datetime"::timestamp >= date_trunc('year', now())`;
+  }
+  return sql``;
+}
+
 function assetTagFilterSql(tags: number[]) {
   if (tags.length === 0) return sql``;
   return sql`AND EXISTS (
@@ -92,8 +102,16 @@ function makeTrends(): Record<string, Trend> {
   };
 }
 
-export async function getTeamKpis({ team, tags = [] }: { team?: string; tags?: number[] }) {
-  if (tags.length === 0 && (!team || team === "Todas")) {
+export async function getTeamKpis({
+  team,
+  tags = [],
+  yearScope,
+}: {
+  team?: string;
+  tags?: number[];
+  yearScope?: string | undefined;
+}) {
+  if (tags.length === 0 && (!team || team === "Todas") && (!yearScope || yearScope === "all")) {
     const [row] = await sql`SELECT * FROM mv_overview`;
     return row as {
       vulns: number;
@@ -107,7 +125,7 @@ export async function getTeamKpis({ team, tags = [] }: { team?: string; tags?: n
     };
   }
 
-  const viewKey = tags.length === 0 ? teamViewKey(team) : undefined;
+  const viewKey = tags.length === 0 && (!yearScope || yearScope === "all") ? teamViewKey(team) : undefined;
   if (viewKey) {
     const [row] =
       await sql`SELECT * FROM mv_team_overview WHERE team = ${viewKey.team} AND scope = ${viewKey.scope}`;
@@ -133,6 +151,7 @@ export async function getTeamKpis({ team, tags = [] }: { team?: string; tags?: n
   }
 
   const cte = assetCteSql(team, tags);
+  const yearFilter = yearFilterSql(yearScope);
   const [row] = await sql`
     ${cte}
     SELECT
@@ -149,6 +168,7 @@ export async function getTeamKpis({ team, tags = [] }: { team?: string; tags?: n
     LEFT JOIN kb_summary kb ON v."QID" = kb.qid
     WHERE ${statusFilterSql()}
       AND v."Severity"::int IN (1,2,3,4,5)
+      ${yearFilter}
   `;
   return row as {
     vulns: number;
@@ -162,15 +182,23 @@ export async function getTeamKpis({ team, tags = [] }: { team?: string; tags?: n
   };
 }
 
-export async function getTeamChartSev({ team, tags = [] }: { team?: string; tags?: number[] }) {
-  if (tags.length === 0 && (!team || team === "Todas")) {
+export async function getTeamChartSev({
+  team,
+  tags = [],
+  yearScope,
+}: {
+  team?: string;
+  tags?: number[];
+  yearScope?: string | undefined;
+}) {
+  if (tags.length === 0 && (!team || team === "Todas") && (!yearScope || yearScope === "all")) {
     const rows = await sql`SELECT sev, total FROM mv_chart_sev`;
     const map = new Map<string, number>();
     for (const r of rows) map.set(r["sev"], (map.get(r["sev"]) ?? 0) + r["total"]);
     return SEVERITY_ORDER.map((s) => map.get(s) ?? 0);
   }
 
-  const viewKey = tags.length === 0 ? teamViewKey(team) : undefined;
+  const viewKey = tags.length === 0 && (!yearScope || yearScope === "all") ? teamViewKey(team) : undefined;
   if (viewKey) {
     const rows =
       await sql`SELECT sev, total FROM mv_team_chart_sev WHERE team = ${viewKey.team} AND scope = ${viewKey.scope}`;
@@ -180,6 +208,7 @@ export async function getTeamChartSev({ team, tags = [] }: { team?: string; tags
   }
 
   const cte = assetCteSql(team, tags);
+  const yearFilter = yearFilterSql(yearScope);
   const rows = await sql`
     ${cte}
     SELECT ${severityLabelExpr()} as "sev", COUNT(*)::int as "total"
@@ -187,6 +216,7 @@ export async function getTeamChartSev({ team, tags = [] }: { team?: string; tags
     JOIN filtered_assets a ON v."QG_HostID" = a."QG_HostID"
     WHERE ${statusFilterSql()}
       AND v."Severity"::int IN (1,2,3,4,5)
+      ${yearFilter}
     GROUP BY ${severityLabelExpr()}
   `;
   const map = new Map<string, number>();
@@ -194,8 +224,16 @@ export async function getTeamChartSev({ team, tags = [] }: { team?: string; tags
   return SEVERITY_ORDER.map((s) => map.get(s) ?? 0);
 }
 
-export async function getTeamSla({ team, tags = [] }: { team?: string; tags?: number[] }) {
-  if (tags.length === 0 && (!team || team === "Todas")) {
+export async function getTeamSla({
+  team,
+  tags = [],
+  yearScope,
+}: {
+  team?: string;
+  tags?: number[];
+  yearScope?: string | undefined;
+}) {
+  if (tags.length === 0 && (!team || team === "Todas") && (!yearScope || yearScope === "all")) {
     const rows =
       await sql`SELECT sev, "DentroSLA_Corr", "DentroSLA_NaoCorr", "ForaSLA_Corr", "ForaSLA_NaoCorr" FROM mv_sla`;
     const result: Record<string, SlaBucket> = {};
@@ -213,7 +251,7 @@ export async function getTeamSla({ team, tags = [] }: { team?: string; tags?: nu
     return result;
   }
 
-  const viewKey = tags.length === 0 ? teamViewKey(team) : undefined;
+  const viewKey = tags.length === 0 && (!yearScope || yearScope === "all") ? teamViewKey(team) : undefined;
   if (viewKey) {
     const rows =
       await sql`SELECT sev, "DentroSLA_Corr", "DentroSLA_NaoCorr", "ForaSLA_Corr", "ForaSLA_NaoCorr" FROM mv_team_sla WHERE team = ${viewKey.team} AND scope = ${viewKey.scope}`;
@@ -233,6 +271,7 @@ export async function getTeamSla({ team, tags = [] }: { team?: string; tags?: nu
   }
 
   const cte = assetCteSql(team, tags);
+  const yearFilter = yearFilterSql(yearScope);
   const rows = await sql`
     ${cte}
     , base AS (
@@ -242,6 +281,7 @@ export async function getTeamSla({ team, tags = [] }: { team?: string; tags?: nu
       LEFT JOIN kb_summary kb ON v."QID" = kb.qid
       WHERE ${statusFilterSql()}
         AND v."Severity"::int IN (1,2,3,4,5)
+        ${yearFilter}
     )
     SELECT
       sev_label as "sev",
@@ -267,8 +307,16 @@ export async function getTeamSla({ team, tags = [] }: { team?: string; tags?: nu
   return result;
 }
 
-export async function getTeamRaw({ team, tags = [] }: { team?: string; tags?: number[] }) {
-  if (tags.length === 0 && (!team || team === "Todas")) {
+export async function getTeamRaw({
+  team,
+  tags = [],
+  yearScope,
+}: {
+  team?: string;
+  tags?: number[];
+  yearScope?: string | undefined;
+}) {
+  if (tags.length === 0 && (!team || team === "Todas") && (!yearScope || yearScope === "all")) {
     const rows = await sql`SELECT sev, action, total, avg_age, qids FROM mv_raw`;
     const result: Record<string, SeverityBlock> = {};
     for (const s of SEVERITY_ORDER) {
@@ -287,7 +335,7 @@ export async function getTeamRaw({ team, tags = [] }: { team?: string; tags?: nu
     return result;
   }
 
-  const viewKey = tags.length === 0 ? teamViewKey(team) : undefined;
+  const viewKey = tags.length === 0 && (!yearScope || yearScope === "all") ? teamViewKey(team) : undefined;
   if (viewKey) {
     const rows =
       await sql`SELECT sev, action, total, avg_age, qids FROM mv_team_raw WHERE team = ${viewKey.team} AND scope = ${viewKey.scope}`;
@@ -309,6 +357,7 @@ export async function getTeamRaw({ team, tags = [] }: { team?: string; tags?: nu
   }
 
   const cte = assetCteSql(team, tags);
+  const yearFilter = yearFilterSql(yearScope);
   const rows = await sql`
     ${cte}
     , base AS (
@@ -318,6 +367,7 @@ export async function getTeamRaw({ team, tags = [] }: { team?: string; tags?: nu
       LEFT JOIN kb_summary kb ON v."QID" = kb.qid
       WHERE ${statusFilterSql()}
         AND v."Severity"::int IN (1,2,3,4,5)
+        ${yearFilter}
     )
     SELECT
       sev_label as "sev",
@@ -348,15 +398,17 @@ export async function getTeamRaw({ team, tags = [] }: { team?: string; tags?: nu
 export async function getTeamData({
   team,
   tags = [],
+  yearScope,
 }: {
   team: string;
   tags?: number[];
+  yearScope?: string | undefined;
 }): Promise<TeamData> {
   const [kpis, chartSev, slaData, raw] = await Promise.all([
-    getTeamKpis({ team, tags }),
-    getTeamChartSev({ team, tags }),
-    getTeamSla({ team, tags }),
-    getTeamRaw({ team, tags }),
+    getTeamKpis({ team, tags, yearScope }),
+    getTeamChartSev({ team, tags, yearScope }),
+    getTeamSla({ team, tags, yearScope }),
+    getTeamRaw({ team, tags, yearScope }),
   ]);
   return { kpis, trends: makeTrends(), chartSev, slaData, raw };
 }
@@ -371,12 +423,14 @@ export async function getOverview({ tags = [] }: { tags?: number[] }): Promise<T
   return { kpis, trends: makeTrends(), chartSev, slaData, raw };
 }
 
-export async function getAllTeamsData(): Promise<Record<string, TeamData>> {
+export async function getAllTeamsData({
+  yearScope,
+}: { yearScope?: string | undefined } = {}): Promise<Record<string, TeamData>> {
   const teams =
     await sql`SELECT DISTINCT team FROM mv_team_overview WHERE scope = 'full' ORDER BY team`;
   const result: Record<string, TeamData> = {};
   for (const { team } of teams) {
-    result[team as string] = await getTeamData({ team: team as string });
+    result[team as string] = await getTeamData({ team: team as string, yearScope });
   }
   return result;
 }
@@ -396,6 +450,7 @@ export async function getQids({
   tags = [],
   categories,
   statuses,
+  yearScope,
 }: {
   sev?: string[] | undefined;
   team?: string | undefined;
@@ -403,9 +458,11 @@ export async function getQids({
   tags?: number[];
   categories?: string[] | undefined;
   statuses?: string[] | undefined;
+  yearScope?: string | undefined;
 }): Promise<QidRow[]> {
   const catFilter = categoriesFilterSql(categories);
   const statusFilter = statusesFilterSql(statuses);
+  const yearFilter = yearFilterSql(yearScope);
 
   if (
     (!team || team === "Todas") &&
@@ -413,7 +470,8 @@ export async function getQids({
     !q &&
     !categories &&
     !statuses &&
-    tags.length === 0
+    tags.length === 0 &&
+    (!yearScope || yearScope === "all")
   ) {
     const rows = await sql`SELECT * FROM mv_top_qids`;
     return rows.map((r) => ({
@@ -463,6 +521,7 @@ export async function getQids({
       ${qFilter}
       ${catFilter}
       ${statusFilter}
+      ${yearFilter}
     GROUP BY v."QID", ${teamExpr}, COALESCE(kb.category, 'Unknown'), ${severityLabelExpr()}
     ORDER BY COUNT(*) DESC
     LIMIT 120
@@ -496,12 +555,14 @@ export async function getVulnerabilityStats({
   categories,
   statuses,
   q,
+  yearScope,
 }: {
   team?: string | undefined;
   tags?: number[];
   categories?: string[] | undefined;
   statuses?: string[] | undefined;
   q?: string | undefined;
+  yearScope?: string | undefined;
 }): Promise<VulnerabilityStats> {
   const cte = assetCteSql(team, tags);
   const qFilter = q
@@ -509,6 +570,7 @@ export async function getVulnerabilityStats({
     : sql``;
   const catFilter = categoriesFilterSql(categories);
   const statusFilter = statusesFilterSql(statuses);
+  const yearFilter = yearFilterSql(yearScope);
 
   const [row] = await sql`
     ${cte}
@@ -527,6 +589,7 @@ export async function getVulnerabilityStats({
         ${qFilter}
         ${catFilter}
         ${statusFilter}
+        ${yearFilter}
     ),
     base_for_categories AS (
       SELECT COALESCE(kb.category, 'Unknown') as category
@@ -537,6 +600,7 @@ export async function getVulnerabilityStats({
         AND v."Severity"::int IN (1,2,3,4,5)
         ${qFilter}
         ${statusFilter}
+        ${yearFilter}
     )
     SELECT
       (SELECT COUNT(*)::int FROM base) as "total",
@@ -596,12 +660,14 @@ export async function getAssets({
   team,
   q,
   tags = [],
+  yearScope,
 }: {
   team?: string | undefined;
   q?: string | undefined;
   tags?: number[];
+  yearScope?: string | undefined;
 }): Promise<AssetRow[]> {
-  if (tags.length === 0 && (!team || team === "Todas") && !q) {
+  if (tags.length === 0 && (!team || team === "Todas") && !q && (!yearScope || yearScope === "all")) {
     const rows = await sql`SELECT * FROM mv_top_assets`;
     return rows.map((r) => ({
       ip: r["ip"],
@@ -617,6 +683,7 @@ export async function getAssets({
   const qFilter = q
     ? sql`AND (a."IP" ILIKE ${`%${q}%`} OR a."DNS" ILIKE ${`%${q}%`} OR a."OS" ILIKE ${`%${q}%`})`
     : sql``;
+  const yearFilter = yearFilterSql(yearScope);
   const cte = assetCteSql(team, tags, sql`, a."IP", a."DNS", a."OS"`);
 
   const rows = await sql`
@@ -634,6 +701,7 @@ export async function getAssets({
     WHERE ${statusFilterSql()}
       AND v."Severity"::int IN (1,2,3,4,5)
       ${qFilter}
+      ${yearFilter}
     GROUP BY a."IP", a."DNS", a."OS", ${extractTeamExpr()}
     ORDER BY vulns DESC
     LIMIT 100

@@ -4,7 +4,7 @@ import { z } from "zod";
 const tagsSchema = z.array(z.coerce.number()).default([]);
 
 export const fetchTeamData = createServerFn({ method: "GET" })
-  .validator(z.object({ team: z.string(), tags: tagsSchema }))
+  .validator(z.object({ team: z.string(), tags: tagsSchema, yearScope: z.string().optional() }))
   .handler(async ({ data }) => {
     const { getTeamData } = await import("../server/queries.server");
     return await getTeamData(data);
@@ -17,10 +17,12 @@ export const fetchOverview = createServerFn({ method: "GET" })
     return await getOverview(data);
   });
 
-export const fetchAllTeamsData = createServerFn({ method: "GET" }).handler(async () => {
-  const { getAllTeamsData } = await import("../server/queries.server");
-  return await getAllTeamsData();
-});
+export const fetchAllTeamsData = createServerFn({ method: "GET" })
+  .validator(z.object({ yearScope: z.string().optional() }))
+  .handler(async ({ data }) => {
+    const { getAllTeamsData } = await import("../server/queries.server");
+    return await getAllTeamsData(data);
+  });
 
 const qidsFilterSchema = z.object({
   sev: z.array(z.string()).optional(),
@@ -29,6 +31,7 @@ const qidsFilterSchema = z.object({
   tags: tagsSchema,
   categories: z.array(z.string()).optional(),
   statuses: z.array(z.string()).optional(),
+  yearScope: z.string().optional(),
 });
 
 export const fetchQids = createServerFn({ method: "GET" })
@@ -42,6 +45,7 @@ const assetsFilterSchema = z.object({
   team: z.string().optional(),
   q: z.string().optional(),
   tags: tagsSchema,
+  yearScope: z.string().optional(),
 });
 
 export const fetchAssets = createServerFn({ method: "GET" })
@@ -77,6 +81,7 @@ const statsFilterSchema = z.object({
   categories: z.array(z.string()).optional(),
   statuses: z.array(z.string()).optional(),
   q: z.string().optional(),
+  yearScope: z.string().optional(),
 });
 
 export const fetchVulnerabilityStats = createServerFn({ method: "GET" })

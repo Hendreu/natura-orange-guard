@@ -118,22 +118,22 @@ export const overviewQueryOptions = (team: string, tags: number[] = []) =>
     queryFn: () => fetchTeamData({ data: { team, tags } }),
   });
 
-export const overviewAllQueryOptions = (tags: number[] = []) =>
+export const overviewAllQueryOptions = (tags: number[] = [], yearScope?: string) =>
   queryOptions({
-    queryKey: ["overview-all", tags],
+    queryKey: ["overview-all", tags, yearScope],
     queryFn: () => fetchOverview({ data: { tags } }),
   });
 
-export const squadsQueryOptions = () =>
+export const squadsQueryOptions = (yearScope?: string) =>
   queryOptions({
-    queryKey: ["squads"],
-    queryFn: () => fetchAllTeamsData({}),
+    queryKey: ["squads", yearScope],
+    queryFn: () => fetchAllTeamsData({ data: { yearScope } }),
   });
 
-export const slaQueryOptions = () =>
+export const slaQueryOptions = (yearScope?: string) =>
   queryOptions({
-    queryKey: ["sla"],
-    queryFn: () => fetchAllTeamsData({}),
+    queryKey: ["sla", yearScope],
+    queryFn: () => fetchAllTeamsData({ data: { yearScope } }),
   });
 
 export const qidsQueryOptions = (filters: {
@@ -143,13 +143,19 @@ export const qidsQueryOptions = (filters: {
   tags?: number[];
   categories?: string[];
   statuses?: string[];
+  yearScope?: string;
 }) =>
   queryOptions({
     queryKey: ["qids", filters],
     queryFn: () => fetchQids({ data: filters }),
   });
 
-export const assetsQueryOptions = (filters: { team?: string; q?: string; tags?: number[] }) =>
+export const assetsQueryOptions = (filters: {
+  team?: string;
+  q?: string;
+  tags?: number[];
+  yearScope?: string;
+}) =>
   queryOptions({
     queryKey: ["assets", filters],
     queryFn: () => fetchAssets({ data: filters }),
@@ -255,6 +261,7 @@ export const vulnerabilityStatsQueryOptions = (filters: {
   categories?: string[];
   statuses?: string[];
   q?: string;
+  yearScope?: string;
 }) =>
   queryOptions({
     queryKey: ["vulnerability-stats", filters],

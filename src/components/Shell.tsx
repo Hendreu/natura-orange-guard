@@ -4,6 +4,7 @@ import type { ReactNode } from "react";
 import { Activity, Boxes, Bug, Cloud, FileBarChart, Gauge, ShieldHalf, Timer } from "lucide-react";
 import { lastSyncQueryOptions } from "@/lib/sla-data";
 import { TagFilter } from "@/components/TagFilter";
+import { YearScopeFilter } from "@/components/YearScopeFilter";
 
 const nav = [
   { to: "/", label: "Visão geral", icon: Gauge },
@@ -88,7 +89,10 @@ export function Shell({
           </h1>
           <div className="mt-2 flex flex-col gap-2 sm:flex-row sm:items-end sm:justify-between">
             <p className="text-sm text-muted-foreground">{subtitle}</p>
-            <TagFilter />
+            <div className="flex items-center gap-2">
+              <YearScopeFilter />
+              <TagFilter />
+            </div>
           </div>
           <nav className="mt-4 flex flex-wrap gap-2 lg:hidden">
             {nav.map((n) => (

@@ -30,6 +30,7 @@ type VulnSearch = {
   tags?: number[] | undefined;
   categories?: string[] | undefined;
   statuses?: string[] | undefined;
+  yearScope?: "current" | "slipped" | "all" | undefined;
 };
 
 const parseArray = (value: unknown): string[] | undefined => {
@@ -55,6 +56,10 @@ export const Route = createFileRoute("/vulnerabilidades")({
     tags: parseNumberArray(search["tags"]),
     categories: parseArray(search["categories"]),
     statuses: parseArray(search["statuses"]),
+    yearScope:
+      search["yearScope"] === "current" || search["yearScope"] === "slipped" || search["yearScope"] === "all"
+        ? search["yearScope"]
+        : undefined,
   }),
   head: () => ({
     meta: [
@@ -83,6 +88,7 @@ function Vulnerabilidades() {
   const selectedSevs = useMemo(() => search.sev ?? [], [search.sev]);
   const categories = useMemo(() => search.categories ?? [], [search.categories]);
   const statuses = useMemo(() => search.statuses ?? defaultStatuses, [search.statuses]);
+  const yearScope = search.yearScope ?? "current";
 
   // Draft state: edits happen locally until user clicks "Aplicar"
   const [draftTeam, setDraftTeam] = useState(team);
@@ -138,13 +144,14 @@ function Vulnerabilidades() {
     setDraftCategories([]);
     setDraftStatuses(defaultStatuses);
     navigate({
-      search: () => ({
+      search: (prev: VulnSearch) => ({
         q: undefined,
         sev: undefined,
         team: undefined,
         tags: undefined,
         categories: undefined,
         statuses: undefined,
+        yearScope: prev.yearScope,
       }),
     });
   };
@@ -160,11 +167,11 @@ function Vulnerabilidades() {
     isLoading,
     isError,
   } = useQuery(
-    qidsQueryOptions({ sev: selectedSevs, team, q: debouncedQ, tags, categories, statuses }),
+    qidsQueryOptions({ sev: selectedSevs, team, q: debouncedQ, tags, categories, statuses, yearScope }),
   );
 
   const { data: stats, isLoading: statsLoading } = useQuery(
-    vulnerabilityStatsQueryOptions({ team, tags, categories, statuses, q: debouncedQ }),
+    vulnerabilityStatsQueryOptions({ team, tags, categories, statuses, q: debouncedQ, yearScope }),
   );
 
   const severityOptions = useMemo(() => {
