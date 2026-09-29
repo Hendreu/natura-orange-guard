@@ -249,6 +249,7 @@ export const reportsQueryOptions = (filters: {
   team?: string;
   os?: string;
   tags?: number[];
+  statuses?: string[];
   yearScope?: string;
 }) =>
   queryOptions({

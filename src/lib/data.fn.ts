@@ -66,6 +66,7 @@ const reportsFilterSchema = z.object({
   team: z.string().optional(),
   os: z.string().optional(),
   tags: tagsSchema,
+  statuses: z.array(z.string()).optional(),
   yearScope: z.string().optional(),
 });
 

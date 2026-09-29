@@ -41,7 +41,7 @@ import {
   teamNames,
   type ReportData,
 } from "@/lib/sla-data";
-import { TEAM_OPTIONS } from "@/lib/constants";
+import { ACTIVE_STATUSES, TEAM_OPTIONS } from "@/lib/constants";
 import { parseNumberArray } from "@/lib/search";
 
 type RelatoriosSearch = {
@@ -50,6 +50,7 @@ type RelatoriosSearch = {
   q?: string | undefined;
   tags?: number[] | undefined;
   yearScope?: "current" | "slipped" | "all" | undefined;
+  includeFixed?: boolean | undefined;
 };
 
 export const Route = createFileRoute("/relatorios")({
@@ -62,6 +63,7 @@ export const Route = createFileRoute("/relatorios")({
       search["yearScope"] === "current" || search["yearScope"] === "slipped" || search["yearScope"] === "all"
         ? search["yearScope"]
         : undefined,
+    includeFixed: search["includeFixed"] === true || search["includeFixed"] === "true" ? true : undefined,
   }),
   head: () => ({
     meta: [
@@ -142,15 +144,18 @@ function Relatorios() {
   }, [debouncedOs, os, navigate]);
 
   const yearScope = search.yearScope ?? "current";
+  const includeFixed = search.includeFixed ?? true;
+  const statuses = includeFixed ? undefined : [...ACTIVE_STATUSES];
 
   const filters = useMemo(
     () => ({
       ...(team !== "Todas" ? { team } : {}),
       ...(os ? { os } : {}),
       ...(yearScope !== "all" ? { yearScope } : {}),
+      ...(statuses ? { statuses } : {}),
       tags: search.tags ?? [],
     }),
-    [team, os, yearScope, search.tags],
+    [team, os, yearScope, statuses, search.tags],
   );
   const { data, isLoading, isError } = useQuery(reportsQueryOptions(filters));
 
@@ -205,6 +210,15 @@ function Relatorios() {
         q={q}
         qInput={qInput}
         setQInput={setQInput}
+        includeFixed={includeFixed}
+        setIncludeFixed={(v) =>
+          navigate({
+            search: (prev: RelatoriosSearch) => ({
+              ...prev,
+              includeFixed: v ? true : undefined,
+            }),
+          })
+        }
       />
 
       <section className="mb-6 grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
@@ -232,7 +246,7 @@ function Relatorios() {
           icon={ShieldAlert}
           label="Vulnerabilidades"
           value={fmt(data.kpis.totalVulns)}
-          sub="ativas no escopo filtrado"
+          sub={includeFixed ? "no escopo filtrado" : "ativas no escopo filtrado"}
           tone="default"
         />
         <KpiCard
@@ -285,6 +299,8 @@ function FilterBar({
   q,
   qInput,
   setQInput,
+  includeFixed,
+  setIncludeFixed,
 }: {
   team: string;
   setTeam: (t: string) => void;
@@ -293,6 +309,8 @@ function FilterBar({
   q: string;
   qInput: string;
   setQInput: (s: string) => void;
+  includeFixed: boolean;
+  setIncludeFixed: (v: boolean) => void;
 }) {
   const navigate = useNavigate({ from: "/relatorios" });
 
@@ -300,6 +318,7 @@ function FilterBar({
     team !== "Todas" ? { key: "team" as const, label: `Time: ${team}` } : null,
     os ? { key: "os" as const, label: `SO: ${os}` } : null,
     q ? { key: "q" as const, label: `Busca: ${q}` } : null,
+    !includeFixed ? { key: "includeFixed" as const, label: "Sem corrigidas" } : null,
   ].filter(Boolean) as { key: keyof RelatoriosSearch; label: string }[];
 
   return (
@@ -312,9 +331,6 @@ function FilterBar({
               <SelectValue />
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value="Todas" className="text-xs">
-                Todas
-              </SelectItem>
               {TEAM_OPTIONS.map((opt) => (
                 <SelectItem key={opt.value} value={opt.value} className="text-xs">
                   {opt.label}
@@ -348,6 +364,16 @@ function FilterBar({
             />
           </div>
         </div>
+
+        <label className="flex cursor-pointer items-center gap-2 pb-1">
+          <input
+            type="checkbox"
+            checked={includeFixed}
+            onChange={(e) => setIncludeFixed(e.target.checked)}
+            className="h-4 w-4 rounded border-border bg-input text-primary focus:ring-ring"
+          />
+          <span className="text-xs text-foreground">Incluir corrigidas</span>
+        </label>
       </div>
 
       {activeFilters.length > 0 && (
@@ -378,6 +404,7 @@ function FilterBar({
                   os: undefined,
                   q: undefined,
                   tags: undefined,
+                  includeFixed: undefined,
                   yearScope: prev.yearScope,
                 }),
               })

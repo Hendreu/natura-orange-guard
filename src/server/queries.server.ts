@@ -1039,14 +1039,22 @@ export async function getReports({
   team,
   os,
   tags = [],
+  statuses,
   yearScope,
 }: {
   team?: string | undefined;
   os?: string | undefined;
   tags?: number[];
+  statuses?: string[] | undefined;
   yearScope?: string | undefined;
 }): Promise<ReportData> {
-  if (tags.length === 0 && !team && !os && (yearScope === "current" || yearScope === undefined)) {
+  if (
+    tags.length === 0 &&
+    !team &&
+    !os &&
+    !statuses &&
+    (yearScope === "current" || yearScope === undefined)
+  ) {
     return loadReportsFromViews({
       summary: "mv_report_summary_current_year",
       os: "mv_report_os_current_year",
@@ -1057,7 +1065,7 @@ export async function getReports({
     });
   }
 
-  if (tags.length === 0 && !team && !os && yearScope === "all") {
+  if (tags.length === 0 && !team && !os && !statuses && yearScope === "all") {
     return loadReportsFromViews({
       summary: "mv_report_summary",
       os: "mv_report_os",
@@ -1070,6 +1078,7 @@ export async function getReports({
 
   const osFilter = os ? sql`AND a."OS" ILIKE ${`%${os}%`}` : sql``;
   const yearFilter = yearFilterSql(yearScope);
+  const statusFilter = statusesFilterSql(statuses);
   const cte = assetCteSql(team, tags, sql`, a."IP", a."DNS", a."OS"`);
 
   const [kpis] = await sql`
@@ -1080,8 +1089,9 @@ export async function getReports({
       COUNT(*)::int as "totalVulns"
     FROM vulnerabilities v
     JOIN filtered_assets a ON v."QG_HostID" = a."QG_HostID"
-    WHERE ${statusFilterSql()}
+    WHERE TRUE
       AND v."Severity"::int IN (1,2,3,4,5)
+      ${statusFilter}
       ${osFilter}
       ${yearFilter}
   `;
@@ -1095,8 +1105,9 @@ export async function getReports({
       COUNT(*) FILTER (WHERE v."Severity"::int = 5)::int as "critical"
     FROM vulnerabilities v
     JOIN filtered_assets a ON v."QG_HostID" = a."QG_HostID"
-    WHERE ${statusFilterSql()}
+    WHERE TRUE
       AND v."Severity"::int IN (1,2,3,4,5)
+      ${statusFilter}
       ${osFilter}
       ${yearFilter}
     GROUP BY a."OS"
@@ -1114,8 +1125,9 @@ export async function getReports({
     FROM vulnerabilities v
     JOIN filtered_assets a ON v."QG_HostID" = a."QG_HostID"
     LEFT JOIN kb_summary kb ON v."QID" = kb.qid
-    WHERE ${statusFilterSql()}
+    WHERE TRUE
       AND v."Severity"::int IN (1,2,3,4,5)
+      ${statusFilter}
       ${osFilter}
       ${yearFilter}
     GROUP BY v."QID", ${severityLabelExpr()}
@@ -1132,8 +1144,9 @@ export async function getReports({
     FROM vulnerabilities v
     JOIN filtered_assets a ON v."QG_HostID" = a."QG_HostID"
     LEFT JOIN kb_summary kb ON v."QID" = kb.qid
-    WHERE ${statusFilterSql()}
+    WHERE TRUE
       AND v."Severity"::int IN (1,2,3,4,5)
+      ${statusFilter}
       ${osFilter}
       ${yearFilter}
     GROUP BY COALESCE(kb.category, 'Unknown'), ${severityLabelExpr()}
@@ -1153,8 +1166,9 @@ export async function getReports({
       COUNT(*) FILTER (WHERE v."Severity"::int = 5)::int as "critical"
     FROM vulnerabilities v
     JOIN filtered_assets a ON v."QG_HostID" = a."QG_HostID"
-    WHERE ${statusFilterSql()}
+    WHERE TRUE
       AND v."Severity"::int IN (1,2,3,4,5)
+      ${statusFilter}
       ${osFilter}
       ${yearFilter}
     GROUP BY a."QG_HostID", a."DNS", a."IP", a."OS", a.team
@@ -1171,8 +1185,9 @@ export async function getReports({
       COUNT(DISTINCT a."QG_HostID") FILTER (WHERE v."Severity"::int = 5)::int as "critical"
     FROM vulnerabilities v
     JOIN filtered_assets a ON v."QG_HostID" = a."QG_HostID"
-    WHERE ${statusFilterSql()}
+    WHERE TRUE
       AND v."Severity"::int IN (1,2,3,4,5)
+      ${statusFilter}
       ${osFilter}
       ${yearFilter}
     GROUP BY ${extractTeamExpr()}
