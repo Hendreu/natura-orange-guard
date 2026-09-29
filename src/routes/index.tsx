@@ -179,7 +179,7 @@ function Overview() {
   return (
     <Shell
       title="Visão geral"
-      subtitle="Comparativo semanal — Semana 2 vs Semana 3 de Julho // base consolidada Qualys"
+      subtitle="Visão consolidada de todos os dados Qualys"
     >
       {/* Scope bar */}
       <section className="mb-6 flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
