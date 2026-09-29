@@ -49,6 +49,7 @@ type RelatoriosSearch = {
   os?: string | undefined;
   q?: string | undefined;
   tags?: number[] | undefined;
+  yearScope?: "current" | "slipped" | "all" | undefined;
 };
 
 export const Route = createFileRoute("/relatorios")({
@@ -57,6 +58,10 @@ export const Route = createFileRoute("/relatorios")({
     os: typeof search["os"] === "string" ? search["os"] : undefined,
     q: typeof search["q"] === "string" ? search["q"] : undefined,
     tags: parseNumberArray(search["tags"]),
+    yearScope:
+      search["yearScope"] === "current" || search["yearScope"] === "slipped" || search["yearScope"] === "all"
+        ? search["yearScope"]
+        : undefined,
   }),
   head: () => ({
     meta: [
@@ -136,13 +141,16 @@ function Relatorios() {
     }
   }, [debouncedOs, os, navigate]);
 
+  const yearScope = search.yearScope ?? "current";
+
   const filters = useMemo(
     () => ({
-      team: team === "Todas" ? undefined : team,
-      os: os || undefined,
+      ...(team !== "Todas" ? { team } : {}),
+      ...(os ? { os } : {}),
+      ...(yearScope !== "all" ? { yearScope } : {}),
       tags: search.tags ?? [],
     }),
-    [team, os, search.tags],
+    [team, os, yearScope, search.tags],
   );
   const { data, isLoading, isError } = useQuery(reportsQueryOptions(filters));
 
@@ -262,7 +270,7 @@ function Relatorios() {
       </nav>
 
       {activeTab === "overview" && <OverviewTab data={data} />}
-      {activeTab === "assets" && <AssetsTab assets={filteredAssets} q={debouncedQ} />}
+      {activeTab === "assets" && <AssetsTab assets={filteredAssets} q={debouncedQ} yearScope={yearScope} />}
       {activeTab === "controls" && <ControlsTab data={data} />}
       {activeTab === "teams" && <TeamsTab teams={data.teamRows} />}
     </Shell>
@@ -365,11 +373,12 @@ function FilterBar({
           <button
             onClick={() =>
               navigate({
-                search: () => ({
+                search: (prev: RelatoriosSearch) => ({
                   team: undefined,
                   os: undefined,
                   q: undefined,
                   tags: undefined,
+                  yearScope: prev.yearScope,
                 }),
               })
             }
@@ -536,7 +545,7 @@ function OverviewTab({ data }: { data: ReportData }) {
   );
 }
 
-function AssetsTab({ assets, q }: { assets: ReportData["assets"]; q: string }) {
+function AssetsTab({ assets, q, yearScope }: { assets: ReportData["assets"]; q: string; yearScope: "current" | "slipped" | "all" }) {
   const navigate = useNavigate({ from: "/relatorios" });
   return (
     <section className="slab corner-cut p-5">
@@ -560,6 +569,7 @@ function AssetsTab({ assets, q }: { assets: ReportData["assets"]; q: string }) {
                   os: undefined,
                   q: undefined,
                   tags: undefined,
+                  yearScope: yearScope === "current" ? undefined : yearScope,
                 }),
               })
             }

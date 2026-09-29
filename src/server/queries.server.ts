@@ -884,12 +884,14 @@ export async function getReports({
   team,
   os,
   tags = [],
+  yearScope,
 }: {
   team?: string | undefined;
   os?: string | undefined;
   tags?: number[];
+  yearScope?: string | undefined;
 }): Promise<ReportData> {
-  if (tags.length === 0 && !team && !os) {
+  if (tags.length === 0 && !team && !os && (!yearScope || yearScope === "all")) {
     const [kpis] = await sql`SELECT * FROM mv_report_summary`;
     const osRows = await sql`SELECT * FROM mv_report_os`;
     const topQids = await sql`SELECT * FROM mv_report_topqids`;
@@ -963,6 +965,7 @@ export async function getReports({
   }
 
   const osFilter = os ? sql`AND a."OS" ILIKE ${`%${os}%`}` : sql``;
+  const yearFilter = yearFilterSql(yearScope);
   const cte = assetCteSql(team, tags, sql`, a."IP", a."DNS", a."OS"`);
 
   const [kpis] = await sql`
@@ -976,6 +979,7 @@ export async function getReports({
     WHERE ${statusFilterSql()}
       AND v."Severity"::int IN (1,2,3,4,5)
       ${osFilter}
+      ${yearFilter}
   `;
 
   const osRows = await sql`
@@ -990,6 +994,7 @@ export async function getReports({
     WHERE ${statusFilterSql()}
       AND v."Severity"::int IN (1,2,3,4,5)
       ${osFilter}
+      ${yearFilter}
     GROUP BY a."OS"
     ORDER BY vulns DESC
     LIMIT 20
@@ -1008,6 +1013,7 @@ export async function getReports({
     WHERE ${statusFilterSql()}
       AND v."Severity"::int IN (1,2,3,4,5)
       ${osFilter}
+      ${yearFilter}
     GROUP BY v."QID", ${severityLabelExpr()}
     ORDER BY COUNT(*) DESC
     LIMIT 25
@@ -1025,6 +1031,7 @@ export async function getReports({
     WHERE ${statusFilterSql()}
       AND v."Severity"::int IN (1,2,3,4,5)
       ${osFilter}
+      ${yearFilter}
     GROUP BY COALESCE(kb.category, 'Unknown'), ${severityLabelExpr()}
     ORDER BY COUNT(*) DESC
     LIMIT 20
@@ -1045,6 +1052,7 @@ export async function getReports({
     WHERE ${statusFilterSql()}
       AND v."Severity"::int IN (1,2,3,4,5)
       ${osFilter}
+      ${yearFilter}
     GROUP BY a."QG_HostID", a."DNS", a."IP", a."OS", a.team
     ORDER BY vulns DESC
     LIMIT 100
@@ -1062,6 +1070,7 @@ export async function getReports({
     WHERE ${statusFilterSql()}
       AND v."Severity"::int IN (1,2,3,4,5)
       ${osFilter}
+      ${yearFilter}
     GROUP BY ${extractTeamExpr()}
     ORDER BY vulns DESC
     LIMIT 50

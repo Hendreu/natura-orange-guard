@@ -246,9 +246,10 @@ export type ReportData = {
 };
 
 export const reportsQueryOptions = (filters: {
-  team?: string | undefined;
-  os?: string | undefined;
+  team?: string;
+  os?: string;
   tags?: number[];
+  yearScope?: string;
 }) =>
   queryOptions({
     queryKey: ["reports", filters],

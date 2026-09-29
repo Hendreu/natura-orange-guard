@@ -66,6 +66,7 @@ const reportsFilterSchema = z.object({
   team: z.string().optional(),
   os: z.string().optional(),
   tags: tagsSchema,
+  yearScope: z.string().optional(),
 });
 
 export const fetchReports = createServerFn({ method: "GET" })
