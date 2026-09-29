@@ -233,7 +233,25 @@ export async function getTeamSla({
   tags?: number[];
   yearScope?: string | undefined;
 }) {
-  if (tags.length === 0 && (!team || team === "Todas") && (!yearScope || yearScope === "all")) {
+  if (tags.length === 0 && (!team || team === "Todas") && (yearScope === "current" || yearScope === undefined)) {
+    const rows =
+      await sql`SELECT sev, "DentroSLA_Corr", "DentroSLA_NaoCorr", "ForaSLA_Corr", "ForaSLA_NaoCorr" FROM mv_sla_current_year`;
+    const result: Record<string, SlaBucket> = {};
+    for (const s of SEVERITY_ORDER) {
+      const row = rows.find((r) => r["sev"] === s);
+      result[s] = row
+        ? {
+            DentroSLA_Corr: row["DentroSLA_Corr"],
+            DentroSLA_NaoCorr: row["DentroSLA_NaoCorr"],
+            ForaSLA_Corr: row["ForaSLA_Corr"],
+            ForaSLA_NaoCorr: row["ForaSLA_NaoCorr"],
+          }
+        : { DentroSLA_Corr: 0, DentroSLA_NaoCorr: 0, ForaSLA_Corr: 0, ForaSLA_NaoCorr: 0 };
+    }
+    return result;
+  }
+
+  if (tags.length === 0 && (!team || team === "Todas") && yearScope === "all") {
     const rows =
       await sql`SELECT sev, "DentroSLA_Corr", "DentroSLA_NaoCorr", "ForaSLA_Corr", "ForaSLA_NaoCorr" FROM mv_sla`;
     const result: Record<string, SlaBucket> = {};
@@ -251,7 +269,26 @@ export async function getTeamSla({
     return result;
   }
 
-  const viewKey = tags.length === 0 && (!yearScope || yearScope === "all") ? teamViewKey(team) : undefined;
+  const currentViewKey = tags.length === 0 && (yearScope === "current" || yearScope === undefined) ? teamViewKey(team) : undefined;
+  if (currentViewKey) {
+    const rows =
+      await sql`SELECT sev, "DentroSLA_Corr", "DentroSLA_NaoCorr", "ForaSLA_Corr", "ForaSLA_NaoCorr" FROM mv_team_sla_current_year WHERE team = ${currentViewKey.team} AND scope = ${currentViewKey.scope}`;
+    const result: Record<string, SlaBucket> = {};
+    for (const s of SEVERITY_ORDER) {
+      const row = rows.find((r) => r["sev"] === s);
+      result[s] = row
+        ? {
+            DentroSLA_Corr: row["DentroSLA_Corr"],
+            DentroSLA_NaoCorr: row["DentroSLA_NaoCorr"],
+            ForaSLA_Corr: row["ForaSLA_Corr"],
+            ForaSLA_NaoCorr: row["ForaSLA_NaoCorr"],
+          }
+        : { DentroSLA_Corr: 0, DentroSLA_NaoCorr: 0, ForaSLA_Corr: 0, ForaSLA_NaoCorr: 0 };
+    }
+    return result;
+  }
+
+  const viewKey = tags.length === 0 && yearScope === "all" ? teamViewKey(team) : undefined;
   if (viewKey) {
     const rows =
       await sql`SELECT sev, "DentroSLA_Corr", "DentroSLA_NaoCorr", "ForaSLA_Corr", "ForaSLA_NaoCorr" FROM mv_team_sla WHERE team = ${viewKey.team} AND scope = ${viewKey.scope}`;
@@ -471,7 +508,32 @@ export async function getQids({
     !categories &&
     !statuses &&
     tags.length === 0 &&
-    (!yearScope || yearScope === "all")
+    (yearScope === "current" || yearScope === undefined)
+  ) {
+    const rows = await sql`SELECT * FROM mv_top_qids_current_year`;
+    return rows.map((r) => ({
+      qid: r["qid"],
+      title: r["title"] ?? "",
+      sev: r["sev"],
+      team: r["team"],
+      action: r["action"],
+      count: r["count"],
+      corr: r["corr"],
+      naoCorr: r["naoCorr"],
+      age: r["age"],
+      solution: r["solution"] ?? "",
+      status: r["status"] ?? "",
+    }));
+  }
+
+  if (
+    (!team || team === "Todas") &&
+    (!sev || sev.length === 0) &&
+    !q &&
+    !categories &&
+    !statuses &&
+    tags.length === 0 &&
+    yearScope === "all"
   ) {
     const rows = await sql`SELECT * FROM mv_top_qids`;
     return rows.map((r) => ({
@@ -667,7 +729,20 @@ export async function getAssets({
   tags?: number[];
   yearScope?: string | undefined;
 }): Promise<AssetRow[]> {
-  if (tags.length === 0 && (!team || team === "Todas") && !q && (!yearScope || yearScope === "all")) {
+  if (tags.length === 0 && (!team || team === "Todas") && !q && (yearScope === "current" || yearScope === undefined)) {
+    const rows = await sql`SELECT * FROM mv_top_assets_current_year`;
+    return rows.map((r) => ({
+      ip: r["ip"],
+      dns: r["dns"],
+      os: r["os"],
+      team: r["team"],
+      vulns: r["vulns"],
+      maxAge: r["maxAge"],
+      crit: r["crit"],
+    }));
+  }
+
+  if (tags.length === 0 && (!team || team === "Todas") && !q && yearScope === "all") {
     const rows = await sql`SELECT * FROM mv_top_assets`;
     return rows.map((r) => ({
       ip: r["ip"],
@@ -880,6 +955,86 @@ export type ReportData = {
   }[];
 };
 
+async function loadReportsFromViews(views: {
+  summary: string;
+  os: string;
+  topqids: string;
+  categories: string;
+  assets: string;
+  teamrows: string;
+}): Promise<ReportData> {
+  const [kpis] = await sql`SELECT * FROM ${sql.unsafe(views.summary)}`;
+  const osRows = await sql`SELECT * FROM ${sql.unsafe(views.os)}`;
+  const topQids = await sql`SELECT * FROM ${sql.unsafe(views.topqids)}`;
+  const categories = await sql`SELECT * FROM ${sql.unsafe(views.categories)}`;
+  const assets = await sql`SELECT * FROM ${sql.unsafe(views.assets)}`;
+  const teamRows = await sql`SELECT * FROM ${sql.unsafe(views.teamrows)}`;
+
+  const totalAssets = (kpis?.["totalAssets"] as number) ?? 0;
+  const assetsWithCritical = (kpis?.["assetsWithCritical"] as number) ?? 0;
+  const complianceScore = totalAssets
+    ? Math.round(((totalAssets - assetsWithCritical) / totalAssets) * 100)
+    : 0;
+
+  return {
+    kpis: {
+      totalAssets,
+      assetsWithCritical,
+      complianceScore,
+      totalVulns: (kpis?.["totalVulns"] as number) ?? 0,
+    },
+    osRows: osRows.map((r) => {
+      const assets = (r["assets"] as number) ?? 0;
+      const critical = (r["critical"] as number) ?? 0;
+      return {
+        os: (r["os"] as string) ?? "Unknown",
+        assets,
+        vulns: (r["vulns"] as number) ?? 0,
+        critical,
+        compliancePct: assets ? Math.round(((assets - critical) / assets) * 100) : 0,
+      };
+    }),
+    topQids: topQids.map((r) => ({
+      qid: (r["qid"] as number) ?? 0,
+      title: (r["title"] as string) ?? "Sem título",
+      sev: (r["sev"] as string) ?? "Baixa",
+      count: (r["count"] as number) ?? 0,
+    })),
+    categories: categories.map((r) => ({
+      name: (r["name"] as string) ?? "Unknown",
+      count: (r["count"] as number) ?? 0,
+      sev: (r["sev"] as string) ?? "Baixa",
+    })),
+    assets: assets.map((r) => {
+      const assetVulns = (r["vulns"] as number) ?? 0;
+      const critical = (r["critical"] as number) ?? 0;
+      return {
+        qgHostId: (r["qgHostId"] as string) ?? "",
+        hostname: (r["hostname"] as string) ?? "",
+        ip: (r["ip"] as string) ?? "",
+        os: (r["os"] as string) ?? "Unknown",
+        team: (r["team"] as string) ?? "Unknown",
+        vulns: assetVulns,
+        critical,
+        compliancePct: assetVulns
+          ? Math.round(((assetVulns - critical) / assetVulns) * 100)
+          : 100,
+      };
+    }),
+    teamRows: teamRows.map((r) => {
+      const assets = (r["assets"] as number) ?? 0;
+      const critical = (r["critical"] as number) ?? 0;
+      return {
+        team: (r["team"] as string) ?? "Unknown",
+        assets,
+        vulns: (r["vulns"] as number) ?? 0,
+        critical,
+        compliancePct: assets ? Math.round(((assets - critical) / assets) * 100) : 0,
+      };
+    }),
+  };
+}
+
 export async function getReports({
   team,
   os,
@@ -891,77 +1046,26 @@ export async function getReports({
   tags?: number[];
   yearScope?: string | undefined;
 }): Promise<ReportData> {
-  if (tags.length === 0 && !team && !os && (!yearScope || yearScope === "all")) {
-    const [kpis] = await sql`SELECT * FROM mv_report_summary`;
-    const osRows = await sql`SELECT * FROM mv_report_os`;
-    const topQids = await sql`SELECT * FROM mv_report_topqids`;
-    const categories = await sql`SELECT * FROM mv_report_categories`;
-    const assets = await sql`SELECT * FROM mv_report_assets`;
-    const teamRows = await sql`SELECT * FROM mv_report_teamrows`;
+  if (tags.length === 0 && !team && !os && (yearScope === "current" || yearScope === undefined)) {
+    return loadReportsFromViews({
+      summary: "mv_report_summary_current_year",
+      os: "mv_report_os_current_year",
+      topqids: "mv_report_topqids_current_year",
+      categories: "mv_report_categories_current_year",
+      assets: "mv_report_assets_current_year",
+      teamrows: "mv_report_teamrows_current_year",
+    });
+  }
 
-    const totalAssets = (kpis?.["totalAssets"] as number) ?? 0;
-    const assetsWithCritical = (kpis?.["assetsWithCritical"] as number) ?? 0;
-    const complianceScore = totalAssets
-      ? Math.round(((totalAssets - assetsWithCritical) / totalAssets) * 100)
-      : 0;
-
-    return {
-      kpis: {
-        totalAssets,
-        assetsWithCritical,
-        complianceScore,
-        totalVulns: (kpis?.["totalVulns"] as number) ?? 0,
-      },
-      osRows: osRows.map((r) => {
-        const assets = (r["assets"] as number) ?? 0;
-        const critical = (r["critical"] as number) ?? 0;
-        return {
-          os: (r["os"] as string) ?? "Unknown",
-          assets,
-          vulns: (r["vulns"] as number) ?? 0,
-          critical,
-          compliancePct: assets ? Math.round(((assets - critical) / assets) * 100) : 0,
-        };
-      }),
-      topQids: topQids.map((r) => ({
-        qid: (r["qid"] as number) ?? 0,
-        title: (r["title"] as string) ?? "Sem título",
-        sev: (r["sev"] as string) ?? "Baixa",
-        count: (r["count"] as number) ?? 0,
-      })),
-      categories: categories.map((r) => ({
-        name: (r["name"] as string) ?? "Unknown",
-        count: (r["count"] as number) ?? 0,
-        sev: (r["sev"] as string) ?? "Baixa",
-      })),
-      assets: assets.map((r) => {
-        const assetVulns = (r["vulns"] as number) ?? 0;
-        const critical = (r["critical"] as number) ?? 0;
-        return {
-          qgHostId: (r["qgHostId"] as string) ?? "",
-          hostname: (r["hostname"] as string) ?? "",
-          ip: (r["ip"] as string) ?? "",
-          os: (r["os"] as string) ?? "Unknown",
-          team: (r["team"] as string) ?? "Unknown",
-          vulns: assetVulns,
-          critical,
-          compliancePct: assetVulns
-            ? Math.round(((assetVulns - critical) / assetVulns) * 100)
-            : 100,
-        };
-      }),
-      teamRows: teamRows.map((r) => {
-        const assets = (r["assets"] as number) ?? 0;
-        const critical = (r["critical"] as number) ?? 0;
-        return {
-          team: (r["team"] as string) ?? "Unknown",
-          assets,
-          vulns: (r["vulns"] as number) ?? 0,
-          critical,
-          compliancePct: assets ? Math.round(((assets - critical) / assets) * 100) : 0,
-        };
-      }),
-    };
+  if (tags.length === 0 && !team && !os && yearScope === "all") {
+    return loadReportsFromViews({
+      summary: "mv_report_summary",
+      os: "mv_report_os",
+      topqids: "mv_report_topqids",
+      categories: "mv_report_categories",
+      assets: "mv_report_assets",
+      teamrows: "mv_report_teamrows",
+    });
   }
 
   const osFilter = os ? sql`AND a."OS" ILIKE ${`%${os}%`}` : sql``;
