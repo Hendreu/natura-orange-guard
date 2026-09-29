@@ -89,7 +89,10 @@ export function Shell({
           </h1>
           <div className="mt-2 flex flex-col gap-2 sm:flex-row sm:items-end sm:justify-between">
             <p className="text-sm text-muted-foreground">{subtitle}</p>
-            <div className="flex items-center gap-2">
+            <div
+              className={`flex items-center gap-2 ${path === "/" ? "pointer-events-none opacity-60" : ""}`}
+              title={path === "/" ? "Filtros disponíveis nas abas Vulnerabilidades e SLA & Risco" : undefined}
+            >
               <YearScopeFilter />
               <TagFilter />
             </div>
