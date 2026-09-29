@@ -1,19 +1,22 @@
 import { Link, useRouterState } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
-import type { ReactNode } from "react";
+import { useState, type ReactNode } from "react";
 import { Activity, Boxes, Bug, Cloud, FileBarChart, Gauge, ShieldHalf, Timer } from "lucide-react";
 import { lastSyncQueryOptions } from "@/lib/sla-data";
 import { TagFilter } from "@/components/TagFilter";
 import { YearScopeFilter } from "@/components/YearScopeFilter";
 
-const nav = [
+const visibleNav = [
   { to: "/", label: "Visão geral", icon: Gauge },
   { to: "/vulnerabilidades", label: "Vulnerabilidades", icon: Bug },
   { to: "/ativos", label: "Ativos", icon: Boxes },
+  { to: "/relatorios", label: "Relatórios", icon: FileBarChart },
+];
+
+const hiddenNav = [
   { to: "/sla", label: "SLA & Risco", icon: Timer },
   { to: "/squads", label: "Squads", icon: ShieldHalf },
   { to: "/hardening", label: "Hardening", icon: Cloud },
-  { to: "/relatorios", label: "Relatórios", icon: FileBarChart },
 ];
 
 function formatSyncLabel(lastRefresh: string | null | undefined, isPending: boolean) {
@@ -36,6 +39,7 @@ export function Shell({
 }) {
   const path = useRouterState({ select: (s) => s.location.pathname });
   const { data: sync, isPending } = useQuery(lastSyncQueryOptions());
+  const [showHidden, setShowHidden] = useState(false);
 
   return (
     <div className="flex min-h-screen">
@@ -50,7 +54,7 @@ export function Shell({
           <p className="text-[10px] text-muted-foreground">Security Operations</p>
         </div>
         <nav className="flex-1 p-3">
-          {nav.map((n) => {
+          {[...visibleNav, ...(showHidden ? hiddenNav : [])].map((n) => {
             const active = path === n.to;
             const Icon = n.icon;
             return (
@@ -69,7 +73,10 @@ export function Shell({
             );
           })}
         </nav>
-        <div className="border-t border-border p-4">
+        <div
+          className="border-t border-border p-4 select-none"
+          onDoubleClick={() => setShowHidden((v) => !v)}
+        >
           <p className="flex items-center gap-2 text-[10px] text-baixa">
             <Activity size={12} /> Base sincronizada
           </p>
@@ -98,7 +105,7 @@ export function Shell({
             </div>
           </div>
           <nav className="mt-4 flex flex-wrap gap-2 lg:hidden">
-            {nav.map((n) => (
+            {[...visibleNav, ...(showHidden ? hiddenNav : [])].map((n) => (
               <Link
                 key={n.to}
                 to={n.to}
