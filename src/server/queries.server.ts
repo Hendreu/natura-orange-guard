@@ -8,6 +8,8 @@ import type {
   SlaBucket,
   TeamData,
   QidRow,
+  QidAssetsInput,
+  QidAssetsResponse,
   AssetRow,
 } from "@/lib/sla-data";
 
@@ -614,6 +616,57 @@ export async function getQids({
     solution: r["solution"] ?? "",
     status: r["Status"] ?? "",
   }));
+}
+
+export async function getQidAssets({ row, filters, page }: QidAssetsInput): Promise<QidAssetsResponse> {
+  const severityBuckets = { Crítica: [5], Alta: [4], Média: [2, 3], Baixa: [1] };
+  const severities = severityBuckets[row.sev].filter(
+    (severity) => filters.sev.length === 0 || filters.sev.includes(String(severity)),
+  );
+  const cte = assetCteSql(filters.team, filters.tags, sql`, a."IP", a."DNS", a."OS"`);
+  const teamExpr = filters.team && filters.team !== "Todas"
+    ? sql`${filters.team}` : sql`COALESCE(v.team, 'Unknown')`;
+  const search = filters.q
+    ? sql`AND (kb.title ILIKE ${`%${filters.q}%`} OR kb.category ILIKE ${`%${filters.q}%`} OR v."QID"::text ILIKE ${`%${filters.q}%`})`
+    : sql``;
+  const rows = await sql<[QidAssetsResponse]>`
+    ${cte}
+    , eligible_detections AS MATERIALIZED (
+      SELECT v."QG_HostID", v."QID", a.team, a."IP", a."DNS", a."OS"
+      FROM vulnerabilities v
+      JOIN filtered_assets a ON a."QG_HostID" = v."QG_HostID"
+      WHERE v."QID" = ${String(row.qid)}
+        AND v."Severity"::int = ANY(${severities}::int[])
+        ${statusesFilterSql(filters.statuses)}
+        ${yearFilterSql(filters.yearScope)}
+    ), qid_candidates AS MATERIALIZED (
+      SELECT DISTINCT "QID" AS qid FROM eligible_detections
+    )
+    ${qidMetadataCtesSql()}
+    , hosts AS MATERIALIZED (
+      SELECT v."QG_HostID"::text AS "qgHostId",
+        COALESCE(v."DNS", '') AS dns, COALESCE(v."IP", '') AS ip,
+        COALESCE(v."OS", '') AS os, COALESCE(v.team, 'Unknown') AS team,
+        COUNT(*)::int AS "detectionCount"
+      FROM eligible_detections v
+      LEFT JOIN qid_metadata kb ON kb.qid = v."QID"
+      WHERE ${teamExpr} = ${row.team}
+        AND COALESCE(kb.category, 'Unknown') = ${row.action}
+        ${search}
+        ${categoriesFilterSql(filters.categories)}
+      GROUP BY v."QG_HostID", v."DNS", v."IP", v."OS", v.team
+    ), host_page AS (
+      SELECT "qgHostId", dns, ip, os, team, "detectionCount" FROM hosts
+      ORDER BY "qgHostId" COLLATE "C"
+      LIMIT 50 OFFSET ${(page - 1) * 50}
+    )
+    SELECT COALESCE((SELECT jsonb_agg(to_jsonb(host_page) ORDER BY "qgHostId" COLLATE "C")
+      FROM host_page), '[]'::jsonb) AS assets,
+      (SELECT COUNT(*)::int FROM hosts) AS "totalAssets",
+      (SELECT COALESCE(SUM("detectionCount"), 0)::int FROM hosts) AS "totalDetections",
+      ${page}::int AS page, 50::int AS "pageSize"
+  `;
+  return rows[0];
 }
 
 export type VulnerabilityStats = {

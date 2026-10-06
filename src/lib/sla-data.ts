@@ -5,6 +5,7 @@ import {
   fetchOverview,
   fetchAllTeamsData,
   fetchQids,
+  fetchQidAssets,
   fetchAssets,
   fetchHardening,
   fetchReports,
@@ -80,7 +81,7 @@ export type VulnerabilityStats = {
 export type QidRow = {
   qid: number;
   title: string;
-  sev: string;
+  sev: Severity;
   team: string;
   action: string;
   count: number;
@@ -90,6 +91,48 @@ export type QidRow = {
   solution: string;
   status: string;
 };
+
+export type QidAssetsInput = {
+  readonly row: {
+    readonly qid: number;
+    readonly team: string;
+    readonly action: string;
+    readonly sev: Severity;
+  };
+  readonly filters: {
+    readonly team: string;
+    readonly sev: string[];
+    readonly q: string;
+    readonly tags: number[];
+    readonly categories: string[];
+    readonly statuses: string[];
+    readonly yearScope: "current" | "slipped" | "all";
+  };
+  readonly page: number;
+};
+
+export type QidAssetRow = {
+  readonly qgHostId: string;
+  readonly dns: string;
+  readonly ip: string;
+  readonly os: string;
+  readonly team: string;
+  readonly detectionCount: number;
+};
+
+export type QidAssetsResponse = {
+  readonly assets: QidAssetRow[];
+  readonly totalAssets: number;
+  readonly totalDetections: number;
+  readonly page: number;
+  readonly pageSize: 50;
+};
+
+export const qidAssetsQueryOptions = (input: QidAssetsInput) =>
+  queryOptions({
+    queryKey: ["qid-assets", input],
+    queryFn: () => fetchQidAssets({ data: input }),
+  });
 
 export type AssetRow = {
   ip: string;

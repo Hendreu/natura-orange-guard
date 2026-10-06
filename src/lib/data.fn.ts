@@ -1,5 +1,6 @@
 import { createServerFn } from "@tanstack/react-start";
 import { z } from "zod";
+import { SEVERITY_ORDER } from "@/lib/constants";
 
 const tagsSchema = z.array(z.coerce.number()).default([]);
 
@@ -39,6 +40,32 @@ export const fetchQids = createServerFn({ method: "GET" })
   .handler(async ({ data }) => {
     const { getQids } = await import("../server/queries.server");
     return await getQids(data);
+  });
+
+export const qidAssetsInputSchema = z.object({
+  row: z.object({
+    qid: z.number().finite().int().positive(),
+    team: z.string(),
+    action: z.string(),
+    sev: z.enum(SEVERITY_ORDER),
+  }),
+  filters: z.object({
+    team: z.string(),
+    sev: z.array(z.string().regex(/^[1-5]$/)),
+    q: z.string(),
+    tags: z.array(z.number().finite().int().positive()),
+    categories: z.array(z.string()),
+    statuses: z.array(z.string()),
+    yearScope: z.enum(["current", "slipped", "all"]),
+  }),
+  page: z.number().finite().int().positive(),
+});
+
+export const fetchQidAssets = createServerFn({ method: "GET" })
+  .validator(qidAssetsInputSchema)
+  .handler(async ({ data }) => {
+    const { getQidAssets } = await import("../server/queries.server");
+    return await getQidAssets(data);
   });
 
 const assetsFilterSchema = z.object({
