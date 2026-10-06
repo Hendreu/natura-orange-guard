@@ -22,6 +22,7 @@ import {
 } from "@/lib/sla-data";
 import { TEAM_OPTIONS } from "@/lib/constants";
 import { parseNumberArray } from "@/lib/search";
+import { displayQidTitle } from "@/lib/qid-metadata";
 
 type VulnSearch = {
   q?: string | undefined;
@@ -451,7 +452,9 @@ function Vulnerabilidades() {
                       className="cursor-pointer border-b border-border/60 hover:bg-steel"
                     >
                       <td className="px-3 py-2 font-bold text-primary">{r.qid}</td>
-                      <td className="max-w-[420px] truncate px-3 py-2">{r.title}</td>
+                      <td className="max-w-[420px] truncate px-3 py-2">
+                        {displayQidTitle(r.title)}
+                      </td>
                       <td className="px-3 py-2 text-muted-foreground">{r.team}</td>
                       <td className="px-3 py-2">
                         <span
