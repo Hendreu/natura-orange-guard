@@ -1,7 +1,17 @@
 import { Fragment, useEffect, useMemo, useState } from "react";
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
-import { Search } from "lucide-react";
+import { ChevronDown, ChevronRight, Search, SlidersHorizontal } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import {
+  Sheet,
+  SheetTrigger,
+  SheetContent,
+  SheetHeader,
+  SheetTitle,
+  SheetDescription,
+  SheetFooter,
+} from "@/components/ui/sheet";
 import {
   Select,
   SelectContent,
@@ -12,6 +22,8 @@ import {
 import { Shell } from "@/components/Shell";
 import { StatSlab } from "@/components/StatSlab";
 import { FilterChip } from "@/components/FilterChip";
+import { QidAssetList } from "@/components/QidAssetList";
+import { SolutionContent } from "@/components/SolutionContent";
 import { useDebouncedValue } from "@/hooks/use-debounced-value";
 import {
   fmt,
@@ -23,6 +35,7 @@ import {
 import { TEAM_OPTIONS } from "@/lib/constants";
 import { parseNumberArray } from "@/lib/search";
 import { displayQidTitle } from "@/lib/qid-metadata";
+import type { QidAssetsInput } from "@/lib/sla-data";
 
 type VulnSearch = {
   q?: string | undefined;
@@ -96,9 +109,22 @@ function Vulnerabilidades() {
   const [draftSevs, setDraftSevs] = useState<string[]>(selectedSevs);
   const [draftCategories, setDraftCategories] = useState<string[]>(categories);
   const [draftStatuses, setDraftStatuses] = useState<string[]>(statuses);
-  const [open, setOpen] = useState<number | null>(null);
+  const [filtersOpen, setFiltersOpen] = useState(false);
+  const [open, setOpen] = useState<{
+    readonly identity: string;
+    readonly scope: string;
+    readonly page: number;
+  } | null>(null);
   const [qInput, setQInput] = useState(q);
   const debouncedQ = useDebouncedValue(qInput, 300);
+  const filters: QidAssetsInput["filters"] = {
+    team, sev: selectedSevs, q: debouncedQ, tags, categories, statuses, yearScope,
+  };
+  const filterScope = JSON.stringify(filters);
+
+  useEffect(() => {
+    setOpen(null);
+  }, [filterScope]);
 
   // Sync draft when URL changes externally (back/forward, global filter, etc.)
   useEffect(() => {
@@ -168,7 +194,7 @@ function Vulnerabilidades() {
     isLoading,
     isError,
   } = useQuery(
-    qidsQueryOptions({ sev: selectedSevs, team, q: debouncedQ, tags, categories, statuses, yearScope }),
+    qidsQueryOptions(filters),
   );
 
   const { data: stats, isLoading: statsLoading } = useQuery(
@@ -243,13 +269,15 @@ function Vulnerabilidades() {
         <StatSlab label="Critical Vulns (QID)" value={stats?.critical ?? 0} />
       </section>
 
-      <div className="grid gap-4 lg:grid-cols-[260px_1fr]">
-        <aside className="slab space-y-6 p-4">
-          <div>
-            <span className="stencil mb-2 block text-[10px] text-muted-foreground">Busca</span>
+      <div className="space-y-4">
+        <Sheet open={filtersOpen} onOpenChange={setFiltersOpen}>
+          <div className="flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
+          <div className="w-full sm:max-w-xl sm:flex-1">
+            <label htmlFor="vulnerability-search" className="stencil mb-2 block text-[10px] text-muted-foreground">Busca</label>
             <div className="relative">
               <Search className="pointer-events-none absolute top-1/2 left-3 h-3.5 w-3.5 -translate-y-1/2 text-muted-foreground" />
               <input
+                id="vulnerability-search"
                 value={qInput}
                 onChange={(e) => setQInput(e.target.value)}
                 placeholder="QID, título ou categoria..."
@@ -257,6 +285,19 @@ function Vulnerabilidades() {
               />
             </div>
           </div>
+            <SheetTrigger asChild>
+              <Button type="button" variant="outline" className="w-full sm:w-auto">
+                <SlidersHorizontal className="h-4 w-4" aria-hidden="true" />
+                Filtros
+              </Button>
+            </SheetTrigger>
+          </div>
+          <SheetContent side="right" className="flex h-dvh w-full flex-col gap-0 overflow-hidden p-0 sm:max-w-md">
+            <SheetHeader className="shrink-0 border-b border-border p-4 pr-12 text-left">
+              <SheetTitle>Filtros</SheetTitle>
+              <SheetDescription>Selecione squad, severidade, categoria e status e aplique os filtros.</SheetDescription>
+            </SheetHeader>
+            <div className="min-h-0 flex-1 space-y-6 overflow-y-auto p-4">
 
           <div>
             <span className="stencil mb-2 block text-[10px] text-muted-foreground">Squad</span>
@@ -348,21 +389,22 @@ function Vulnerabilidades() {
             </div>
           </div>
 
-          <button
-            onClick={applyFilters}
-            disabled={!hasChanges}
-            className="stencil w-full border border-primary bg-primary px-3 py-2 text-[10px] text-primary-foreground transition-colors disabled:cursor-not-allowed disabled:border-border disabled:bg-secondary disabled:text-muted-foreground"
-          >
-            Aplicar filtros
-          </button>
-
-          <button
-            onClick={clearFilters}
-            className="stencil w-full border border-border px-3 py-2 text-[10px] text-muted-foreground transition-colors hover:border-primary hover:text-foreground"
-          >
-            Limpar tudo
-          </button>
-        </aside>
+            </div>
+            <SheetFooter className="shrink-0 flex-col gap-2 border-t border-border bg-background p-4 sm:flex-col sm:space-x-0">
+              <Button
+                type="button"
+                onClick={() => { applyFilters(); setFiltersOpen(false); }}
+                disabled={!hasChanges}
+                className="stencil w-full text-[10px]"
+              >
+                Aplicar filtros
+              </Button>
+              <Button type="button" variant="outline" onClick={clearFilters} className="stencil w-full text-[10px]">
+                Limpar tudo
+              </Button>
+            </SheetFooter>
+          </SheetContent>
+        </Sheet>
 
         <div className="slab overflow-x-auto">
           {activeFilters.length > 0 && (
@@ -409,7 +451,7 @@ function Vulnerabilidades() {
           <table className="w-full text-xs">
             <thead>
               <tr className="border-b border-border bg-secondary">
-                {["QID", "Título", "Squad", "Sev", "Status", "Vulns", "Idade", "Solução"].map(
+                {["QID", "Título", "Squad", "Sev", "Status", "Detecções", "Idade", "Solução"].map(
                   (h) => (
                     <th
                       key={h}
@@ -445,13 +487,34 @@ function Vulnerabilidades() {
                   </td>
                 </tr>
               ) : (
-                rows.map((r) => (
-                  <Fragment key={`${r.qid}-${r.team}-${r.action}`}>
+                rows.map((r) => {
+                  const identity = JSON.stringify([r.qid, r.team, r.action, r.sev]);
+                  const expanded = open?.identity === identity && open.scope === filterScope;
+                  const detailsId = `qid-details-${encodeURIComponent(identity)}`;
+                  const toggle = () => setOpen((previous) =>
+                    previous?.identity === identity && previous.scope === filterScope
+                      ? null
+                      : { identity, scope: filterScope, page: 1 },
+                  );
+                  return (
+                  <Fragment key={identity}>
                     <tr
-                      onClick={() => setOpen(open === r.qid ? null : r.qid)}
-                      className="cursor-pointer border-b border-border/60 hover:bg-steel"
+                      onClick={toggle}
+                      className={`cursor-pointer border-b border-border/60 hover:bg-steel ${expanded ? "bg-steel" : ""}`}
                     >
-                      <td className="px-3 py-2 font-bold text-primary">{r.qid}</td>
+                      <td className="px-3 py-2 font-bold text-primary">
+                        <button
+                          type="button"
+                          aria-expanded={expanded}
+                          aria-controls={detailsId}
+                          aria-label={`${expanded ? "Ocultar" : "Mostrar"} detalhes do QID ${r.qid}, ${r.team}, ${r.action}, ${r.sev}`}
+                          onClick={(event) => { event.stopPropagation(); toggle(); }}
+                          className="inline-flex items-center gap-1 rounded-sm p-1 hover:bg-primary/10 active:bg-primary/20 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+                        >
+                          {expanded ? <ChevronDown className="h-3 w-3" aria-hidden="true" /> : <ChevronRight className="h-3 w-3" aria-hidden="true" />}
+                          {r.qid}
+                        </button>
+                      </td>
                       <td className="max-w-[420px] truncate px-3 py-2">
                         {displayQidTitle(r.title)}
                       </td>
@@ -473,20 +536,34 @@ function Vulnerabilidades() {
                       </td>
                       <td className="px-3 py-2">{r.solution ? "Sim" : "—"}</td>
                     </tr>
-                    {open === r.qid && (
+                    {expanded && open && (
                       <tr className="border-b border-border">
-                        <td colSpan={8} className="bg-secondary px-5 py-4">
-                          <p className="stencil mb-2 text-[10px] text-primary">
-                            Frente: {r.action}
-                          </p>
-                          <p className="whitespace-pre-wrap text-[11px] leading-relaxed text-muted-foreground">
-                            {r.solution || "Sem solução registrada."}
-                          </p>
+                        <td colSpan={8} className="bg-muted px-5 py-4">
+                          <div id={detailsId} className="space-y-4">
+                            <QidAssetList
+                              input={{
+                                row: { qid: r.qid, team: r.team, action: r.action, sev: r.sev },
+                                filters,
+                                page: open.page,
+                              }}
+                              parentDetectionCount={r.count}
+                              onPageChange={(page) => setOpen((previous) => previous ? { ...previous, page } : null)}
+                            />
+                            <div className="border-t border-border pt-4">
+                              <h3 className="stencil mb-1 text-[11px] text-foreground">Frente de ação</h3>
+                              <p className="text-xs text-muted-foreground">{r.action || "—"}</p>
+                            </div>
+                            <div>
+                              <h3 className="stencil mb-2 text-[11px] text-foreground">Solução recomendada</h3>
+                              <SolutionContent solution={r.solution} />
+                            </div>
+                          </div>
                         </td>
                       </tr>
                     )}
                   </Fragment>
-                ))
+                  );
+                })
               )}
             </tbody>
           </table>
