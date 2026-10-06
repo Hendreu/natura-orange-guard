@@ -1,5 +1,6 @@
 import sql from "@/lib/db";
 import { TEAM_NAMES, SEVERITY_ORDER, ACTIVE_STATUSES } from "@/lib/constants";
+import { enrichQidRows, qidMetadataCtesSql } from "@/server/qid-metadata.server";
 import type {
   Trend,
   ActionGroup,
@@ -511,19 +512,21 @@ export async function getQids({
     (yearScope === "current" || yearScope === undefined)
   ) {
     const rows = await sql`SELECT * FROM mv_top_qids_current_year`;
-    return rows.map((r) => ({
-      qid: r["qid"],
-      title: r["title"] ?? "",
-      sev: r["sev"],
-      team: r["team"],
-      action: r["action"],
-      count: r["count"],
-      corr: r["corr"],
-      naoCorr: r["naoCorr"],
-      age: r["age"],
-      solution: r["solution"] ?? "",
-      status: r["status"] ?? "",
-    }));
+    return enrichQidRows(
+      rows.map((r) => ({
+        qid: r["qid"],
+        title: r["title"] ?? "",
+        sev: r["sev"],
+        team: r["team"],
+        action: r["action"] ?? "Unknown",
+        count: r["count"],
+        corr: r["corr"],
+        naoCorr: r["naoCorr"],
+        age: r["age"],
+        solution: r["solution"] ?? "",
+        status: r["status"] ?? "",
+      })),
+    );
   }
 
   if (
@@ -536,19 +539,21 @@ export async function getQids({
     yearScope === "all"
   ) {
     const rows = await sql`SELECT * FROM mv_top_qids`;
-    return rows.map((r) => ({
-      qid: r["qid"],
-      title: r["title"] ?? "",
-      sev: r["sev"],
-      team: r["team"],
-      action: r["action"],
-      count: r["count"],
-      corr: r["corr"],
-      naoCorr: r["naoCorr"],
-      age: r["age"],
-      solution: r["solution"] ?? "",
-      status: r["status"] ?? "",
-    }));
+    return enrichQidRows(
+      rows.map((r) => ({
+        qid: r["qid"],
+        title: r["title"] ?? "",
+        sev: r["sev"],
+        team: r["team"],
+        action: r["action"] ?? "Unknown",
+        count: r["count"],
+        corr: r["corr"],
+        naoCorr: r["naoCorr"],
+        age: r["age"],
+        solution: r["solution"] ?? "",
+        status: r["status"] ?? "",
+      })),
+    );
   }
 
   const cte = assetCteSql(team, tags);
@@ -558,10 +563,23 @@ export async function getQids({
   const qFilter = q
     ? sql`AND (kb.title ILIKE ${`%${q}%`} OR kb.category ILIKE ${`%${q}%`} OR v."QID"::text ILIKE ${`%${q}%`})`
     : sql``;
-  const teamExpr = team && team !== "Todas" ? sql`${team}` : extractTeamExpr();
+  const teamExpr = team && team !== "Todas" ? sql`${team}` : sql`COALESCE(v.team, 'Unknown')`;
 
   const rows = await sql`
     ${cte}
+    , eligible_detections AS MATERIALIZED (
+      SELECT v."QID", v."Severity", v."Status", v."Last_Found_Datetime", a.team
+      FROM vulnerabilities v
+      JOIN filtered_assets a ON v."QG_HostID" = a."QG_HostID"
+      WHERE ${statusFilterSql()}
+        AND v."Severity"::int IN (1,2,3,4,5)
+        ${sevFilter}
+        ${statusFilter}
+        ${yearFilter}
+    ), qid_candidates AS MATERIALIZED (
+      SELECT DISTINCT "QID" AS qid FROM eligible_detections
+    )
+    ${qidMetadataCtesSql()}
     SELECT
       v."QID"::int as "qid",
       MAX(kb.title) as "title",
@@ -569,21 +587,16 @@ export async function getQids({
       ${teamExpr} as "team",
       COALESCE(kb.category, 'Unknown') as "action",
       COUNT(*)::int as "count",
-      COUNT(*) FILTER (WHERE kb.solution IS NOT NULL)::int as "corr",
-      COUNT(*) FILTER (WHERE kb.solution IS NULL)::int as "naoCorr",
+      COUNT(*) FILTER (WHERE kb.has_summary_solution IS TRUE)::int as "corr",
+      COUNT(*) FILTER (WHERE kb.has_summary_solution IS NOT TRUE)::int as "naoCorr",
       MAX(${ageExpr()})::int as "age",
       MAX(kb.solution) as "solution",
       MAX(v."Status") as "Status"
-    FROM vulnerabilities v
-    JOIN filtered_assets a ON v."QG_HostID" = a."QG_HostID"
-    LEFT JOIN kb_summary kb ON v."QID" = kb.qid
+    FROM eligible_detections v
+    LEFT JOIN qid_metadata kb ON v."QID" = kb.qid
     WHERE ${statusFilterSql()}
-      AND v."Severity"::int IN (1,2,3,4,5)
-      ${sevFilter}
       ${qFilter}
       ${catFilter}
-      ${statusFilter}
-      ${yearFilter}
     GROUP BY v."QID", ${teamExpr}, COALESCE(kb.category, 'Unknown'), ${severityLabelExpr()}
     ORDER BY COUNT(*) DESC
     LIMIT 120
@@ -609,6 +622,9 @@ export type VulnerabilityStats = {
   criticalPatchable: number;
   cisaKev: number;
   ransomware: number;
+  bySeverity: Record<string, number>;
+  bySeverityNumber: Record<string, number>;
+  byCategory: { category: string; count: number }[];
 };
 
 export async function getVulnerabilityStats({
@@ -634,35 +650,40 @@ export async function getVulnerabilityStats({
   const statusFilter = statusesFilterSql(statuses);
   const yearFilter = yearFilterSql(yearScope);
 
-  const [row] = await sql`
+  const [row] = await sql<VulnerabilityStats[]>`
     ${cte}
+    , eligible_detections AS MATERIALIZED (
+      SELECT v."QID", v."Severity"
+      FROM vulnerabilities v
+      JOIN filtered_assets a ON v."QG_HostID" = a."QG_HostID"
+      WHERE ${statusFilterSql()}
+        AND v."Severity"::int IN (1,2,3,4,5)
+        ${statusFilter}
+        ${yearFilter}
+    ), qid_candidates AS MATERIALIZED (
+      SELECT DISTINCT "QID" AS qid FROM eligible_detections
+    )
+    ${qidMetadataCtesSql()}
     , base AS (
       SELECT
         v."Severity"::int as sev,
-        kb.solution,
-        kb.cisa_kev,
-        kb.ransomware,
+        summary.solution,
+        summary.cisa_kev,
+        summary.ransomware,
         COALESCE(kb.category, 'Unknown') as category
-      FROM vulnerabilities v
-      JOIN filtered_assets a ON v."QG_HostID" = a."QG_HostID"
-      LEFT JOIN kb_summary kb ON v."QID" = kb.qid
+      FROM eligible_detections v
+      LEFT JOIN qid_metadata kb ON v."QID" = kb.qid
+      LEFT JOIN kb_summary summary ON v."QID" = summary.qid
       WHERE ${statusFilterSql()}
-        AND v."Severity"::int IN (1,2,3,4,5)
         ${qFilter}
         ${catFilter}
-        ${statusFilter}
-        ${yearFilter}
     ),
     base_for_categories AS (
       SELECT COALESCE(kb.category, 'Unknown') as category
-      FROM vulnerabilities v
-      JOIN filtered_assets a ON v."QG_HostID" = a."QG_HostID"
-      LEFT JOIN kb_summary kb ON v."QID" = kb.qid
+      FROM eligible_detections v
+      LEFT JOIN qid_metadata kb ON v."QID" = kb.qid
       WHERE ${statusFilterSql()}
-        AND v."Severity"::int IN (1,2,3,4,5)
         ${qFilter}
-        ${statusFilter}
-        ${yearFilter}
     )
     SELECT
       (SELECT COUNT(*)::int FROM base) as "total",
@@ -712,9 +733,9 @@ export async function getVulnerabilityStats({
     criticalPatchable: row?.criticalPatchable ?? 0,
     cisaKev: row?.cisaKev ?? 0,
     ransomware: row?.ransomware ?? 0,
-    bySeverity: (row?.bySeverity as Record<string, number>) ?? {},
-    bySeverityNumber: (row?.bySeverityNumber as Record<string, number>) ?? {},
-    byCategory: (row?.byCategory as { category: string; count: number }[]) ?? [],
+    bySeverity: row?.bySeverity ?? {},
+    bySeverityNumber: row?.bySeverityNumber ?? {},
+    byCategory: row?.byCategory ?? [],
   };
 }
 
