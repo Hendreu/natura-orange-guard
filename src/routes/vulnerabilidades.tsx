@@ -4,14 +4,15 @@ import { useQuery } from "@tanstack/react-query";
 import { ChevronDown, ChevronRight, Search, SlidersHorizontal } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
-  Sheet,
-  SheetTrigger,
-  SheetContent,
-  SheetHeader,
-  SheetTitle,
-  SheetDescription,
-  SheetFooter,
-} from "@/components/ui/sheet";
+  Dialog,
+  DialogTrigger,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogDescription,
+  DialogFooter,
+  DialogClose,
+} from "@/components/ui/dialog";
 import {
   Select,
   SelectContent,
@@ -270,127 +271,125 @@ function Vulnerabilidades() {
       </section>
 
       <div className="space-y-4">
-        <Sheet open={filtersOpen} onOpenChange={setFiltersOpen}>
+        <Dialog open={filtersOpen} onOpenChange={setFiltersOpen}>
           <div className="flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
-          <div className="w-full sm:max-w-xl sm:flex-1">
-            <label htmlFor="vulnerability-search" className="stencil mb-2 block text-[10px] text-muted-foreground">Busca</label>
-            <div className="relative">
-              <Search className="pointer-events-none absolute top-1/2 left-3 h-3.5 w-3.5 -translate-y-1/2 text-muted-foreground" />
-              <input
-                id="vulnerability-search"
-                value={qInput}
-                onChange={(e) => setQInput(e.target.value)}
-                placeholder="QID, título ou categoria..."
-                className="h-9 w-full rounded-md border border-border bg-input pr-3 pl-9 text-xs text-foreground outline-none focus:border-primary"
-              />
+            <div className="w-full sm:max-w-xl sm:flex-1">
+              <label htmlFor="vulnerability-search" className="stencil mb-2 block text-[10px] text-muted-foreground">Busca</label>
+              <div className="relative">
+                <Search className="pointer-events-none absolute top-1/2 left-3 h-3.5 w-3.5 -translate-y-1/2 text-muted-foreground" />
+                <input
+                  id="vulnerability-search"
+                  value={qInput}
+                  onChange={(e) => setQInput(e.target.value)}
+                  placeholder="QID, título ou categoria..."
+                  className="h-9 w-full rounded-md border border-border bg-input pr-3 pl-9 text-xs text-foreground outline-none focus:border-primary"
+                />
+              </div>
             </div>
-          </div>
-            <SheetTrigger asChild>
+            <DialogTrigger asChild>
               <Button type="button" variant="outline" className="w-full sm:w-auto">
                 <SlidersHorizontal className="h-4 w-4" aria-hidden="true" />
                 Filtros
               </Button>
-            </SheetTrigger>
+            </DialogTrigger>
           </div>
-          <SheetContent side="right" className="flex h-dvh w-full flex-col gap-0 overflow-hidden p-0 sm:max-w-md">
-            <SheetHeader className="shrink-0 border-b border-border p-4 pr-12 text-left">
-              <SheetTitle>Filtros</SheetTitle>
-              <SheetDescription>Selecione squad, severidade, categoria e status e aplique os filtros.</SheetDescription>
-            </SheetHeader>
+          <DialogContent className="flex max-h-[calc(100dvh-2rem)] w-[calc(100%-2rem)] flex-col gap-0 overflow-hidden p-0 sm:max-w-xl">
+            <DialogHeader className="shrink-0 border-b border-border p-4 pr-12 text-left">
+              <DialogTitle>Filtros</DialogTitle>
+              <DialogDescription>Selecione squad, severidade, categoria e status e aplique os filtros.</DialogDescription>
+            </DialogHeader>
             <div className="min-h-0 flex-1 space-y-6 overflow-y-auto p-4">
+              <div>
+                <span className="stencil mb-2 block text-[10px] text-muted-foreground">Squad</span>
+                <Select value={draftTeam} onValueChange={(v) => setDraftTeam(v)}>
+                  <SelectTrigger className="h-9 w-full border-border bg-input text-xs">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {TEAM_OPTIONS.map((opt) => (
+                      <SelectItem key={opt.value} value={opt.value} className="text-xs">
+                        {opt.label}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
 
-          <div>
-            <span className="stencil mb-2 block text-[10px] text-muted-foreground">Squad</span>
-            <Select value={draftTeam} onValueChange={(v) => setDraftTeam(v)}>
-              <SelectTrigger className="h-9 w-full border-border bg-input text-xs">
-                <SelectValue />
-              </SelectTrigger>
-              <SelectContent>
-                {TEAM_OPTIONS.map((opt) => (
-                  <SelectItem key={opt.value} value={opt.value} className="text-xs">
-                    {opt.label}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-          </div>
+              <div>
+                <span className="stencil mb-2 block text-[10px] text-muted-foreground">Severidade</span>
+                <div className="space-y-1">
+                  {severityOptions.map(({ level, count }) => {
+                    const active = draftSevs.includes(level);
+                    return (
+                      <button
+                        key={level}
+                        onClick={() => {
+                          const next = active
+                            ? draftSevs.filter((v) => v !== level)
+                            : [...draftSevs, level];
+                          setDraftSevs(next);
+                        }}
+                        className={`flex w-full items-center justify-between rounded-sm border px-2 py-1.5 text-xs transition-colors ${
+                          active
+                            ? "border-primary bg-primary/10 text-foreground"
+                            : "border-border bg-background text-muted-foreground hover:bg-muted hover:text-foreground"
+                        }`}
+                      >
+                        <span className="font-bold">Nível {level}</span>
+                        <span className="stencil">{fmt(count)}</span>
+                      </button>
+                    );
+                  })}
+                </div>
+              </div>
 
-          <div>
-            <span className="stencil mb-2 block text-[10px] text-muted-foreground">Severidade</span>
-            <div className="space-y-1">
-              {severityOptions.map(({ level, count }) => {
-                const active = draftSevs.includes(level);
-                return (
-                  <button
-                    key={level}
-                    onClick={() => {
-                      const next = active
-                        ? draftSevs.filter((v) => v !== level)
-                        : [...draftSevs, level];
-                      setDraftSevs(next);
-                    }}
-                    className={`flex w-full items-center justify-between rounded-sm border px-2 py-1.5 text-xs transition-colors ${
-                      active
-                        ? "border-primary bg-primary/10 text-foreground"
-                        : "border-border bg-secondary text-muted-foreground hover:border-primary hover:text-foreground"
-                    }`}
-                  >
-                    <span className="font-bold">Nível {level}</span>
-                    <span className="stencil">{fmt(count)}</span>
-                  </button>
-                );
-              })}
+              <div>
+                <span className="stencil mb-2 block text-[10px] text-muted-foreground">Categoria</span>
+                <div className="flex flex-wrap gap-2">
+                  {categoryOptions.map(({ value, count }) => {
+                    const active = draftCategories.includes(value);
+                    return (
+                      <FilterChip
+                        key={value}
+                        label={value}
+                        count={count}
+                        active={active}
+                        onClick={() => {
+                          const next = active
+                            ? draftCategories.filter((c) => c !== value)
+                            : [...draftCategories, value];
+                          setDraftCategories(next);
+                        }}
+                      />
+                    );
+                  })}
+                </div>
+              </div>
+
+              <div>
+                <span className="stencil mb-2 block text-[10px] text-muted-foreground">Status</span>
+                <div className="flex flex-wrap gap-2">
+                  {statusOptions.map(({ value, label, count }) => {
+                    const active = draftStatuses.includes(value);
+                    return (
+                      <FilterChip
+                        key={value}
+                        label={label}
+                        count={count}
+                        active={active}
+                        onClick={() => {
+                          const next = active
+                            ? draftStatuses.filter((s) => s !== value)
+                            : [...draftStatuses, value];
+                          setDraftStatuses(next);
+                        }}
+                      />
+                    );
+                  })}
+                </div>
+              </div>
             </div>
-          </div>
-
-          <div>
-            <span className="stencil mb-2 block text-[10px] text-muted-foreground">Categoria</span>
-            <div className="flex flex-wrap gap-2">
-              {categoryOptions.map(({ value, count }) => {
-                const active = draftCategories.includes(value);
-                return (
-                  <FilterChip
-                    key={value}
-                    label={value}
-                    count={count}
-                    active={active}
-                    onClick={() => {
-                      const next = active
-                        ? draftCategories.filter((c) => c !== value)
-                        : [...draftCategories, value];
-                      setDraftCategories(next);
-                    }}
-                  />
-                );
-              })}
-            </div>
-          </div>
-
-          <div>
-            <span className="stencil mb-2 block text-[10px] text-muted-foreground">Status</span>
-            <div className="flex flex-wrap gap-2">
-              {statusOptions.map(({ value, label, count }) => {
-                const active = draftStatuses.includes(value);
-                return (
-                  <FilterChip
-                    key={value}
-                    label={label}
-                    count={count}
-                    active={active}
-                    onClick={() => {
-                      const next = active
-                        ? draftStatuses.filter((s) => s !== value)
-                        : [...draftStatuses, value];
-                      setDraftStatuses(next);
-                    }}
-                  />
-                );
-              })}
-            </div>
-          </div>
-
-            </div>
-            <SheetFooter className="shrink-0 flex-col gap-2 border-t border-border bg-background p-4 sm:flex-col sm:space-x-0">
+            <DialogFooter className="shrink-0 flex-col gap-2 border-t border-border bg-background p-4 sm:flex-col sm:space-x-0">
               <Button
                 type="button"
                 onClick={() => { applyFilters(); setFiltersOpen(false); }}
@@ -402,9 +401,14 @@ function Vulnerabilidades() {
               <Button type="button" variant="outline" onClick={clearFilters} className="stencil w-full text-[10px]">
                 Limpar tudo
               </Button>
-            </SheetFooter>
-          </SheetContent>
-        </Sheet>
+              <DialogClose asChild>
+                <Button type="button" variant="outline" className="stencil w-full text-[10px]">
+                  Cancelar
+                </Button>
+              </DialogClose>
+            </DialogFooter>
+          </DialogContent>
+        </Dialog>
 
         <div className="slab overflow-x-auto">
           {activeFilters.length > 0 && (
