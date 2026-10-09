@@ -1,6 +1,7 @@
 import { createServerFn } from "@tanstack/react-start";
 import { z } from "zod";
 import { SEVERITY_ORDER } from "@/lib/constants";
+import { qidSlaFilterSchema } from "@/lib/qid-sla";
 
 const tagsSchema = z.array(z.coerce.number()).default([]);
 
@@ -25,7 +26,8 @@ export const fetchAllTeamsData = createServerFn({ method: "GET" })
     return await getAllTeamsData(data);
   });
 
-const qidsFilterSchema = z.object({
+export const qidsFilterSchema = z.object({
+  sla: qidSlaFilterSchema.optional(),
   sev: z.array(z.string()).optional(),
   team: z.string().optional(),
   q: z.string().optional(),

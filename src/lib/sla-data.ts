@@ -1,4 +1,5 @@
 import { queryOptions } from "@tanstack/react-query";
+import type { QidSla, QidSlaFilter } from "@/lib/qid-sla";
 import { TEAM_NAMES, SEVERITY_ORDER } from "./constants";
 import {
   fetchTeamData,
@@ -79,6 +80,7 @@ export type VulnerabilityStats = {
 };
 
 export type QidRow = {
+  readonly sla: QidSla;
   qid: number;
   title: string;
   sev: Severity;
@@ -179,18 +181,38 @@ export const slaQueryOptions = (yearScope?: string) =>
     queryFn: () => fetchAllTeamsData({ data: { yearScope } }),
   });
 
-export const qidsQueryOptions = (filters: {
-  sev?: string[];
-  team?: string;
-  q?: string;
-  tags?: number[];
-  categories?: string[];
-  statuses?: string[];
-  yearScope?: string;
-}) =>
+export const qidsQueryOptions = (
+  filters: {
+    sla?: QidSlaFilter;
+    sev?: string[];
+    team?: string;
+    q?: string;
+    tags?: number[];
+    categories?: string[];
+    statuses?: string[];
+    yearScope?: string;
+  },
+  loadRows: () => Promise<QidRow[]> = () => fetchQids({ data: filters }),
+) =>
   queryOptions({
     queryKey: ["qids", filters],
-    queryFn: () => fetchQids({ data: filters }),
+    queryFn: async (): Promise<{ readonly rows: QidRow[]; readonly requestStartedAt: number }> => {
+      const requestStartedAt = Date.now();
+      const rows = await loadRows();
+      return { rows, requestStartedAt };
+    },
+    select: (snapshot) => snapshot.rows,
+    staleTime: 0,
+    refetchOnMount: true,
+    refetchOnWindowFocus: true,
+    refetchIntervalInBackground: true,
+    refetchInterval: (query) => {
+      const now = Date.now();
+      const today = new Date(now);
+      const midnight = Date.UTC(today.getUTCFullYear(), today.getUTCMonth(), today.getUTCDate());
+      if (query.state.data && query.state.data.requestStartedAt < midnight) return 1000;
+      return Math.max(1000, midnight + 86400000 - now);
+    },
   });
 
 export const assetsQueryOptions = (filters: {

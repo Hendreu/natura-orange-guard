@@ -1,6 +1,8 @@
 import sql from "@/lib/db";
 import { TEAM_NAMES, SEVERITY_ORDER, ACTIVE_STATUSES } from "@/lib/constants";
 import { enrichQidRows, qidMetadataCtesSql } from "@/server/qid-metadata.server";
+import { enrichQidSlaRows, qidSlaCtesSql, qidSlaPredicateSql, qidSlaUnavailableSql } from "@/server/qid-sla.server";
+import type { QidSlaFilter } from "@/lib/qid-sla";
 import type {
   Trend,
   ActionGroup,
@@ -484,6 +486,7 @@ export async function getTags() {
 }
 
 export async function getQids({
+  sla,
   sev,
   team,
   q,
@@ -492,6 +495,7 @@ export async function getQids({
   statuses,
   yearScope,
 }: {
+  sla?: QidSlaFilter | undefined;
   sev?: string[] | undefined;
   team?: string | undefined;
   q?: string | undefined;
@@ -505,6 +509,7 @@ export async function getQids({
   const yearFilter = yearFilterSql(yearScope);
 
   if (
+    !sla &&
     (!team || team === "Todas") &&
     (!sev || sev.length === 0) &&
     !q &&
@@ -513,8 +518,8 @@ export async function getQids({
     tags.length === 0 &&
     (yearScope === "current" || yearScope === undefined)
   ) {
-    const rows = await sql`SELECT * FROM mv_top_qids_current_year`;
-    return enrichQidRows(
+    const rows = await sql`SELECT *, ${qidSlaUnavailableSql()} AS sla FROM mv_top_qids_current_year`;
+    return enrichQidSlaRows(await enrichQidRows(
       rows.map((r) => ({
         qid: r["qid"],
         title: r["title"] ?? "",
@@ -527,11 +532,13 @@ export async function getQids({
         age: r["age"],
         solution: r["solution"] ?? "",
         status: r["status"] ?? "",
+        sla: r["sla"],
       })),
-    );
+    ), { assets: assetCteSql(undefined, []), year: yearFilter });
   }
 
   if (
+    !sla &&
     (!team || team === "Todas") &&
     (!sev || sev.length === 0) &&
     !q &&
@@ -540,8 +547,8 @@ export async function getQids({
     tags.length === 0 &&
     yearScope === "all"
   ) {
-    const rows = await sql`SELECT * FROM mv_top_qids`;
-    return enrichQidRows(
+    const rows = await sql`SELECT *, ${qidSlaUnavailableSql()} AS sla FROM mv_top_qids`;
+    return enrichQidSlaRows(await enrichQidRows(
       rows.map((r) => ({
         qid: r["qid"],
         title: r["title"] ?? "",
@@ -554,8 +561,9 @@ export async function getQids({
         age: r["age"],
         solution: r["solution"] ?? "",
         status: r["status"] ?? "",
+        sla: r["sla"],
       })),
-    );
+    ), { assets: assetCteSql(undefined, []), year: yearFilter });
   }
 
   const cte = assetCteSql(team, tags);
@@ -582,8 +590,18 @@ export async function getQids({
       SELECT DISTINCT "QID" AS qid FROM eligible_detections
     )
     ${qidMetadataCtesSql()}
+    , sla_detections AS MATERIALIZED (
+      SELECT v."QID" AS qid, ${teamExpr} AS team,
+        COALESCE(kb.category, 'Unknown') AS action, ${severityLabelExpr()} AS sev,
+        v."Status" AS status, v."Last_Found_Datetime" AS last_found
+      FROM eligible_detections v LEFT JOIN qid_metadata kb ON v."QID" = kb.qid
+      WHERE TRUE ${qFilter} ${catFilter}
+    )
+    ${qidSlaCtesSql()}
+    , qid_groups AS (
     SELECT
       v."QID"::int as "qid",
+      v."QID" AS source_qid,
       MAX(kb.title) as "title",
       ${severityLabelExpr()} as "sev",
       ${teamExpr} as "team",
@@ -600,7 +618,15 @@ export async function getQids({
       ${qFilter}
       ${catFilter}
     GROUP BY v."QID", ${teamExpr}, COALESCE(kb.category, 'Unknown'), ${severityLabelExpr()}
-    ORDER BY COUNT(*) DESC
+    )
+    SELECT grouped.qid, grouped.title, grouped.sev, grouped.team, grouped.action,
+      grouped.count, grouped.corr, grouped."naoCorr", grouped.age, grouped.solution,
+      grouped."Status", deadlines.sla
+    FROM qid_groups grouped
+    JOIN qid_sla deadlines ON deadlines.qid = grouped.source_qid
+      AND deadlines.team = grouped.team AND deadlines.action = grouped.action AND deadlines.sev = grouped.sev
+    WHERE TRUE ${qidSlaPredicateSql(sla)}
+    ORDER BY grouped.count DESC
     LIMIT 120
   `;
   return rows.map((r) => ({
@@ -615,6 +641,7 @@ export async function getQids({
     age: r["age"],
     solution: r["solution"] ?? "",
     status: r["Status"] ?? "",
+    sla: r["sla"],
   }));
 }
 

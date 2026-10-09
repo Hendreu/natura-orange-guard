@@ -1,4 +1,4 @@
-import { ok, strictEqual } from "node:assert";
+import { deepStrictEqual, ok, strictEqual } from "node:assert";
 import { test } from "node:test";
 import type { QidRow } from "@/lib/sla-data";
 
@@ -29,7 +29,7 @@ if (!enabled) {
     readonly category: string | null;
     readonly solution: string | null;
   };
-  type ViewRow = Omit<QidRow, "title" | "solution" | "action" | "status"> & {
+  type ViewRow = Omit<QidRow, "title" | "solution" | "action" | "status" | "sla"> & {
     readonly title: string | null;
     readonly solution: string | null;
     readonly action: string | null;
@@ -213,6 +213,19 @@ if (!enabled) {
   });
 
   for (const yearScope of ["current", "all"]) {
+    test(`enriches ${yearScope} MV rows with the same live SLA as dynamic groups`, async () => {
+      const rows = await getQids({ yearScope });
+      const qids = [...new Set(rows.map((row) => row.qid))];
+      for (const qid of qids) {
+        const dynamic = await getQids({ yearScope, q: String(qid) });
+        for (const row of rows.filter((candidate) => candidate.qid === qid)) {
+          const matching = dynamic.find((candidate) => candidate.qid === row.qid && candidate.team === row.team && candidate.action === row.action && candidate.sev === row.sev);
+          if (matching) deepStrictEqual(row.sla, matching.sla);
+          else strictEqual(row.sla.state, row.sev === "Baixa" ? "not-applicable" : "unknown");
+        }
+      }
+    });
+
     test(`preserves ${yearScope} view membership, order, metrics and existing metadata`, async () => {
       const view = yearScope === "current" ? "mv_top_qids_current_year" : "mv_top_qids";
       const stored = await sql<ViewRow[]>`SELECT * FROM ${sql(view)}`;
