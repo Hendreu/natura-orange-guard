@@ -55,8 +55,8 @@ export const LABEL_TO_SEV: Record<string, number> = {
 };
 
 export const SLA_THRESHOLDS: Record<string, number> = {
-  Crítica: 15,
-  Alta: 30,
+  Crítica: 30,
+  Alta: 60,
   Média: 90,
   Baixa: 180,
 };
