@@ -1,8 +1,9 @@
 import { Fragment, useEffect, useMemo, useState } from "react";
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
-import { ChevronDown, ChevronRight, Search, SlidersHorizontal } from "lucide-react";
+import { ChevronDown, ChevronRight, Search, SlidersHorizontal, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
 import {
   Dialog,
   DialogTrigger,
@@ -24,6 +25,7 @@ import { Shell } from "@/components/Shell";
 import { StatSlab } from "@/components/StatSlab";
 import { FilterChip } from "@/components/FilterChip";
 import { QidAssetList } from "@/components/QidAssetList";
+import { QidSlaCell } from "@/components/QidSlaCell";
 import { SolutionContent } from "@/components/SolutionContent";
 import { useDebouncedValue } from "@/hooks/use-debounced-value";
 import {
@@ -36,9 +38,11 @@ import {
 import { TEAM_OPTIONS } from "@/lib/constants";
 import { parseNumberArray } from "@/lib/search";
 import { displayQidTitle } from "@/lib/qid-metadata";
+import { parseQidSlaSearch, qidSlaFilterFromSearch, qidSlaFilterSchema } from "@/lib/qid-sla";
+import type { QidSlaFilter, QidSlaSearch } from "@/lib/qid-sla";
 import type { QidAssetsInput } from "@/lib/sla-data";
 
-type VulnSearch = {
+type VulnSearch = QidSlaSearch & {
   q?: string | undefined;
   sev?: string[] | undefined;
   team?: string | undefined;
@@ -63,8 +67,17 @@ const statusLabel: Record<string, string> = {
 
 const defaultStatuses = ["Active", "New", "Re-Opened"];
 
+const slaOptions = [
+  { value: "all", label: "Todos" },
+  { value: "within", label: "Dentro do SLA" },
+  { value: "overdue", label: "Fora do SLA" },
+  { value: "due-today", label: "Vence hoje" },
+  { value: "next", label: "Próximos N dias" },
+] as const;
+
 export const Route = createFileRoute("/vulnerabilidades")({
   validateSearch: (search: Record<string, unknown>): VulnSearch => ({
+    ...parseQidSlaSearch(search),
     q: typeof search["q"] === "string" ? search["q"] : undefined,
     sev: parseArray(search["sev"]),
     team: typeof search["team"] === "string" ? search["team"] : undefined,
@@ -104,12 +117,17 @@ function Vulnerabilidades() {
   const categories = useMemo(() => search.categories ?? [], [search.categories]);
   const statuses = useMemo(() => search.statuses ?? defaultStatuses, [search.statuses]);
   const yearScope = search.yearScope ?? "current";
+  const sla = qidSlaFilterFromSearch(search);
+  const slaMode = search.sla ?? "all";
+  const slaDays = search.slaDays === undefined ? "" : String(search.slaDays);
 
   // Draft state: edits happen locally until user clicks "Aplicar"
   const [draftTeam, setDraftTeam] = useState(team);
   const [draftSevs, setDraftSevs] = useState<string[]>(selectedSevs);
   const [draftCategories, setDraftCategories] = useState<string[]>(categories);
   const [draftStatuses, setDraftStatuses] = useState<string[]>(statuses);
+  const [draftSlaMode, setDraftSlaMode] = useState<QidSlaFilter["mode"] | "all">(slaMode);
+  const [draftSlaDays, setDraftSlaDays] = useState(slaDays);
   const [filtersOpen, setFiltersOpen] = useState(false);
   const [open, setOpen] = useState<{
     readonly identity: string;
@@ -121,7 +139,23 @@ function Vulnerabilidades() {
   const filters: QidAssetsInput["filters"] = {
     team, sev: selectedSevs, q: debouncedQ, tags, categories, statuses, yearScope,
   };
-  const filterScope = JSON.stringify(filters);
+  const qidFilters = { ...filters, ...(sla ? { sla } : {}) };
+  const filterScope = JSON.stringify(qidFilters);
+  const draftSlaResult = qidSlaFilterSchema.safeParse(
+    draftSlaMode === "next"
+      ? { mode: draftSlaMode, days: draftSlaDays.trim() ? Number(draftSlaDays) : NaN }
+      : { mode: draftSlaMode },
+  );
+  const draftSla = draftSlaResult.success ? draftSlaResult.data : undefined;
+  const slaDraftValid = draftSlaMode === "all" || draftSlaResult.success;
+  const slaLabel = sla
+    ? {
+        within: "SLA: dentro do SLA",
+        overdue: "SLA: fora do SLA",
+        "due-today": "SLA: vence hoje",
+        next: `SLA: próximos ${slaDays}d`,
+      }[sla.mode]
+    : undefined;
 
   useEffect(() => {
     setOpen(null);
@@ -133,7 +167,9 @@ function Vulnerabilidades() {
     setDraftSevs(selectedSevs);
     setDraftCategories(categories);
     setDraftStatuses(statuses);
-  }, [team, selectedSevs, categories, statuses]);
+    setDraftSlaMode(slaMode);
+    setDraftSlaDays(slaDays);
+  }, [team, selectedSevs, categories, statuses, slaMode, slaDays, filtersOpen]);
 
   // Sync input when URL changes externally
   useEffect(() => {
@@ -155,6 +191,7 @@ function Vulnerabilidades() {
   }, [debouncedQ, q, navigate]);
 
   const applyFilters = () => {
+    if (!slaDraftValid) return;
     navigate({
       search: (prev: VulnSearch) => ({
         ...prev,
@@ -162,6 +199,8 @@ function Vulnerabilidades() {
         sev: draftSevs.length ? draftSevs : undefined,
         categories: draftCategories.length ? draftCategories : undefined,
         statuses: draftStatuses.length ? draftStatuses : undefined,
+        sla: draftSla?.mode,
+        slaDays: draftSla?.mode === "next" ? draftSla.days : undefined,
       }),
     });
   };
@@ -171,14 +210,19 @@ function Vulnerabilidades() {
     setDraftSevs([]);
     setDraftCategories([]);
     setDraftStatuses(defaultStatuses);
+    setDraftSlaMode("all");
+    setDraftSlaDays("");
     navigate({
       search: (prev: VulnSearch) => ({
+        ...prev,
         q: undefined,
         sev: undefined,
         team: undefined,
         tags: undefined,
         categories: undefined,
         statuses: undefined,
+        sla: undefined,
+        slaDays: undefined,
         yearScope: prev.yearScope,
       }),
     });
@@ -188,14 +232,16 @@ function Vulnerabilidades() {
     draftTeam !== team ||
     !arraysEqual(draftSevs, selectedSevs) ||
     !arraysEqual(draftCategories, categories) ||
-    !arraysEqual(draftStatuses, statuses);
+    !arraysEqual(draftStatuses, statuses) ||
+    !slaDraftValid ||
+    JSON.stringify(draftSla) !== JSON.stringify(sla);
 
   const {
     data: rows = [],
     isLoading,
     isError,
   } = useQuery(
-    qidsQueryOptions(filters),
+    qidsQueryOptions(qidFilters),
   );
 
   const { data: stats, isLoading: statsLoading } = useQuery(
@@ -296,7 +342,9 @@ function Vulnerabilidades() {
           <DialogContent className="flex max-h-[calc(100dvh-2rem)] w-[calc(100%-2rem)] flex-col gap-0 overflow-hidden p-0 sm:max-w-xl">
             <DialogHeader className="shrink-0 border-b border-border p-4 pr-12 text-left">
               <DialogTitle>Filtros</DialogTitle>
-              <DialogDescription>Selecione squad, severidade, categoria e status e aplique os filtros.</DialogDescription>
+              <DialogDescription>
+                Selecione squad, severidade, categoria, status e SLA e aplique os filtros.
+              </DialogDescription>
             </DialogHeader>
             <div className="min-h-0 flex-1 space-y-6 overflow-y-auto p-4">
               <div>
@@ -388,12 +436,83 @@ function Vulnerabilidades() {
                   })}
                 </div>
               </div>
+
+              <div className="space-y-3">
+                <div>
+                  <label
+                    htmlFor="qid-sla-mode"
+                    className="stencil mb-2 block text-xs text-muted-foreground"
+                  >
+                    SLA (somente tabela)
+                  </label>
+                  <Select
+                    value={draftSlaMode}
+                    onValueChange={(value) => {
+                      const option = slaOptions.find((item) => item.value === value);
+                      if (option) {
+                        setDraftSlaMode(option.value);
+                        if (option.value !== "next") setDraftSlaDays("");
+                      }
+                    }}
+                  >
+                    <SelectTrigger
+                      id="qid-sla-mode"
+                      aria-describedby="qid-sla-scope"
+                      className="h-9 w-full border-border bg-input text-xs"
+                    >
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {slaOptions.map((option) => (
+                        <SelectItem key={option.value} value={option.value} className="text-xs">
+                          {option.label}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+                {draftSlaMode === "next" && (
+                  <div>
+                    <label
+                      htmlFor="qid-sla-days"
+                      className="mb-2 block text-xs text-muted-foreground"
+                    >
+                      Quantidade de dias (N)
+                    </label>
+                    <Input
+                      id="qid-sla-days"
+                      type="number"
+                      min={1}
+                      max={2147483647}
+                      step={1}
+                      required
+                      value={draftSlaDays}
+                      onChange={(event) => setDraftSlaDays(event.target.value)}
+                      aria-invalid={!slaDraftValid}
+                      aria-describedby={slaDraftValid ? "qid-sla-days-hint" : "qid-sla-days-hint qid-sla-days-error"}
+                      className="border-border bg-input font-mono tabular-nums"
+                    />
+                    <p id="qid-sla-days-hint" className="mt-2 text-xs text-muted-foreground">
+                      Vencimentos de 1 a N dias restantes; não inclui hoje nem vencidos.
+                    </p>
+                    {!slaDraftValid && (
+                      <p id="qid-sla-days-error" role="alert" className="mt-2 text-xs text-critica">
+                        Informe um número inteiro de 1 a 2147483647 dias.
+                      </p>
+                    )}
+                  </div>
+                )}
+                <p id="qid-sla-scope" className="text-xs text-muted-foreground">
+                  Filtra grupos de QID por sua pior detecção aberta. Não altera os indicadores nem as
+                  detecções e máquinas dos grupos exibidos.
+                </p>
+              </div>
             </div>
             <DialogFooter className="shrink-0 flex-col gap-2 border-t border-border bg-background p-4 sm:flex-col sm:space-x-0">
               <Button
                 type="button"
                 onClick={() => { applyFilters(); setFiltersOpen(false); }}
-                disabled={!hasChanges}
+                disabled={!hasChanges || !slaDraftValid}
                 className="stencil w-full text-[10px]"
               >
                 Aplicar filtros
@@ -410,8 +529,15 @@ function Vulnerabilidades() {
           </DialogContent>
         </Dialog>
 
+        {sla && (
+          <p className="text-xs text-muted-foreground">
+            Filtro de SLA somente na tabela: os indicadores acima não são reduzidos por este
+            filtro.
+          </p>
+        )}
+
         <div className="slab overflow-x-auto">
-          {activeFilters.length > 0 && (
+          {(activeFilters.length > 0 || sla) && (
             <div className="flex flex-wrap items-center gap-2 border-b border-border px-4 py-3">
               <span className="stencil text-[10px] text-muted-foreground">Filtros:</span>
               {activeFilters.map((f) => (
@@ -450,12 +576,31 @@ function Vulnerabilidades() {
                   <span className="text-muted-foreground">×</span>
                 </button>
               ))}
+              {sla && (
+                <button
+                  type="button"
+                  aria-label={`Remover filtro ${slaLabel}`}
+                  onClick={() =>
+                    navigate({
+                      search: (prev: VulnSearch) => ({
+                        ...prev,
+                        sla: undefined,
+                        slaDays: undefined,
+                      }),
+                    })
+                  }
+                  className="stencil inline-flex items-center gap-1 rounded-sm border border-border bg-secondary px-2 py-1 text-xs text-foreground hover:bg-muted active:bg-input focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+                >
+                  {slaLabel}
+                  <X className="size-3 text-muted-foreground" aria-hidden="true" />
+                </button>
+              )}
             </div>
           )}
           <table className="w-full text-xs">
             <thead>
               <tr className="border-b border-border bg-secondary">
-                {["QID", "Título", "Squad", "Sev", "Status", "Detecções", "Idade", "Solução"].map(
+                {["QID", "Título", "Squad", "Sev", "Status", "Detecções", "Idade", "SLA", "Solução"].map(
                   (h) => (
                     <th
                       key={h}
@@ -471,14 +616,14 @@ function Vulnerabilidades() {
               {isLoading || statsLoading ? (
                 Array.from({ length: 8 }).map((_, i) => (
                   <tr key={i} className="border-b border-border/60">
-                    <td colSpan={8} className="px-3 py-2">
+                    <td colSpan={9} className="px-3 py-2">
                       <div className="h-6 w-full animate-pulse bg-steel" />
                     </td>
                   </tr>
                 ))
               ) : isError ? (
                 <tr>
-                  <td colSpan={8} className="px-3 py-8 text-center">
+                  <td colSpan={9} className="px-3 py-8 text-center">
                     <p className="stencil text-sm text-critica">
                       Erro ao carregar vulnerabilidades
                     </p>
@@ -486,7 +631,7 @@ function Vulnerabilidades() {
                 </tr>
               ) : rows.length === 0 ? (
                 <tr>
-                  <td colSpan={8} className="px-3 py-8 text-center">
+                  <td colSpan={9} className="px-3 py-8 text-center">
                     <p className="stencil text-sm text-muted-foreground">Nenhum resultado</p>
                   </td>
                 </tr>
@@ -538,11 +683,14 @@ function Vulnerabilidades() {
                       >
                         {r.age}d
                       </td>
+                      <td className="px-3 py-2">
+                        <QidSlaCell sla={r.sla} />
+                      </td>
                       <td className="px-3 py-2">{r.solution ? "Sim" : "—"}</td>
                     </tr>
                     {expanded && open && (
                       <tr className="border-b border-border">
-                        <td colSpan={8} className="bg-muted px-5 py-4">
+                        <td colSpan={9} className="bg-muted px-5 py-4">
                           <div id={detailsId} className="space-y-4">
                             <QidAssetList
                               input={{
